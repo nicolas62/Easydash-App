@@ -9,4 +9,15 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      # Ajoutez d'autres variables d'environnement ici si besoin (ex: GEMINI_API_KEY)
+    networks:
+      - wordpress_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.easydash.rule=Host(`devjee.gauthier-nicolas.fr`)"
+      - "traefik.http.routers.easydash.entrypoints=websecure"
+      - "traefik.http.routers.easydash.tls.certresolver=letsencrypt"
+      - "traefik.http.services.easydash.loadbalancer.server.port=3000"
+
+networks:
+  wordpress_network:
+    external: true
