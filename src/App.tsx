@@ -108,6 +108,14 @@ const App: React.FC = () => {
     handlePullToRefreshTouchEnd();
     handleSwipeTouchEnd(e);
   };
+  const currentWidgetsMemo = useMemo(() => widgets.filter(w => {
+    if (activeDashboardId === "default") return w.isFavorite;
+    return w.dashboardId === activeDashboardId;
+  }), [widgets, activeDashboardId]);
+
+  const activeDashboard = useMemo(() => dashboards.find(d => d.id === activeDashboardId), [dashboards, activeDashboardId]);
+  const widgetToDelete = useMemo(() => widgets.find(w => w.id === deleteWidgetId), [widgets, deleteWidgetId]);
+
 
   if (!isSettingsLoaded) {
     return (
@@ -130,13 +138,6 @@ const App: React.FC = () => {
     );
   }
 
-  const currentWidgets = useMemo(() => widgets.filter(w => {
-    if (activeDashboardId === 'default') return w.isFavorite;
-    return w.dashboardId === activeDashboardId;
-  }), [widgets, activeDashboardId]);
-  
-  const activeDashboard = useMemo(() => dashboards.find(d => d.id === activeDashboardId), [dashboards, activeDashboardId]);
-  const widgetToDelete = useMemo(() => widgets.find(w => w.id === deleteWidgetId), [widgets, deleteWidgetId]);
 
   return (
     <div className="min-h-screen bg-dark-bg text-content-primary flex flex-col font-sans overflow-hidden transition-colors duration-300">
@@ -207,7 +208,7 @@ const App: React.FC = () => {
             pullChange={pullChange}
             isLoading={isLoading}
             activeDashboard={activeDashboard}
-            currentWidgets={currentWidgets}
+            currentWidgets={currentWidgetsMemo}
             commands={commands}
             isEditMode={isEditMode}
             sensors={sensors}
