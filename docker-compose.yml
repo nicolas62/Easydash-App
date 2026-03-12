@@ -10,7 +10,7 @@ services:
     environment:
       - NODE_ENV=production
     networks:
-      - wordpress_network
+      - test_wp_wordpress_network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.easydash.rule=Host(`devjee.gauthier-nicolas.fr`)"
@@ -19,5 +19,5 @@ services:
       - "traefik.http.services.easydash.loadbalancer.server.port=3000"
 
 networks:
-  wordpress_network:
+  test_wp_wordpress_network:
     external: true
