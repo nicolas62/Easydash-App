@@ -1,6 +1,8 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+// Disable SSL verification for self-signed certs (common in home automation)
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 async function startServer() {
@@ -9,65 +11,18 @@ async function startServer() {
         const PORT = Number(process.env.PORT) || 3000;
         const NODE_ENV = process.env.NODE_ENV || 'development';
         console.log(`Starting server in ${NODE_ENV} mode...`);
+        // Add security headers to allow OAuth popups
+        app.use((req, res, next) => {
+            res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+            next();
+        });
         // Health check endpoint
         app.get("/health", (req, res) => {
             res.status(200).send("OK");
         });
-        // --- API PROXY ENDPOINT ---
-        app.get("/api/proxy", async (req, res) => {
-            const targetUrl = req.query.url;
-            if (!targetUrl) {
-                return res.status(400).json({ error: "Missing 'url' query parameter" });
-            }
-            try {
-                const response = await fetch(targetUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-                if (!response.ok) {
-                    return res.status(response.status).send(response.statusText);
-                }
-                const contentType = response.headers.get('content-type');
-                if (contentType) {
-                    res.setHeader('Content-Type', contentType);
-                }
-                const buffer = await response.arrayBuffer();
-                res.send(Buffer.from(buffer));
-            }
-            catch (error) {
-                console.error(`Proxy error for ${targetUrl}:`, error);
-                res.status(500).json({ error: error.message });
-            }
-        });
-        // --- JSON RPC POST PROXY ---
-        app.use(express.json());
-        app.post("/api/proxy", async (req, res) => {
-            const targetUrl = req.query.url;
-            if (!targetUrl) {
-                return res.status(400).json({ error: "Missing 'url' query parameter" });
-            }
-            try {
-                const response = await fetch(targetUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(req.body)
-                });
-                if (!response.ok) {
-                    return res.status(response.status).send(response.statusText);
-                }
-                const data = await response.json();
-                res.json(data);
-            }
-            catch (error) {
-                console.error(`Proxy POST error for ${targetUrl}:`, error);
-                res.status(500).json({ error: error.message });
-            }
-        });
+        // --- PROXY REMOVED ---
+        // The client now connects directly to Jeedom.
+        // If you see 404 on /api/proxy, it means the client code is outdated.
         // Vite middleware for development
         if (process.env.NODE_ENV !== "production") {
             const { createServer: createViteServer } = await import("vite");

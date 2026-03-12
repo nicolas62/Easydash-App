@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /api/
+
+Sitemap: https://easydash.fr/sitemap.xml

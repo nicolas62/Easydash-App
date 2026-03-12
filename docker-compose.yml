@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  easydash:
+    build: .
+    image: easydash:latest
+    container_name: easydash_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # Ajoutez d'autres variables d'environnement ici si besoin (ex: GEMINI_API_KEY)
