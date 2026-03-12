@@ -4,10 +4,10 @@
   "version": "0.8.2",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.ts",
+    "dev": "tsx src/server.ts",
     "start": "NODE_ENV=production node dist-server/server.js",
     "lint": "tsc --noEmit",
-    "build": "vite build && tsc server.ts --outDir dist-server --module esnext --target es2022 --moduleResolution bundler --noEmit false --esModuleInterop --skipLibCheck",
+    "build": "vite build && tsc src/server.ts --outDir dist-server --module esnext --target es2022 --moduleResolution bundler --noEmit false --esModuleInterop --skipLibCheck",
     "preview": "vite preview"
   },
   "dependencies": {

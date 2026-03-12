@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-jeedom-50: #f0f9ff;
+  --color-jeedom-100: #e0f2fe;
+  --color-jeedom-500: #0ea5e9;
+  --color-jeedom-600: #0284c7;
+  --color-jeedom-900: #0c4a6e;
+  
+  --color-dark-bg: var(--bg-app);
+  --color-dark-surface: var(--bg-surface);
+  --color-dark-card: var(--bg-card);
+  
+  --color-content-primary: var(--text-primary);
+  --color-content-secondary: var(--text-secondary);
+  --color-content-inverted: #ffffff;
+  
+  --color-border-DEFAULT: var(--border-divider);
+  --color-input-bg: var(--input-bg);
+
+  --animate-fade-in-up: fadeInUp 0.4s ease-out forwards;
+  --animate-pop: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --animate-pulse-fast: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-bounce-subtle: bounce-subtle 1s infinite;
+
+  @keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  @keyframes bounce-subtle {
+    0%, 100% { transform: translateY(-10%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+    50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+  }
+}
+
+:root {
+  --bg-app: #121212;
+  --bg-surface: #1e1e1e;
+  --bg-card: #252525;
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --border-divider: #1f2937;
+  --input-bg: #111827;
+}
+
+[data-theme="light"] {
+  --bg-app: #f3f4f6;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --border-divider: #e5e7eb;
+  --input-bg: #f9fafb;
+}
+
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom Scrollbar for sleek look */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-divider);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* React Grid Layout Resize Handle */
+.react-grid-item .react-resizable-handle {
+  z-index: 100 !important;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+  position: absolute;
+}
+.react-grid-item .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
+  border-bottom-right-radius: 2px;
+  transition: border-color 0.2s;
+  opacity: 0.5;
+}
+.react-grid-item:hover .react-resizable-handle::after {
+  opacity: 0.9;
+}
