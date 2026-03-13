@@ -15,6 +15,9 @@ interface MainContentProps {
   activeDashboard?: Dashboard;
   currentWidgets: WidgetConfig[];
   commands: JeedomCommand[];
+  scenarios: any[];
+  settings: any;
+  onScenarioClick: (scenarioId: string) => void;
   isEditMode: boolean;
   sensors: any;
   handleDragEnd: (event: DragEndEvent) => void;
@@ -33,6 +36,9 @@ const MainContent: React.FC<MainContentProps> = ({
   activeDashboard,
   currentWidgets,
   commands,
+  scenarios,
+  settings,
+  onScenarioClick,
   isEditMode,
   sensors,
   handleDragEnd,
@@ -149,13 +155,16 @@ const MainContent: React.FC<MainContentProps> = ({
             <SortableContext items={currentWidgets.map(w => w.id)} strategy={rectSortingStrategy}>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                 {currentWidgets.map(widget => (
-                  <SortableWidget key={widget.id} id={widget.id} isEditMode={isEditMode}>
+                  <SortableWidget key={widget.id} id={widget.id} size={widget.size || "small"} isEditMode={isEditMode}>
                     <WidgetCard
-                      config={widget}
+                      widget={widget}
                       commands={commands}
-                      isEditMode={isEditMode}
+                      scenarios={scenarios}
+                      settings={settings}
+                      editMode={isEditMode}
                       onEdit={() => onEditWidget(widget)}
                       onDelete={() => onDeleteWidget(widget.id)}
+                      onScenarioClick={onScenarioClick}
                     />
                   </SortableWidget>
                 ))}

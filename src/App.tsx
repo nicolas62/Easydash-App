@@ -204,6 +204,9 @@ const App: React.FC = () => {
             onDeleteDashboard={handleDeleteDashboard}
           />
           <MainContent
+            scenarios={scenarios}
+            settings={settings}
+            onScenarioClick={handleScenarioClick}
             mainRef={mainRef}
             pullChange={pullChange}
             isLoading={isLoading}
