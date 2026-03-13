@@ -13,7 +13,7 @@ services:
       - test_wp_wordpress_network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.easydash.rule=Host(`devjee.gauthier-nicolas.fr`)"
+      - "traefik.http.routers.easydash.rule=Host(`devjee.gauthier-nicolas.fr`) || Host(`easydash.fr`) || Host(`www.easydash.fr`)"
       - "traefik.http.routers.easydash.entrypoints=websecure"
       - "traefik.http.routers.easydash.tls.certresolver=letsencrypt"
       - "traefik.http.services.easydash.loadbalancer.server.port=3000"
