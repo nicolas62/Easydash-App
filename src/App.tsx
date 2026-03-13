@@ -41,7 +41,7 @@ const App: React.FC = () => {
   }
 
   const { notification, setNotification } = useNotifications();
-  const { settings, setSettings, isSettingsLoaded, performResetConfig } = useSettings();
+  const { settings, setSettings, isSettingsLoaded, performResetConfig, handleImportConfig: importSettings } = useSettings();
   
   const { 
     dashboards, 
@@ -55,7 +55,7 @@ const App: React.FC = () => {
     handleSaveWidget,
     handleSaveDashboard,
     handleDeleteDashboard,
-    handleImportConfig
+    handleImportConfig: importDashboards
   } = useDashboards();
 
   const { eqLogics, commands, scenarios, isLoading, loadAvailableData, refreshWidgetValues, setCommands } = useJeedomData(settings, isSettingsLoaded, widgets, setNotification);
@@ -234,7 +234,8 @@ const App: React.FC = () => {
         dashboards={dashboards}
         widgets={widgets}
         onImportConfig={(data) => {
-          handleImportConfig(data);
+          importDashboards(data);
+          importSettings(data);
           setIsSettingsOpen(false);
         }}
         isWidgetEditorOpen={isWidgetEditorOpen}
