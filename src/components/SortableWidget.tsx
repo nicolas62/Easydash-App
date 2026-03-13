@@ -1,23 +1,15 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import WidgetCard from './WidgetCard';
-import { WidgetConfig, JeedomCommand, JeedomScenario } from '../types';
 
 interface SortableWidgetProps {
-    widget: WidgetConfig;
-    commands: JeedomCommand[];
-    scenarios: JeedomScenario[];
-    settings: any;
-    editMode: boolean;
-    isConnected?: boolean;
-    onEdit: (widget: WidgetConfig) => void;
-    onDelete: (id: string) => void;
-    onScenarioClick: (scenarioId: string) => void;
-    onActionSuccess?: () => void;
+    id: string;
+    size: 'small' | 'medium' | 'large' | 'wide';
+    isEditMode: boolean;
+    children: React.ReactNode;
 }
 
-const SortableWidget: React.FC<SortableWidgetProps> = (props) => {
+const SortableWidget: React.FC<SortableWidgetProps> = ({ id, size, isEditMode, children }) => {
     const {
         attributes,
         listeners,
@@ -26,8 +18,8 @@ const SortableWidget: React.FC<SortableWidgetProps> = (props) => {
         transition,
         isDragging,
     } = useSortable({ 
-        id: props.widget.id,
-        disabled: !props.editMode, // Disable drag if not in edit mode
+        id: id,
+        disabled: !isEditMode, // Disable drag if not in edit mode
     });
 
     const style = {
@@ -51,13 +43,9 @@ const SortableWidget: React.FC<SortableWidgetProps> = (props) => {
             style={style} 
             {...attributes} 
             {...listeners}
-            className={`${sizeClasses[props.widget.size]} touch-none`}
+            className={`${sizeClasses[size] || sizeClasses.small} touch-none`}
         >
-            <WidgetCard 
-                {...props} 
-                className="h-full w-full" 
-                // Pass style to handle transform if needed, but wrapper handles it
-            />
+            {children}
         </div>
     );
 };
