@@ -131,11 +131,13 @@ const Modals: React.FC<ModalsProps> = ({
         onClose={closeScenarioModal}
         scenarios={scenarios}
         onScenarioClick={onScenarioClick}
+        settings={settings}
       />
       <ScenarioDetailsModal
         isOpen={isScenarioDetailsOpen}
         onClose={closeScenarioDetails}
         scenario={selectedScenario}
+        settings={settings}
       />
       <ConfirmationModal
         isOpen={isResetConfirmationOpen}
