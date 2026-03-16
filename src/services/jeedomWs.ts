@@ -14,7 +14,6 @@ class JeedomWebSocketService {
     private reconnectTimeout: NodeJS.Timeout | null = null;
     private reconnectAttempts = 0;
     private isConnecting = false;
-    private pingInterval: NodeJS.Timeout | null = null;
     private currentAttempt: 'A' | 'B' = 'A';
 
     private constructor() {}
@@ -63,8 +62,7 @@ class JeedomWebSocketService {
             clearTimeout(this.reconnectTimeout);
             this.reconnectTimeout = null;
         }
-        this.stopPing();
-        
+
         if (this.ws) {
             // Prevent auto-reconnect on intentional disconnect
             this.ws.onclose = null;
@@ -143,13 +141,10 @@ class JeedomWebSocketService {
                 this.currentAttempt = 'A'; // Reset for future reconnects
                 this.setStatus('OPEN');
                 
-                // Authenticate
+                // Authenticate — seul usage autorisé de ws.send()
                 this.send({
                     apikey: this.settings?.apiKey
                 });
-
-                // Start Ping (Keep Alive)
-                this.startPing();
             };
 
             this.ws.onmessage = (event) => {
@@ -164,7 +159,6 @@ class JeedomWebSocketService {
             this.ws.onclose = (event) => {
                 this.isConnecting = false;
                 this.setStatus('CLOSED');
-                this.stopPing();
                 
                 if (!hasOpened && this.currentAttempt === 'A') {
                     // Fallback to B with 1000ms delay
@@ -245,24 +239,6 @@ class JeedomWebSocketService {
             this.reconnectAttempts++;
             this.initConnection();
         }, delay);
-    }
-
-    private startPing() {
-        this.stopPing();
-        this.pingInterval = setInterval(() => {
-            if (this.ws?.readyState === WebSocket.OPEN) {
-                // Send empty object or specific ping if needed. 
-                // Jeedom usually keeps connection alive but sending {} is safe.
-                this.send({}); 
-            }
-        }, 30000); // 30s ping
-    }
-
-    private stopPing() {
-        if (this.pingInterval) {
-            clearInterval(this.pingInterval);
-            this.pingInterval = null;
-        }
     }
 
     public subscribe(cmdId: string, callback: JeedomEventCallback) {
