@@ -590,35 +590,59 @@ export const fetchJeedomScenarios = async (settings: AppSettings): Promise<Jeedo
     }
 };
 
+/**
+ * Helper: exécute une action scénario avec double fallback (RPC → HTTP → erreur claire)
+ * Ne relance jamais d'erreur si au moins l'une des méthodes réussit.
+ */
+const executeScenarioAction = async (
+    settings: AppSettings,
+    scenarioId: string,
+    rpcState: string,
+    httpAction: string
+): Promise<void> => {
+    // Tentative 1 : JSON-RPC
+    let rpcError: any = null;
+    try {
+        console.log(`[scenario] RPC attempt: scenario::changeState id=${scenarioId} state=${rpcState}`);
+        await jeedomJsonRpcCall(settings, 'scenario::changeState', { id: scenarioId, state: rpcState });
+        console.log(`[scenario] RPC success: state=${rpcState}`);
+        return; // succès → on sort
+    } catch (e: any) {
+        rpcError = e;
+        console.warn(`[scenario] RPC failed (state=${rpcState}):`, e?.message || e);
+    }
+
+    // Tentative 2 : HTTP API fallback
+    try {
+        console.log(`[scenario] HTTP fallback attempt: type=scenario id=${scenarioId} action=${httpAction}`);
+        const result = await jeedomApiCall(settings, { type: 'scenario', id: scenarioId, action: httpAction });
+        console.log(`[scenario] HTTP fallback success:`, result);
+        return; // succès → on sort
+    } catch (e: any) {
+        console.error(`[scenario] HTTP fallback also failed (action=${httpAction}):`, e?.message || e);
+        // Les deux méthodes ont échoué → on remonte une erreur claire
+        const isNetworkError = (err: any) => err?.message?.includes('ECHEC_RESEAU') || err?.name === 'TypeError';
+        if (isNetworkError(rpcError) || isNetworkError(e)) {
+            throw new Error(`Impossible de joindre Jeedom. Vérifiez la connexion réseau et les paramètres CORS.`);
+        }
+        throw new Error(`Echec action scénario. RPC: ${rpcError?.message || '?'} | HTTP: ${e?.message || '?'}`);
+    }
+};
+
 export const executeScenario = async (settings: AppSettings, scenarioId: string): Promise<void> => {
     if (settings.useDemoMode) return;
-    try {
-        await jeedomJsonRpcCall(settings, 'scenario::changeState', { id: scenarioId, state: 'run' });
-    } catch (e) {
-        console.warn("RPC failed, trying HTTP API for scenario execution...");
-        await jeedomApiCall(settings, { type: 'scenario', id: scenarioId, action: 'start' });
-    }
+    await executeScenarioAction(settings, scenarioId, 'run', 'start');
 };
 
 export const stopScenario = async (settings: AppSettings, scenarioId: string): Promise<void> => {
     if (settings.useDemoMode) return;
-    try {
-        await jeedomJsonRpcCall(settings, 'scenario::changeState', { id: scenarioId, state: 'stop' });
-    } catch (e) {
-        console.warn("RPC failed, trying HTTP API for scenario stop...");
-        await jeedomApiCall(settings, { type: 'scenario', id: scenarioId, action: 'stop' });
-    }
+    await executeScenarioAction(settings, scenarioId, 'stop', 'stop');
 };
 
 export const toggleScenarioState = async (settings: AppSettings, scenarioId: string, currentState: boolean): Promise<void> => {
     if (settings.useDemoMode) return;
     const state = currentState ? 'disable' : 'enable';
-    try {
-        await jeedomJsonRpcCall(settings, 'scenario::changeState', { id: scenarioId, state: state });
-    } catch (e) {
-        console.warn("RPC failed, trying HTTP API for scenario toggle...");
-        await jeedomApiCall(settings, { type: 'scenario', id: scenarioId, action: state });
-    }
+    await executeScenarioAction(settings, scenarioId, state, state);
 };
 
 export const getJeedomHistory = async (settings: AppSettings, commandId: string, startTime: string, endTime: string): Promise<any[]> => {
