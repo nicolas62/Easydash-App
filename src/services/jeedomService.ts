@@ -178,9 +178,10 @@ const jeedomApiCall = async (settings: AppSettings, params: Record<string, strin
                 return cleanText;
             }
 
-            // Gestion spécifique pour les scénarios : Jeedom retourne souvent "ok" (texte brut) pour start/stop/activate/deactivate
-            if (params.type === 'scenario' && (cleanText === 'ok' || cleanText === '"ok"')) {
-                return { result: 'ok' };
+            // Gestion spécifique pour les scénarios : Jeedom retourne souvent "ok", "1", "true"
+            // ou d'autres valeurs texte brutes (non-JSON) pour start/stop/activate/deactivate
+            if (params.type === 'scenario') {
+                return { result: cleanText || 'ok' };
             }
 
             // Affichage d'un extrait de la réponse pour le debug

@@ -58,7 +58,7 @@ const CommandSelector: React.FC<CommandSelectorProps> = ({
     // Trouver le nom de la commande sélectionnée pour l'affichage
     const selectedCommandName = useMemo(() => {
         if (!value) return null;
-        for (const eq of availableEqLogics) {
+        for (const eq of (availableEqLogics || [])) {
             const cmd = eq.cmds?.find(c => c.id === value);
             if (cmd) return `${eq.name} - ${cmd.name}`;
         }
@@ -68,8 +68,8 @@ const CommandSelector: React.FC<CommandSelectorProps> = ({
     // Filtrer les données
     const filteredData = useMemo(() => {
         const lowerSearch = searchTerm.toLowerCase();
-        
-        return availableEqLogics.map(eq => {
+
+        return (availableEqLogics || []).map(eq => {
             // Filtrer les commandes par type ET par recherche
             const matchingCmds = (eq.cmds || []).filter(cmd => {
                 const typeMatch = filterType === 'all' || cmd.type === filterType;
@@ -154,16 +154,16 @@ const CommandSelector: React.FC<CommandSelectorProps> = ({
 // --- FIN COMPOSANT INTERNE ---
 
 const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, onSave, initialData, availableEqLogics, availableScenarios = [], dashboardId, settings }) => {
-    const [scenarios, setScenarios] = useState<JeedomScenario[]>(availableScenarios);
+    const [scenarios, setScenarios] = useState<JeedomScenario[]>(availableScenarios || []);
     const [isLoadingScenarios, setIsLoadingScenarios] = useState(false);
     const [scenarioError, setScenarioError] = useState<string | null>(null);
 
     // Debug logs
-    console.log("WidgetEditorModal Render. Scenarios count:", scenarios.length, "Available props:", availableScenarios.length);
+    console.log("WidgetEditorModal Render. Scenarios count:", (scenarios || []).length, "Available props:", (availableScenarios || []).length);
 
     // Sync with props but allow local override
     useEffect(() => {
-        if (availableScenarios.length > 0) {
+        if ((availableScenarios || []).length > 0) {
             console.log("Syncing scenarios from props:", availableScenarios.length);
             setScenarios(availableScenarios);
         }
