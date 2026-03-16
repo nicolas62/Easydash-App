@@ -52,8 +52,10 @@ const ScenarioModal: React.FC<ScenarioModalProps> = ({ isOpen, onClose, settings
                 loadScenarios();
                 setExecutingId(null);
             }, 2000);
-        } catch (e) {
-            setToast({ message: "Echec lancement", type: 'error' });
+        } catch (e: any) {
+            const msg = e?.message ? `Echec: ${e.message.substring(0, 80)}` : "Echec lancement";
+            setToast({ message: msg, type: 'error' });
+            console.error("[ScenarioModal] handleRun error:", e);
             setExecutingId(null);
         }
     };

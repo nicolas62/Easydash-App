@@ -30,8 +30,10 @@ const ScenarioDetailsModal: React.FC<ScenarioDetailsModalProps> = ({ isOpen, onC
                 onUpdate();
                 setLoading(false);
             }, 1000);
-        } catch (e) {
-            setToast({ message: "Echec lancement", type: 'error' });
+        } catch (e: any) {
+            const msg = e?.message ? `Echec: ${e.message.substring(0, 80)}` : "Echec lancement";
+            setToast({ message: msg, type: 'error' });
+            console.error("[ScenarioDetailsModal] handleRun error:", e);
             setLoading(false);
         }
     };
@@ -45,8 +47,10 @@ const ScenarioDetailsModal: React.FC<ScenarioDetailsModalProps> = ({ isOpen, onC
                 onUpdate();
                 setLoading(false);
             }, 1000);
-        } catch (e) {
-            setToast({ message: "Echec arrêt", type: 'error' });
+        } catch (e: any) {
+            const msg = e?.message ? `Echec arrêt: ${e.message.substring(0, 80)}` : "Echec arrêt";
+            setToast({ message: msg, type: 'error' });
+            console.error("[ScenarioDetailsModal] handleStop error:", e);
             setLoading(false);
         }
     };
