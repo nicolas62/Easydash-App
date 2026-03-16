@@ -105,11 +105,11 @@ const Modals: React.FC<ModalsProps> = ({
       <WidgetEditorModal
         isOpen={isWidgetEditorOpen}
         onClose={closeWidgetEditor}
-        widget={editingWidget}
+        initialData={editingWidget}
         onSave={onSaveWidget}
-        eqLogics={eqLogics}
-        commands={commands}
-        activeDashboardId={activeDashboardId}
+        availableEqLogics={eqLogics}
+        dashboardId={activeDashboardId}
+        settings={settings}
       />
       <DashboardModal
         isOpen={isDashboardModalOpen}
