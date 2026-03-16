@@ -206,7 +206,15 @@ const App: React.FC = () => {
           <MainContent
             scenarios={scenarios}
             settings={settings}
-            onScenarioClick={handleScenarioClick}
+            onScenarioClick={(scenarioIdOrObj: any) => {
+              // WidgetCard passes a string ID, handleScenarioClick expects a JeedomScenario object
+              if (typeof scenarioIdOrObj === 'string') {
+                const found = scenarios.find(s => s.id === scenarioIdOrObj);
+                if (found) handleScenarioClick(found);
+              } else {
+                handleScenarioClick(scenarioIdOrObj);
+              }
+            }}
             mainRef={mainRef}
             pullChange={pullChange}
             isLoading={isLoading}

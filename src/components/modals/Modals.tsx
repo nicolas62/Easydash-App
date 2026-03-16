@@ -138,6 +138,7 @@ const Modals: React.FC<ModalsProps> = ({
         onClose={closeScenarioDetails}
         scenario={selectedScenario}
         settings={settings}
+        onUpdate={() => {}}
       />
       <ConfirmationModal
         isOpen={isResetConfirmationOpen}
