@@ -1,8 +1,7 @@
 version: '3.8'
 services:
   easydash:
-    build: .
-    image: easydash:latest
+    image: ghcr.io/nicolas62/easydash:latest
     container_name: easydash_app
     restart: unless-stopped
     ports:
