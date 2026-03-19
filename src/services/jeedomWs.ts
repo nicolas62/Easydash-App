@@ -4,6 +4,9 @@ type JeedomEventCallback = (value: string | number) => void;
 export type ConnectionStatus = 'CONNECTING' | 'OPEN' | 'CLOSED';
 export type StatusCallback = (status: ConnectionStatus) => void;
 
+const HEARTBEAT_INTERVAL_MS = 30_000; // ping envoyé toutes les 30s
+const HEARTBEAT_TIMEOUT_MS = 90_000;  // reconnexion si aucun message depuis 90s
+
 class JeedomWebSocketService {
     private static instance: JeedomWebSocketService;
     private ws: WebSocket | null = null;
@@ -15,6 +18,8 @@ class JeedomWebSocketService {
     private reconnectAttempts = 0;
     private isConnecting = false;
     private currentAttempt: 'A' | 'B' = 'A';
+    private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+    private lastMessageTime = 0;
 
     private constructor() {}
 
@@ -58,6 +63,8 @@ class JeedomWebSocketService {
     }
 
     public disconnect() {
+        this.stopHeartbeat();
+
         if (this.reconnectTimeout) {
             clearTimeout(this.reconnectTimeout);
             this.reconnectTimeout = null;
@@ -70,9 +77,32 @@ class JeedomWebSocketService {
             this.ws.close();
             this.ws = null;
         }
-        
+
         this.isConnecting = false;
         this.setStatus('CLOSED');
+    }
+
+    private startHeartbeat() {
+        this.stopHeartbeat();
+        this.lastMessageTime = Date.now();
+
+        this.heartbeatInterval = setInterval(() => {
+            // Zombie detection : aucun message depuis trop longtemps
+            if (Date.now() - this.lastMessageTime > HEARTBEAT_TIMEOUT_MS) {
+                console.warn('[JeedomWS] ❤️ Connexion zombie détectée (aucun message depuis 90s). Reconnexion forcée.');
+                this.ws?.close();
+                return;
+            }
+            // Ping applicatif vers Jeedom
+            this.send({ type: 'ping' });
+        }, HEARTBEAT_INTERVAL_MS);
+    }
+
+    private stopHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
+        }
     }
 
     private getWsUrls(jeedomUrl: string): { urlA: string, urlB: string } {
@@ -140,7 +170,8 @@ class JeedomWebSocketService {
                 this.reconnectAttempts = 0;
                 this.currentAttempt = 'A'; // Reset for future reconnects
                 this.setStatus('OPEN');
-                
+                this.startHeartbeat();
+
                 // Authenticate — seul usage autorisé de ws.send()
                 this.send({
                     apikey: this.settings?.apiKey
@@ -158,6 +189,7 @@ class JeedomWebSocketService {
 
             this.ws.onclose = (event) => {
                 this.isConnecting = false;
+                this.stopHeartbeat();
                 this.setStatus('CLOSED');
                 
                 if (!hasOpened && this.currentAttempt === 'A') {
@@ -209,12 +241,11 @@ class JeedomWebSocketService {
     }
 
     private handleMessage(data: any) {
-        // Jeedom WS format usually:
-        // { type: "event", event: "cmd", id: "123", value: "on" } or similar
-        // Or sometimes just { type: "event", id: "123", value: "..." }
-        
-        // Log for debug (remove in production if too noisy)
-        // console.log('[JeedomWS] Message:', data);
+        // Tout message reçu réinitialise le timer zombie
+        this.lastMessageTime = Date.now();
+
+        // Réponse au ping applicatif
+        if (data.type === 'pong') return;
 
         if (data.type === 'event' && (data.event === 'cmd' || data.id)) {
             const cmdId = String(data.id);
