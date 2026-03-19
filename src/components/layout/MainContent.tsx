@@ -155,7 +155,7 @@ const MainContent: React.FC<MainContentProps> = ({
         {currentWidgets.length > 0 && (
           <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
             <SortableContext items={currentWidgets.map(w => w.id)} strategy={rectSortingStrategy}>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 auto-rows-[minmax(140px,auto)] gap-4">
                 {currentWidgets.map(widget => (
                   <SortableWidget key={widget.id} id={widget.id} size={widget.size || "small"} isEditMode={isEditMode}>
                     <WidgetCard
