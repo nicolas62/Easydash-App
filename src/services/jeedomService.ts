@@ -144,21 +144,27 @@ const updateCachedUrl = (settings: AppSettings, newUrl: string) => {
  */
 const jeedomApiCall = async (settings: AppSettings, params: Record<string, string>) => {
     const baseUrl = getUrlToUse(settings);
-    
+
     const urlParams = new URLSearchParams();
     urlParams.append('apikey', settings.apiKey.trim());
     Object.keys(params).forEach(key => urlParams.append(key, params[key]));
-    
+
     const fetchUrl = `${baseUrl}?${urlParams.toString()}`;
 
     try {
-        const response = await fetchWithTimeout(fetchUrl, {
-            method: 'GET',
-            mode: 'cors',
-            credentials: 'omit',
-            referrerPolicy: 'no-referrer',
-            headers: { 'Accept': 'application/json' }
-        });
+        const response = settings.useProxy
+            ? await fetchWithTimeout('/api/proxy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: fetchUrl, method: 'GET' })
+              })
+            : await fetchWithTimeout(fetchUrl, {
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'omit',
+                referrerPolicy: 'no-referrer',
+                headers: { 'Accept': 'application/json' }
+              });
 
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -219,30 +225,29 @@ const jeedomApiCall = async (settings: AppSettings, params: Record<string, strin
 // --- JSON RPC CALL ---
 const jeedomJsonRpcCall = async (settings: AppSettings, method: string, params: any = {}, timeoutMs = DEFAULT_TIMEOUT_MS) => {
     const baseUrl = getUrlToUse(settings);
-    
-    // Prepare the JSON-RPC payload
+
     const rpcPayload = {
         jsonrpc: "2.0",
-        method: method,
-        params: {
-            apikey: settings.apiKey.trim(),
-            ...params
-        },
+        method,
+        params: { apikey: settings.apiKey.trim(), ...params },
         id: Date.now()
     };
 
     try {
-        const response = await fetchWithTimeout(baseUrl, {
-            method: 'POST',
-            mode: 'cors',
-            credentials: 'omit',
-            referrerPolicy: 'no-referrer',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(rpcPayload)
-        }, timeoutMs);
+        const response = settings.useProxy
+            ? await fetchWithTimeout('/api/proxy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: baseUrl, method: 'POST', body: rpcPayload })
+              }, timeoutMs)
+            : await fetchWithTimeout(baseUrl, {
+                method: 'POST',
+                mode: 'cors',
+                credentials: 'omit',
+                referrerPolicy: 'no-referrer',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(rpcPayload)
+              }, timeoutMs);
 
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
