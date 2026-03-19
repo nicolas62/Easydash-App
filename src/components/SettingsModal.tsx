@@ -321,7 +321,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                                     </div>
 
                                     <label className="flex items-center space-x-3 p-3 border border-border rounded-lg bg-input-bg cursor-pointer">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             name="useWebSocket"
                                             checked={formData.useWebSocket !== false}
@@ -332,8 +332,26 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                                             <span className="block text-sm font-medium text-content-primary">Utiliser WebSocket</span>
                                             <span className="block text-xs text-content-secondary">
                                                 {formData.useWebSocket !== false
-                                                    ? "Connexion en temps réel activée. Décocher en cas de problème de connexion." 
+                                                    ? "Connexion en temps réel activée. Décocher en cas de problème de connexion."
                                                     : "Désactivé. L'application utilisera uniquement le rafraîchissement périodique."}
+                                            </span>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-center space-x-3 p-3 border border-border rounded-lg bg-input-bg cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            name="useProxy"
+                                            checked={!!formData.useProxy}
+                                            onChange={handleChange}
+                                            className="w-5 h-5 text-jeedom-500 rounded focus:ring-jeedom-500 bg-input-bg border-border"
+                                        />
+                                        <div>
+                                            <span className="block text-sm font-medium text-content-primary">Mode Proxy</span>
+                                            <span className="block text-xs text-content-secondary">
+                                                {formData.useProxy
+                                                    ? "Activé. Les requêtes transitent par le serveur EasyDash (résout les erreurs CORS)."
+                                                    : "Désactivé. Activer si EasyDash est sur un domaine différent de Jeedom."}
                                             </span>
                                         </div>
                                     </label>
