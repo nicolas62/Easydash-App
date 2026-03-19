@@ -27,9 +27,24 @@ async function startServer() {
       res.status(200).send("OK");
     });
 
-    // --- PROXY REMOVED ---
-    // The client now connects directly to Jeedom.
-    // If you see 404 on /api/proxy, it means the client code is outdated.
+    // Proxy HTTP → Jeedom (résout les problèmes CORS pour les accès externes)
+    app.use(express.json());
+    app.post("/api/proxy", async (req: any, res: any) => {
+      const { url, method = 'POST', body } = req.body || {};
+      if (!url) return res.status(400).json({ error: 'Missing url' });
+      try {
+        const fetchOptions: RequestInit = {
+          method,
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        };
+        if (method === 'POST' && body) fetchOptions.body = JSON.stringify(body);
+        const upstream = await fetch(url, fetchOptions);
+        const text = await upstream.text();
+        res.status(upstream.status).send(text);
+      } catch (e: any) {
+        res.status(502).json({ error: e.message });
+      }
+    });
 
 
   // Vite middleware for development
