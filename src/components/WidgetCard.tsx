@@ -55,6 +55,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     const [loading, setLoading] = useState(false);
     const [animateValue, setAnimateValue] = useState(false);
     const [chartData, setChartData] = useState<{ time: number; value: number }[]>([]);
+    const [chartError, setChartError] = useState<string | null>(null);
     const [optimisticValue, setOptimisticValue] = useState<string | number | undefined>(undefined);
 
     const isGridLayout = className?.includes('react-grid-item');
@@ -88,12 +89,20 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                 const rawData = data.map((item: any) => ({
                     time: new Date(item.datetime).getTime(),
                     value: parseFloat(item.value),
-                }));
+                })).filter((p: { time: number; value: number }) => !isNaN(p.value));
                 const aggregated = aggregateChartData(rawData, widget.chartAggregation || 'none');
-                cacheService.set(cacheKey, aggregated);
+                if (aggregated.length > 0) {
+                    cacheService.set(cacheKey, aggregated); // Ne cache pas les résultats vides
+                    setChartError(null);
+                } else {
+                    setChartError('Aucune donnée historique. Vérifiez que la commande est historisée dans Jeedom.');
+                }
                 setChartData(aggregated);
-            } catch (e) {
+            } catch (e: any) {
                 console.error('Failed to load chart data', e);
+                setChartError(e?.message?.includes('CORS') || e?.message?.includes('fetch')
+                    ? 'Erreur réseau — activez le Mode Proxy dans les paramètres.'
+                    : 'Erreur lors du chargement des données.');
             }
         };
 
@@ -308,11 +317,17 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                         animateValue={animateValue}
                     />
                 ) : isChart ? (
-                    <ChartWidget
-                        widget={widget}
-                        chartData={chartData}
-                        isColorized={isColorized}
-                    />
+                    chartError ? (
+                        <div className="flex items-center justify-center h-full p-3 text-center">
+                            <p className="text-xs text-orange-400 leading-snug">{chartError}</p>
+                        </div>
+                    ) : (
+                        <ChartWidget
+                            widget={widget}
+                            chartData={chartData}
+                            isColorized={isColorized}
+                        />
+                    )
                 ) : (
                     <ActionWidget
                         widget={widget}
