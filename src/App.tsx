@@ -12,6 +12,7 @@ import { usePolling } from './hooks/usePolling';
 import { useSwipe } from './hooks/useSwipe';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useNotifications } from './hooks/useNotifications';
+import { jeedomWs } from './services/jeedomWs';
 
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
@@ -89,7 +90,17 @@ const App: React.FC = () => {
   
   usePolling(settings, isSettingsLoaded, refreshWidgetValues, widgets, activeDashboardId);
   useWebSocket(settings, isSettingsLoaded, updateCommandValues);
-  
+
+  // Rafraîchit les valeurs au changement de dashboard uniquement si le WS ne gère pas les updates
+  useEffect(() => {
+    if (!isSettingsLoaded || jeedomWs.isConnected()) return;
+    const currentWidgets = widgets.filter(w => {
+      if (activeDashboardId === 'default') return w.isFavorite;
+      return w.dashboardId === activeDashboardId;
+    });
+    if (currentWidgets.length > 0) refreshWidgetValues(currentWidgets);
+  }, [activeDashboardId, isSettingsLoaded]);
+
   const handleTouchStart = (e: React.TouchEvent) => {
     handlePullToRefreshTouchStart(e);
     handleSwipeTouchStart(e);
