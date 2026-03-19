@@ -53,8 +53,8 @@ export function useJeedomData(settings: AppSettings, isSettingsLoaded: boolean, 
           const newCmds = [...prevCmds];
           let hasChanges = false;
           updates.forEach(update => {
-              const index = newCmds.findIndex(c => c.id == update.id); 
-              if (index !== -1 && newCmds[index].value != update.value) { 
+              const index = newCmds.findIndex(c => String(c.id) === String(update.id));
+              if (index !== -1 && String(newCmds[index].value) !== String(update.value)) {
                    newCmds[index] = { ...newCmds[index], value: update.value };
                    hasChanges = true;
               }

@@ -33,6 +33,10 @@ interface ModalsProps {
   confirmDeleteWidget: () => void;
   cancelDeleteWidget: () => void;
   widgetToDelete?: WidgetConfig;
+  deleteDashboardId: string | null;
+  confirmDeleteDashboard: () => void;
+  cancelDeleteDashboard: () => void;
+  dashboardToDelete?: Dashboard;
   isHelpModalOpen: boolean;
   closeHelpModal: () => void;
   isContactModalOpen: boolean;
@@ -74,6 +78,10 @@ const Modals: React.FC<ModalsProps> = ({
   confirmDeleteWidget,
   cancelDeleteWidget,
   widgetToDelete,
+  deleteDashboardId,
+  confirmDeleteDashboard,
+  cancelDeleteDashboard,
+  dashboardToDelete,
   isHelpModalOpen,
   closeHelpModal,
   isContactModalOpen,
@@ -114,23 +122,29 @@ const Modals: React.FC<ModalsProps> = ({
       <DashboardModal
         isOpen={isDashboardModalOpen}
         onClose={closeDashboardModal}
-        dashboard={editingDashboard}
+        initialData={editingDashboard}
         onSave={onSaveDashboard}
       />
       <ConfirmationModal
         isOpen={!!deleteWidgetId}
         onConfirm={confirmDeleteWidget}
-        onCancel={cancelDeleteWidget}
+        onClose={cancelDeleteWidget}
         title="Supprimer le widget"
         message={`Êtes-vous sûr de vouloir supprimer le widget "${widgetToDelete?.name}" ?`}
+      />
+      <ConfirmationModal
+        isOpen={!!deleteDashboardId}
+        onConfirm={confirmDeleteDashboard}
+        onClose={cancelDeleteDashboard}
+        title="Supprimer le dashboard"
+        message={`Supprimer "${dashboardToDelete?.name}" et tous ses widgets ?`}
+        confirmLabel="Supprimer"
       />
       <HelpModal isOpen={isHelpModalOpen} onClose={closeHelpModal} />
       <ContactModal isOpen={isContactModalOpen} onClose={closeContactModal} />
       <ScenarioModal
         isOpen={isScenarioModalOpen}
         onClose={closeScenarioModal}
-        scenarios={scenarios}
-        onScenarioClick={onScenarioClick}
         settings={settings}
       />
       <ScenarioDetailsModal
@@ -143,11 +157,10 @@ const Modals: React.FC<ModalsProps> = ({
       <ConfirmationModal
         isOpen={isResetConfirmationOpen}
         onConfirm={performResetConfig}
-        onCancel={closeResetConfirmation}
+        onClose={closeResetConfirmation}
         title="Réinitialiser la configuration"
         message="Toute votre configuration locale (widgets, dashboards) sera perdue. Les données sur votre Jeedom ne seront pas affectées. Continuer ?"
-        confirmText="Réinitialiser"
-        isDestructive
+        confirmLabel="Réinitialiser"
       />
       <ReleaseNotesModal isOpen={isReleaseNotesOpen} onClose={closeReleaseNotes} />
     </>

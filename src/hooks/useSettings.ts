@@ -51,7 +51,14 @@ export function useSettings() {
   }, [settings.theme]);
 
   const handleImportConfig = (data: { settings?: AppSettings }) => {
-    if (data.settings) setSettings(data.settings);
+    if (data.settings) {
+      const s = data.settings;
+      if (typeof s.jeedomUrl !== 'string' || typeof s.apiKey !== 'string' || typeof s.refreshInterval !== 'number') {
+        console.error("Import ignoré : données settings invalides", s);
+        return;
+      }
+      setSettings({ ...DEFAULT_SETTINGS, ...s });
+    }
   };
 
   const performResetConfig = () => {

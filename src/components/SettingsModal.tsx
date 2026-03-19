@@ -34,6 +34,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
     const [driveStatus, setDriveStatus] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
     const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
     const [pendingImport, setPendingImport] = useState<{ settings?: AppSettings, dashboards?: Dashboard[], widgets?: WidgetConfig[] } | null>(null);
+    const [importError, setImportError] = useState<string | null>(null);
 
     // Sync form data when settings change or modal opens
     useEffect(() => {
@@ -126,9 +127,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
         reader.onload = (event) => {
             try {
                 const json = JSON.parse(event.target?.result as string);
+                setImportError(null);
                 setPendingImport(json);
             } catch (err) {
-                alert("Erreur lors de la lecture du fichier de configuration.");
+                setImportError("Fichier invalide : impossible de lire le JSON.");
                 console.error(err);
             }
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -431,6 +433,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                                             <span>Importer une configuration</span>
                                         </label>
                                     </div>
+                                    {importError && (
+                                        <p className="mt-2 text-xs text-red-400 px-1">{importError}</p>
+                                    )}
                                     {pendingImport ? (
                                         <div className="mt-3 p-3 rounded-xl border border-jeedom-500/40 bg-jeedom-500/10 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
                                             <p className="text-xs font-medium text-jeedom-500">Fichier chargé — comment l'appliquer ?</p>

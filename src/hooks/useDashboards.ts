@@ -53,12 +53,10 @@ export function useDashboards() {
   };
 
   const handleDeleteDashboard = (id: string) => {
-      if (dashboards.length <= 1) return alert("Vous devez avoir au moins un dashboard.");
-      if (window.confirm("Supprimer ce dashboard et tous ses widgets ?")) {
-          setDashboards(dashboards.filter(d => d.id !== id));
-          setWidgets(widgets.filter(w => w.dashboardId !== id));
-          if (activeDashboardId === id) setActiveDashboardId(dashboards[0].id);
-      }
+      if (dashboards.length <= 1) return;
+      setDashboards(dashboards.filter(d => d.id !== id));
+      setWidgets(widgets.filter(w => w.dashboardId !== id));
+      if (activeDashboardId === id) setActiveDashboardId(dashboards[0].id);
   };
   
     const handleImportConfig = (

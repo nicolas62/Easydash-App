@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Dispatch, SetStateAction } from 'react';
 import { WidgetConfig, WidgetCategory, JeedomScenario, Dashboard } from '../types';
 import { ICONS } from '../constants';
 import React from 'react';
@@ -21,7 +21,7 @@ import {
     Layers,
   } from 'lucide-react';
 
-export function useUI(loadAvailableData: () => void, dashboards: Dashboard[], activeDashboardId: string, setActiveDashboardId: (id: string) => void, setDashboards: (d: Dashboard[]) => void) {
+export function useUI(loadAvailableData: () => void, dashboards: Dashboard[], activeDashboardId: string, setActiveDashboardId: (id: string) => void, setDashboards: Dispatch<SetStateAction<Dashboard[]>>) {
   const [activeFilter, setActiveFilter] = useState<WidgetCategory>('all');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -34,6 +34,7 @@ export function useUI(loadAvailableData: () => void, dashboards: Dashboard[], ac
   const [selectedScenario, setSelectedScenario] = useState<JeedomScenario | null>(null);
   const [isResetConfirmationOpen, setIsResetConfirmationOpen] = useState(false);
   const [deleteWidgetId, setDeleteWidgetId] = useState<string | null>(null);
+  const [deleteDashboardId, setDeleteDashboardId] = useState<string | null>(null);
   const [editingWidget, setEditingWidget] = useState<WidgetConfig | undefined>(undefined);
   const [isReleaseNotesOpen, setIsReleaseNotesOpen] = useState(false);
 
@@ -70,6 +71,14 @@ export function useUI(loadAvailableData: () => void, dashboards: Dashboard[], ac
   const confirmDeleteWidget = (callback: () => void) => {
     callback();
     setDeleteWidgetId(null);
+  };
+
+  const handleDeleteDashboardClick = (id: string) => {
+    setDeleteDashboardId(id);
+  };
+
+  const cancelDeleteDashboard = () => {
+    setDeleteDashboardId(null);
   };
   
   const handleAddDashboard = () => { 
@@ -110,12 +119,15 @@ export function useUI(loadAvailableData: () => void, dashboards: Dashboard[], ac
     setIsResetConfirmationOpen,
     deleteWidgetId,
     setDeleteWidgetId,
+    deleteDashboardId,
     editingWidget,
     setEditingWidget,
     handleAddWidget,
     handleEditWidget,
     handleDeleteWidgetClick,
     confirmDeleteWidget,
+    handleDeleteDashboardClick,
+    cancelDeleteDashboard,
     handleAddDashboard,
     handleEditDashboard,
     handleScenarioClick,
