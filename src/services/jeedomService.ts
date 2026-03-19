@@ -431,53 +431,34 @@ export const fetchSpecificCommandValues = async (settings: AppSettings, cmdIds: 
     if (settings.useDemoMode) {
         return cmdIds.map(id => ({ id, value: Math.floor(Math.random() * 100) }));
     }
-    
-    const promises = cmdIds.map(async (id) => {
+
+    const fetchOne = async (id: string): Promise<{id: string, value: string | number} | null> => {
         try {
-            let val = await jeedomJsonRpcCall(settings, 'cmd::execCmd', { id: id });
-            
-            // Unpack object if needed
+            let val = await jeedomJsonRpcCall(settings, 'cmd::execCmd', { id });
             if (val && typeof val === 'object') {
-                if (val.value !== undefined) val = val.value;
-                else if (val.result !== undefined) val = val.result;
+                val = val.value !== undefined ? val.value : (val.result !== undefined ? val.result : JSON.stringify(val));
             }
-            
-            // Ensure primitive for display
-            if (val && typeof val === 'object') {
-                try {
-                    val = JSON.stringify(val);
-                } catch (e) {
-                    val = String(val);
-                }
-            }
-
             return { id, value: val };
-        } catch (e) {
+        } catch {
             try {
-                const res = await jeedomApiCall(settings, { type: 'cmd', id: id });
-                let val = res;
-                
+                let val = await jeedomApiCall(settings, { type: 'cmd', id });
                 if (val && typeof val === 'object') {
-                    if (val.result !== undefined) val = val.result;
-                    else if (val.value !== undefined) val = val.value;
+                    val = val.result !== undefined ? val.result : (val.value !== undefined ? val.value : JSON.stringify(val));
                 }
-
-                if (val && typeof val === 'object') {
-                    try {
-                        val = JSON.stringify(val);
-                    } catch (e) {
-                        val = String(val);
-                    }
-                }
-                
                 return { id, value: val };
-            } catch (e2) {
+            } catch {
                 return null;
             }
         }
-    });
+    };
 
-    const results = await Promise.all(promises);
+    // Limite la concurrence à 3 requêtes simultanées pour éviter les ban IP
+    const CHUNK = 3;
+    const results: Array<{id: string, value: string | number} | null> = [];
+    for (let i = 0; i < cmdIds.length; i += CHUNK) {
+        const chunk = await Promise.all(cmdIds.slice(i, i + CHUNK).map(fetchOne));
+        results.push(...chunk);
+    }
     return results.filter(r => r !== null) as Array<{id: string, value: string | number}>;
 };
 

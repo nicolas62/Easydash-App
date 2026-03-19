@@ -58,7 +58,7 @@ const App: React.FC = () => {
     handleImportConfig: importDashboards
   } = useDashboards();
 
-  const { eqLogics, commands, scenarios, isLoading, loadAvailableData, refreshWidgetValues, setCommands } = useJeedomData(settings, isSettingsLoaded, widgets, setNotification);
+  const { eqLogics, commands, scenarios, isLoading, loadAvailableData, refreshWidgetValues, updateCommandValues } = useJeedomData(settings, isSettingsLoaded, widgets, setNotification);
   
   const {
     isSettingsOpen, setIsSettingsOpen,
@@ -88,18 +88,7 @@ const App: React.FC = () => {
   const { sensors, handleDragEnd } = useDnd(setWidgets);
   
   usePolling(settings, isSettingsLoaded, refreshWidgetValues, widgets, activeDashboardId);
-  useWebSocket(settings, isSettingsLoaded);
-  
-  useEffect(() => {
-    if (!isSettingsLoaded) return;
-    const currentWidgets = widgets.filter(w => {
-      if (activeDashboardId === 'default') return w.isFavorite;
-      return w.dashboardId === activeDashboardId;
-    });
-    if (currentWidgets.length > 0) {
-      refreshWidgetValues(currentWidgets);
-    }
-  }, [activeDashboardId, isSettingsLoaded, refreshWidgetValues, widgets]);
+  useWebSocket(settings, isSettingsLoaded, updateCommandValues);
   
   const handleTouchStart = (e: React.TouchEvent) => {
     handlePullToRefreshTouchStart(e);
