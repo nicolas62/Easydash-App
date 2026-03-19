@@ -13,6 +13,10 @@ export function useJeedomData(settings: AppSettings, isSettingsLoaded: boolean, 
   const [scenarios, setScenarios] = useState<JeedomScenario[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const isFetchingRef = useRef(false);
+  const consecutiveErrorsRef = useRef(0);
+  const lastErrorTimeRef = useRef(0);
+  const BACKOFF_THRESHOLD = 3;       // erreurs avant backoff
+  const BACKOFF_MS = 2 * 60_000;     // 2 minutes de silence après threshold
 
   useEffect(() => { localStorage.setItem('jeedom_eqLogics', JSON.stringify(eqLogics)); }, [eqLogics]);
 
@@ -66,10 +70,17 @@ export function useJeedomData(settings: AppSettings, isSettingsLoaded: boolean, 
 
   const refreshWidgetValues = useCallback(async (widgetsToRefresh: WidgetConfig[]) => {
       if (widgetsToRefresh.length === 0) return;
-      
-      if (isFetchingRef.current) {
-          console.log("Skipping refresh: Request already in progress");
-          return;
+
+      if (isFetchingRef.current) return;
+
+      // Backoff : trop d'échecs consécutifs → pause de 2 minutes
+      if (consecutiveErrorsRef.current >= BACKOFF_THRESHOLD) {
+          const elapsed = Date.now() - lastErrorTimeRef.current;
+          if (elapsed < BACKOFF_MS) {
+              console.warn(`[Refresh] Backoff actif (${consecutiveErrorsRef.current} erreurs). Reprise dans ${Math.round((BACKOFF_MS - elapsed) / 1000)}s`);
+              return;
+          }
+          consecutiveErrorsRef.current = 0; // reset après expiration du backoff
       }
 
       isFetchingRef.current = true;
@@ -89,8 +100,18 @@ export function useJeedomData(settings: AppSettings, isSettingsLoaded: boolean, 
       if (uniqueIds.length > 0) {
           try {
               const updates = await fetchSpecificCommandValues(settings, uniqueIds);
-              updateCommandValues(updates);
+              if (updates.length === 0) {
+                  // Toutes les requêtes ont échoué
+                  consecutiveErrorsRef.current++;
+                  lastErrorTimeRef.current = Date.now();
+                  console.warn(`[Refresh] Échec total (${consecutiveErrorsRef.current}/${BACKOFF_THRESHOLD})`);
+              } else {
+                  consecutiveErrorsRef.current = 0;
+                  updateCommandValues(updates);
+              }
           } catch (e) {
+              consecutiveErrorsRef.current++;
+              lastErrorTimeRef.current = Date.now();
               console.error("Error refreshing widget values", e);
           } finally {
               isFetchingRef.current = false;
