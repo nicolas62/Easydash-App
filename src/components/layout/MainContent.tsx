@@ -19,6 +19,7 @@ interface MainContentProps {
   settings: any;
   onScenarioClick: (scenarioId: string) => void;
   isEditMode: boolean;
+  onAddWidget?: () => void;
   sensors: any;
   handleDragEnd: (event: DragEndEvent) => void;
   onEditWidget: (widget: WidgetConfig) => void;
@@ -40,6 +41,7 @@ const MainContent: React.FC<MainContentProps> = ({
   settings,
   onScenarioClick,
   isEditMode,
+  onAddWidget,
   sensors,
   handleDragEnd,
   onEditWidget,
@@ -173,6 +175,18 @@ const MainContent: React.FC<MainContentProps> = ({
           </DndContext>
         )}
       </div>
+
+      {/* FAB — Ajouter un widget (visible uniquement en mode édition) */}
+      {isEditMode && onAddWidget && (
+        <button
+          onClick={onAddWidget}
+          className="absolute bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-jeedom-500 hover:bg-jeedom-400 text-white rounded-full shadow-lg shadow-jeedom-500/30 hover:scale-105 active:scale-95 transition-all animate-in zoom-in duration-200"
+          title="Ajouter un widget"
+        >
+          <Plus size={18} />
+          <span className="text-sm font-medium">Widget</span>
+        </button>
+      )}
     </main>
   );
 };

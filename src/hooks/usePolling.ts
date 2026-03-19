@@ -24,22 +24,31 @@ export function usePolling(
 
         console.log(`Starting polling with interval: ${intervalTime}ms (WS Enabled: ${isWsEnabled})`);
 
-        const intervalId = setInterval(async () => {
-            const currentActiveId = activeDashboardIdRef.current;
+        let isRunning = false;
 
+        const intervalId = setInterval(async () => {
+            if (isRunning) return;
+
+            const currentActiveId = activeDashboardIdRef.current;
             const currentWidgets = widgetsRef.current.filter(w => {
                 if (currentActiveId === 'default') return w.isFavorite;
                 return w.dashboardId === currentActiveId;
             });
 
-            if (currentWidgets.length > 0) {
+            if (currentWidgets.length === 0) return;
+
+            isRunning = true;
+            try {
                 await refreshWidgetValues(currentWidgets);
+            } finally {
+                isRunning = false;
             }
         }, intervalTime);
 
         return () => {
             console.log("Stopping polling");
             clearInterval(intervalId);
+            isRunning = false;
         };
     }, [settings.refreshInterval, settings.useWebSocket, settings.useDemoMode, isSettingsLoaded, refreshWidgetValues]);
 }

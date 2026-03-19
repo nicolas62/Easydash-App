@@ -38,6 +38,19 @@ const MOCK_SCENARIOS: JeedomScenario[] = [
 
 // --- HELPERS ---
 
+const DEFAULT_TIMEOUT_MS = 10_000;
+const LONG_TIMEOUT_MS = 30_000;
+
+/**
+ * Wrapper fetch avec AbortController pour éviter les requêtes zombies.
+ * Lance une erreur TIMEOUT_ERROR si le délai est dépassé.
+ */
+const fetchWithTimeout = (url: string, options: RequestInit, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<Response> => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+};
+
 // Convertit n'importe quoi (Objet ou Tableau) en Tableau
 const normalizeList = (data: any): any[] => {
     if (!data) return [];
@@ -139,14 +152,14 @@ const jeedomApiCall = async (settings: AppSettings, params: Record<string, strin
     const fetchUrl = `${baseUrl}?${urlParams.toString()}`;
 
     try {
-        const response = await fetch(fetchUrl, {
+        const response = await fetchWithTimeout(fetchUrl, {
             method: 'GET',
             mode: 'cors',
             credentials: 'omit',
             referrerPolicy: 'no-referrer',
             headers: { 'Accept': 'application/json' }
         });
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -190,8 +203,11 @@ const jeedomApiCall = async (settings: AppSettings, params: Record<string, strin
         }
     } catch (error: any) {
         console.error(`API Fail [${JSON.stringify(params)}]:`, error);
+        if (error.name === 'AbortError') {
+            throw new Error(`TIMEOUT: Jeedom n'a pas répondu dans les temps (${DEFAULT_TIMEOUT_MS / 1000}s). Vérifiez que le serveur est accessible.`);
+        }
         if (error.message === 'Failed to fetch' || error.name === 'TypeError' || (error.message && error.message.includes('ECHEC_RESEAU'))) {
-            throw new Error(`ECHEC_RESEAU: Impossible de joindre Jeedom (${baseUrl}). 
+            throw new Error(`ECHEC_RESEAU: Impossible de joindre Jeedom (${baseUrl}).
             1. Le serveur est peut-être inaccessible (Port 443 fermé ?).
             2. Si certificat auto-signé : Ouvrez l'URL Jeedom dans un nouvel onglet et acceptez le risque.
             3. Vérifiez le CORS dans Jeedom.`);
@@ -201,7 +217,7 @@ const jeedomApiCall = async (settings: AppSettings, params: Record<string, strin
 };
 
 // --- JSON RPC CALL ---
-const jeedomJsonRpcCall = async (settings: AppSettings, method: string, params: any = {}) => {
+const jeedomJsonRpcCall = async (settings: AppSettings, method: string, params: any = {}, timeoutMs = DEFAULT_TIMEOUT_MS) => {
     const baseUrl = getUrlToUse(settings);
     
     // Prepare the JSON-RPC payload
@@ -216,7 +232,7 @@ const jeedomJsonRpcCall = async (settings: AppSettings, method: string, params: 
     };
 
     try {
-        const response = await fetch(baseUrl, {
+        const response = await fetchWithTimeout(baseUrl, {
             method: 'POST',
             mode: 'cors',
             credentials: 'omit',
@@ -226,7 +242,7 @@ const jeedomJsonRpcCall = async (settings: AppSettings, method: string, params: 
                 'Accept': 'application/json'
             },
             body: JSON.stringify(rpcPayload)
-        });
+        }, timeoutMs);
 
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -250,8 +266,11 @@ const jeedomJsonRpcCall = async (settings: AppSettings, method: string, params: 
              throw error;
         }
         console.error(`RPC Fail [${method}]:`, error);
+        if (error.name === 'AbortError') {
+            throw new Error(`TIMEOUT: Jeedom n'a pas répondu dans les temps (${timeoutMs / 1000}s). Vérifiez que le serveur est accessible.`);
+        }
         if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
-            throw new Error(`ECHEC_RESEAU: Impossible de joindre Jeedom (${baseUrl}). 
+            throw new Error(`ECHEC_RESEAU: Impossible de joindre Jeedom (${baseUrl}).
             1. Le serveur est peut-être inaccessible (Port 443 fermé ?).
             2. Si certificat auto-signé : Ouvrez l'URL Jeedom dans un nouvel onglet et acceptez le risque.
             3. Vérifiez le CORS dans Jeedom.`);
@@ -695,20 +714,20 @@ export const getJeedomUsbMapping = async (settings: AppSettings): Promise<Record
 
 export const jeedomReboot = async (settings: AppSettings): Promise<void> => {
     if (settings.useDemoMode) return new Promise(resolve => setTimeout(resolve, 2000));
-    await jeedomJsonRpcCall(settings, 'jeedom::reboot');
+    await jeedomJsonRpcCall(settings, 'jeedom::reboot', {}, LONG_TIMEOUT_MS);
 };
 
 export const jeedomHalt = async (settings: AppSettings): Promise<void> => {
     if (settings.useDemoMode) return new Promise(resolve => setTimeout(resolve, 2000));
-    await jeedomJsonRpcCall(settings, 'jeedom::halt');
+    await jeedomJsonRpcCall(settings, 'jeedom::halt', {}, LONG_TIMEOUT_MS);
 };
 
 export const jeedomUpdate = async (settings: AppSettings): Promise<void> => {
     if (settings.useDemoMode) return new Promise(resolve => setTimeout(resolve, 2000));
-    await jeedomJsonRpcCall(settings, 'update::update');
+    await jeedomJsonRpcCall(settings, 'update::update', {}, LONG_TIMEOUT_MS);
 };
 
 export const jeedomBackup = async (settings: AppSettings): Promise<void> => {
     if (settings.useDemoMode) return new Promise(resolve => setTimeout(resolve, 2000));
-    await jeedomJsonRpcCall(settings, 'jeedom::backup');
+    await jeedomJsonRpcCall(settings, 'jeedom::backup', {}, LONG_TIMEOUT_MS);
 };
