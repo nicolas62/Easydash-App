@@ -93,6 +93,11 @@ export function useJeedomData(settings: AppSettings, isSettingsLoaded: boolean, 
           }
           else if (w.type === 'toggle' && w.infoId) idsToFetch.add(w.infoId);
           else if (w.type === 'action' && w.infoId) idsToFetch.add(w.infoId);
+          else if (w.type === 'thermostat') {
+              if (w.currentTempCmdId) idsToFetch.add(w.currentTempCmdId);
+              if (w.setpointCmdId) idsToFetch.add(w.setpointCmdId);
+              if (w.stateCmdId) idsToFetch.add(w.stateCmdId);
+          }
           if (w.displayInfoId) idsToFetch.add(w.displayInfoId);
       });
 

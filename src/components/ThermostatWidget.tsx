@@ -1,20 +1,28 @@
 import React, { useMemo } from 'react';
-import { WidgetConfig, AppSettings } from '../types';
+import { WidgetConfig, AppSettings, JeedomCommand } from '../types';
 import { useJeedomCommand } from '../hooks/useJeedomCommand';
 import { executeJeedomCommand } from '../services/jeedomService';
-import { Plus, Minus, Thermometer, Flame, Snowflake, Power } from 'lucide-react';
+import { Plus, Minus, Thermometer, Flame, Snowflake } from 'lucide-react';
 
 interface ThermostatWidgetProps {
     widget: WidgetConfig;
     settings: AppSettings;
     isColorized: boolean;
+    commands?: JeedomCommand[];
 }
 
-const ThermostatWidget: React.FC<ThermostatWidgetProps> = ({ widget, settings, isColorized }) => {
+const ThermostatWidget: React.FC<ThermostatWidgetProps> = ({ widget, settings, isColorized, commands = [] }) => {
+    // --- INITIAL VALUES from loaded commands ---
+    const findInitialValue = (cmdId?: string): string | number | undefined => {
+        if (!cmdId) return undefined;
+        const cmd = commands.find(c => String(c.id) === String(cmdId));
+        return cmd?.value as string | number | undefined;
+    };
+
     // --- REAL-TIME DATA ---
-    const currentTemp = useJeedomCommand(widget.currentTempCmdId, undefined);
-    const setpoint = useJeedomCommand(widget.setpointCmdId, undefined);
-    const state = useJeedomCommand(widget.stateCmdId, undefined);
+    const currentTemp = useJeedomCommand(widget.currentTempCmdId, findInitialValue(widget.currentTempCmdId));
+    const setpoint = useJeedomCommand(widget.setpointCmdId, findInitialValue(widget.setpointCmdId));
+    const state = useJeedomCommand(widget.stateCmdId, findInitialValue(widget.stateCmdId));
 
     // --- LOGIC ---
     const isHeating = useMemo(() => {
