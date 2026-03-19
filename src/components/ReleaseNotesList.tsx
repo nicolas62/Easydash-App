@@ -3,6 +3,20 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.8.3",
+        date: "19 Mars 2026",
+        features: [
+            { type: 'fix', text: "Correction du bug mode édition : le bouton 'Ajouter un widget' était absent — un bouton flottant apparaît désormais en bas à droite lors de l'édition." },
+            { type: 'improvement', text: "Refactorisation de WidgetCard en sous-composants (ChartWidget, InfoWidget, ActionWidget) pour une meilleure maintenabilité." },
+            { type: 'fix', text: "Correction du type scenarioId dans App.tsx : suppression du cast `any` et de la branche morte dans le handler." },
+            { type: 'improvement', text: "Race condition dans usePolling corrigée : les requêtes de rafraîchissement ne peuvent plus se superposer." },
+            { type: 'improvement', text: "Heartbeat WebSocket : détection automatique des connexions zombie (silence > 90s) et reconnexion forcée." },
+            { type: 'improvement', text: "Import de configuration : choix entre Fusionner (ajoute sans écraser) ou Remplacer tout, pour les imports fichier et Google Drive." },
+            { type: 'improvement', text: "Pipeline CI/CD : build et push automatique de l'image Docker sur ghcr.io à chaque commit sur main." },
+            { type: 'fix', text: "Ajout d'un .dockerignore pour éviter que les binaires node_modules Windows écrasent ceux du conteneur Linux." },
+        ]
+    },
+    {
         version: "0.8.2",
         date: "6 Mars 2026",
         features: [
