@@ -305,7 +305,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                 {isCamera ? (
                     <CameraWidget widget={widget} settings={settings} isColorized={isColorized} />
                 ) : isThermostat ? (
-                    <ThermostatWidget widget={widget} settings={settings} isColorized={isColorized} />
+                    <ThermostatWidget widget={widget} settings={settings} isColorized={isColorized} commands={commands} />
                 ) : isWeather ? (
                     <WeatherWidget widget={widget} isColorized={isColorized} />
                 ) : isInfoType ? (
