@@ -1,6 +1,7 @@
 import { AppSettings } from '../types';
 
 type JeedomEventCallback = (value: string | number) => void;
+type CommandUpdateCallback = (updates: Array<{id: string, value: string | number}>) => void;
 export type ConnectionStatus = 'CONNECTING' | 'OPEN' | 'CLOSED';
 export type StatusCallback = (status: ConnectionStatus) => void;
 
@@ -17,6 +18,7 @@ class JeedomWebSocketService {
     private reconnectTimeout: NodeJS.Timeout | null = null;
     private reconnectAttempts = 0;
     private isConnecting = false;
+    private commandUpdateCallback: CommandUpdateCallback | null = null;
     private currentAttempt: 'A' | 'B' = 'A';
     private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
     private lastMessageTime = 0;
@@ -35,6 +37,14 @@ class JeedomWebSocketService {
             this.currentStatus = status;
             this.statusSubscribers.forEach(cb => cb(status));
         }
+    }
+
+    public isConnected(): boolean {
+        return this.currentStatus === 'OPEN';
+    }
+
+    public onUpdate(callback: CommandUpdateCallback) {
+        this.commandUpdateCallback = callback;
     }
 
     public onStatusChange(callback: StatusCallback) {
@@ -247,13 +257,18 @@ class JeedomWebSocketService {
         // Réponse au ping applicatif
         if (data.type === 'pong') return;
 
-        if (data.type === 'event' && (data.event === 'cmd' || data.id)) {
+        if (data.id !== undefined) {
             const cmdId = String(data.id);
             const value = data.value;
 
-            if (cmdId && this.subscribers.has(cmdId)) {
-                const callbacks = this.subscribers.get(cmdId);
-                callbacks?.forEach(cb => cb(value));
+            // Mise à jour globale (remplace le polling HTTP)
+            if (this.commandUpdateCallback) {
+                this.commandUpdateCallback([{ id: cmdId, value }]);
+            }
+
+            // Abonnements par commande (usage interne optionnel)
+            if (this.subscribers.has(cmdId)) {
+                this.subscribers.get(cmdId)?.forEach(cb => cb(value));
             }
         }
     }

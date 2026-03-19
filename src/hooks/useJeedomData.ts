@@ -116,34 +116,31 @@ export function useJeedomData(settings: AppSettings, isSettingsLoaded: boolean, 
 
   const initialLoad = useCallback(async () => {
     if (!isSettingsLoaded) return;
-    
     if (!settings.useDemoMode && (!settings.jeedomUrl || !settings.apiKey)) return;
 
     setIsLoading(true);
     setNotification(null);
     try {
+      // 1 requête : scénarios
       const scenes = await fetchJeedomScenarios(settings);
       setScenarios(scenes);
 
-      await refreshWidgetValues(widgets);
+      // 1 requête : toutes les données équipements + valeurs courantes incluses
+      // Évite N requêtes individuelles cmd::execCmd au démarrage
+      await loadAvailableData();
 
-      if (widgets.length > 0 && eqLogics.length === 0) {
-          await loadAvailableData();
-      }
-
-      if (!settings.useDemoMode && scenes.length === 0 && widgets.length === 0 && eqLogics.length === 0) {
-           setNotification({ 
-              message: 'Bienvenue ! Commencez par créer un widget ou vérifiez votre connexion.', 
-              type: 'success' 
+      if (!settings.useDemoMode && scenes.length === 0 && widgets.length === 0) {
+          setNotification({
+              message: 'Bienvenue ! Commencez par créer un widget ou vérifiez votre connexion.',
+              type: 'success'
           });
       }
-
     } catch (err: any) {
       setNotification({ message: err.message || 'Erreur de connexion', type: 'error' });
     } finally {
       setIsLoading(false);
     }
-  }, [settings, isSettingsLoaded, widgets, eqLogics.length, refreshWidgetValues, loadAvailableData]);
+  }, [settings, isSettingsLoaded, widgets.length, loadAvailableData]);
 
   useEffect(() => {
     if (isSettingsLoaded) {
@@ -151,5 +148,5 @@ export function useJeedomData(settings: AppSettings, isSettingsLoaded: boolean, 
     }
   }, [initialLoad, isSettingsLoaded]);
 
-  return { eqLogics, commands, scenarios, isLoading, loadAvailableData, refreshWidgetValues, setCommands };
+  return { eqLogics, commands, scenarios, isLoading, loadAvailableData, refreshWidgetValues, updateCommandValues, setCommands };
 }

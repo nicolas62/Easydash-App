@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { AppSettings } from '../types';
-import { WidgetConfig } from '../types';
+import { AppSettings, WidgetConfig } from '../types';
+import { jeedomWs } from '../services/jeedomWs';
 
 export function usePolling(
     settings: AppSettings, 
@@ -28,6 +28,8 @@ export function usePolling(
 
         const intervalId = setInterval(async () => {
             if (isRunning) return;
+            // Le WebSocket gère les mises à jour en temps réel — pas besoin de polluer l'API HTTP
+            if (jeedomWs.isConnected()) return;
 
             const currentActiveId = activeDashboardIdRef.current;
             const currentWidgets = widgetsRef.current.filter(w => {
