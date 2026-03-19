@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { JeedomEqLogic, JeedomCommand, JeedomScenario, AppSettings, WidgetConfig } from '../types';
 import { fetchJeedomFullData, fetchSpecificCommandValues, fetchJeedomScenarios } from '../services/jeedomService';
+import { jeedomWs } from '../services/jeedomWs';
 import { ToastType } from '../components/Toast';
 
 export function useJeedomData(settings: AppSettings, isSettingsLoaded: boolean, widgets: WidgetConfig[], setNotification: (notification: {message: string, type: ToastType} | null) => void) {
@@ -121,13 +122,19 @@ export function useJeedomData(settings: AppSettings, isSettingsLoaded: boolean, 
     setIsLoading(true);
     setNotification(null);
     try {
-      // 1 requête : scénarios
+      // Requête 1 : scénarios
       const scenes = await fetchJeedomScenarios(settings);
       setScenarios(scenes);
 
-      // 1 requête : toutes les données équipements + valeurs courantes incluses
-      // Évite N requêtes individuelles cmd::execCmd au démarrage
+      // Requête 2 : structure complète + valeurs cachées Jeedom
       await loadAvailableData();
+
+      // Requête 3 (chunked, max 3 simultanées) : valeurs live des widgets du dashboard courant
+      // Nécessaire car jeeObject::full peut retourner des valeurs null pour certains plugins.
+      // Sautée si le WebSocket est déjà connecté et prend en charge les mises à jour.
+      if (!jeedomWs.isConnected() && widgets.length > 0) {
+          await refreshWidgetValues(widgets);
+      }
 
       if (!settings.useDemoMode && scenes.length === 0 && widgets.length === 0) {
           setNotification({
@@ -140,7 +147,7 @@ export function useJeedomData(settings: AppSettings, isSettingsLoaded: boolean, 
     } finally {
       setIsLoading(false);
     }
-  }, [settings, isSettingsLoaded, widgets.length, loadAvailableData]);
+  }, [settings, isSettingsLoaded, widgets, loadAvailableData, refreshWidgetValues]);
 
   useEffect(() => {
     if (isSettingsLoaded) {
