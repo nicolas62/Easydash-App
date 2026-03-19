@@ -19,8 +19,10 @@ export function usePolling(
         if (!isSettingsLoaded) return;
 
         const isWsEnabled = settings.useWebSocket !== false && !settings.useDemoMode;
-        const minInterval = isWsEnabled ? 300000 : 2000;
-        const intervalTime = Math.max(minInterval, settings.refreshInterval || 5000);
+        // Si WS activé : 5 min minimum (le WS gère les updates temps réel)
+        // Si WS désactivé : 30s minimum (évite les bursts qui déclenchent le ban IP)
+        const minInterval = isWsEnabled ? 300_000 : 30_000;
+        const intervalTime = Math.max(minInterval, settings.refreshInterval || 30_000);
 
         console.log(`Starting polling with interval: ${intervalTime}ms (WS Enabled: ${isWsEnabled})`);
 
