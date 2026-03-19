@@ -14,7 +14,7 @@ interface SettingsModalProps {
     onSave: (settings: AppSettings) => void;
     dashboards?: Dashboard[];
     widgets?: WidgetConfig[];
-    onImport?: (data: { settings?: AppSettings, dashboards?: Dashboard[], widgets?: WidgetConfig[] }) => void;
+    onImport?: (data: { settings?: AppSettings, dashboards?: Dashboard[], widgets?: WidgetConfig[] }, mode: 'replace' | 'merge') => void;
 }
 
 type Tab = 'general' | 'health' | 'data';
@@ -33,6 +33,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
     const [driveLoading, setDriveLoading] = useState(false);
     const [driveStatus, setDriveStatus] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
     const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
+    const [pendingImport, setPendingImport] = useState<{ settings?: AppSettings, dashboards?: Dashboard[], widgets?: WidgetConfig[] } | null>(null);
 
     // Sync form data when settings change or modal opens
     useEffect(() => {
@@ -125,17 +126,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
         reader.onload = (event) => {
             try {
                 const json = JSON.parse(event.target?.result as string);
-                if (onImport) {
-                    onImport(json);
-                }
+                setPendingImport(json);
             } catch (err) {
                 alert("Erreur lors de la lecture du fichier de configuration.");
                 console.error(err);
             }
-            // Reset input
             if (fileInputRef.current) fileInputRef.current.value = '';
         };
         reader.readAsText(file);
+    };
+
+    const confirmImport = (mode: 'replace' | 'merge') => {
+        if (pendingImport && onImport) {
+            onImport(pendingImport, mode);
+        }
+        setPendingImport(null);
     };
 
     const handleSaveToDrive = async () => {
@@ -163,9 +168,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
         setDriveStatus(null);
         try {
             const data = await loadConfigFromDrive();
-            if (onImport && data) {
-                onImport(data);
-                setDriveStatus({ message: "Configuration restaurée depuis Google Drive !", type: 'success' });
+            if (data) {
+                setPendingImport(data);
+                setDriveStatus({ message: "Configuration chargée. Choisissez le mode d'import ci-dessous.", type: 'success' });
             }
         } catch (error) {
             setDriveStatus({ message: "Erreur lors de la restauration depuis Drive.", type: 'error' });
@@ -426,9 +431,39 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                                             <span>Importer une configuration</span>
                                         </label>
                                     </div>
-                                    <p className="text-xs text-content-secondary mt-2 px-1 text-orange-400/80">
-                                        Attention : L'importation écrasera votre configuration actuelle.
-                                    </p>
+                                    {pendingImport ? (
+                                        <div className="mt-3 p-3 rounded-xl border border-jeedom-500/40 bg-jeedom-500/10 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                            <p className="text-xs font-medium text-jeedom-500">Fichier chargé — comment l'appliquer ?</p>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => confirmImport('merge')}
+                                                    className="flex-1 py-2 px-3 rounded-lg bg-jeedom-500 hover:bg-jeedom-400 text-white text-xs font-medium transition-colors"
+                                                >
+                                                    Fusionner
+                                                </button>
+                                                <button
+                                                    onClick={() => confirmImport('replace')}
+                                                    className="flex-1 py-2 px-3 rounded-lg bg-dark-card hover:bg-input-bg border border-orange-500/50 text-orange-400 text-xs font-medium transition-colors"
+                                                >
+                                                    Remplacer tout
+                                                </button>
+                                                <button
+                                                    onClick={() => setPendingImport(null)}
+                                                    className="py-2 px-3 rounded-lg bg-dark-card hover:bg-input-bg border border-border text-content-secondary text-xs transition-colors"
+                                                >
+                                                    Annuler
+                                                </button>
+                                            </div>
+                                            <p className="text-xs text-content-secondary">
+                                                <span className="text-jeedom-500 font-medium">Fusionner</span> : ajoute les nouveaux dashboards/widgets sans toucher à l'existant.<br />
+                                                <span className="text-orange-400 font-medium">Remplacer</span> : écrase toute la configuration actuelle.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-content-secondary mt-2 px-1">
+                                            Vous pourrez choisir de fusionner ou de remplacer après sélection du fichier.
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Google Drive Sync Section */}

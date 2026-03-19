@@ -17,7 +17,7 @@ interface ModalsProps {
   onSaveSettings: (settings: AppSettings) => void;
   dashboards: Dashboard[];
   widgets: WidgetConfig[];
-  onImportConfig: (data: any) => void;
+  onImportConfig: (data: any, mode: 'replace' | 'merge') => void;
   isWidgetEditorOpen: boolean;
   closeWidgetEditor: () => void;
   editingWidget?: WidgetConfig;
