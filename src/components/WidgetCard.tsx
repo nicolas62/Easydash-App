@@ -155,7 +155,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
             if (inactiveIconName) {
                 const val = optimisticValue !== undefined ? optimisticValue
                     : (mainValue !== undefined ? mainValue : mainCommand?.value);
-                const isActive = val == 1 || val === '1' || val === 'on';
+                const isActive = val === 1 || val === '1' || val === 'on';
                 if (!isActive) return ICONS[inactiveIconName] || ICONS[widget.icon] || ICONS['help-circle'];
             }
         }
@@ -199,7 +199,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                 }
             } else if (widget.type === 'action' || widget.type === 'toggle' || widget.type === 'slider') {
                 if (widget.type === 'toggle' || widget.type === 'action') {
-                    const isActive = previousValue == 1 || previousValue === '1' || previousValue === 'on';
+                    const isActive = previousValue === 1 || previousValue === '1' || previousValue === 'on';
                     setOptimisticValue(isActive ? 0 : 1);
                 }
 

@@ -72,8 +72,10 @@ const App: React.FC = () => {
     selectedScenario,
     isResetConfirmationOpen, setIsResetConfirmationOpen,
     deleteWidgetId,
+    deleteDashboardId,
     editingWidget,
     handleAddWidget, handleEditWidget, handleDeleteWidgetClick, confirmDeleteWidget,
+    handleDeleteDashboardClick, cancelDeleteDashboard,
     handleAddDashboard, handleEditDashboard, handleScenarioClick,
     isReleaseNotesOpen, setIsReleaseNotesOpen
   } = useUI(loadAvailableData, dashboards, activeDashboardId, setActiveDashboardId, setDashboards);
@@ -115,6 +117,7 @@ const App: React.FC = () => {
 
   const activeDashboard = useMemo(() => dashboards.find(d => d.id === activeDashboardId), [dashboards, activeDashboardId]);
   const widgetToDelete = useMemo(() => widgets.find(w => w.id === deleteWidgetId), [widgets, deleteWidgetId]);
+  const dashboardToDelete = useMemo(() => dashboards.find(d => d.id === deleteDashboardId), [dashboards, deleteDashboardId]);
 
 
   if (!isSettingsLoaded) {
@@ -125,7 +128,7 @@ const App: React.FC = () => {
     );
   }
 
-  const isConfigured = settings.useDemoMode || (settings.jeedomUrl && settings.apiKey);
+  const isConfigured = settings.useDemoMode || !!(settings.jeedomUrl && settings.apiKey);
 
   if (!isConfigured) {
     return (
@@ -180,7 +183,7 @@ const App: React.FC = () => {
             setEditingDashboard(dashboard)
             handleEditDashboard(dashboard)
           }}
-          onDeleteDashboard={handleDeleteDashboard}
+          onDeleteDashboard={handleDeleteDashboardClick}
           openScenarios={() => setIsScenarioModalOpen(true)}
           openHelp={() => setIsHelpModalOpen(true)}
           openContact={() => setIsContactModalOpen(true)}
@@ -201,7 +204,7 @@ const App: React.FC = () => {
                 setEditingDashboard(dashboard)
                 handleEditDashboard(dashboard)
             }}
-            onDeleteDashboard={handleDeleteDashboard}
+            onDeleteDashboard={handleDeleteDashboardClick}
           />
           <MainContent
             scenarios={scenarios}
@@ -263,6 +266,10 @@ const App: React.FC = () => {
         confirmDeleteWidget={() => confirmDeleteWidget(() => setWidgets(widgets.filter(w => w.id !== deleteWidgetId)))}
         cancelDeleteWidget={() => handleDeleteWidgetClick('')}
         widgetToDelete={widgetToDelete}
+        deleteDashboardId={deleteDashboardId}
+        confirmDeleteDashboard={() => { if (deleteDashboardId) handleDeleteDashboard(deleteDashboardId); cancelDeleteDashboard(); }}
+        cancelDeleteDashboard={cancelDeleteDashboard}
+        dashboardToDelete={dashboardToDelete}
         isHelpModalOpen={isHelpModalOpen}
         closeHelpModal={() => setIsHelpModalOpen(false)}
         isContactModalOpen={isContactModalOpen}
