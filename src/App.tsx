@@ -237,8 +237,8 @@ const App: React.FC = () => {
         onSaveSettings={setSettings}
         dashboards={dashboards}
         widgets={widgets}
-        onImportConfig={(data) => {
-          importDashboards(data);
+        onImportConfig={(data, mode) => {
+          importDashboards(data, mode);
           importSettings(data);
           setIsSettingsOpen(false);
         }}

@@ -61,13 +61,31 @@ export function useDashboards() {
       }
   };
   
-    const handleImportConfig = (data: { dashboards?: Dashboard[], widgets?: WidgetConfig[] }) => {
-    if (data.dashboards) setDashboards(data.dashboards);
-    if (data.widgets) setWidgets(data.widgets);
-    
-    if (data.dashboards && data.dashboards.length > 0) {
-       const exists = data.dashboards.find(d => d.id === activeDashboardId);
-       if (!exists) setActiveDashboardId(data.dashboards[0].id);
+    const handleImportConfig = (
+    data: { dashboards?: Dashboard[], widgets?: WidgetConfig[] },
+    mode: 'replace' | 'merge' = 'replace'
+  ) => {
+    if (mode === 'replace') {
+      if (data.dashboards) setDashboards(data.dashboards);
+      if (data.widgets) setWidgets(data.widgets);
+      if (data.dashboards && data.dashboards.length > 0) {
+        const exists = data.dashboards.find(d => d.id === activeDashboardId);
+        if (!exists) setActiveDashboardId(data.dashboards[0].id);
+      }
+    } else {
+      // Merge : ajoute uniquement les entrées absentes (par ID)
+      if (data.dashboards) {
+        setDashboards(prev => [
+          ...prev,
+          ...data.dashboards!.filter(d => !prev.find(p => p.id === d.id)),
+        ]);
+      }
+      if (data.widgets) {
+        setWidgets(prev => [
+          ...prev,
+          ...data.widgets!.filter(w => !prev.find(p => p.id === w.id)),
+        ]);
+      }
     }
   };
 
