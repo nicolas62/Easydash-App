@@ -1,6 +1,7 @@
 {
   "short_name": "EasyDash",
-  "name": "EasyDash",
+  "name": "EasyDash – Dashboard Jeedom",
+  "description": "Interface domotique moderne et personnalisable pour Jeedom. Idéal pour tablette murale et smartphone.",
   "icons": [
     {
       "src": "/logo.png",
@@ -13,9 +14,11 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
   "theme_color": "#121212",
   "background_color": "#121212",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "lang": "fr",
+  "categories": ["utilities", "productivity"]
 }

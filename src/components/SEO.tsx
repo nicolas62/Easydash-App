@@ -13,8 +13,8 @@ const SEO: React.FC<SEOProps> = ({
     title = "EasyDash | Le Dashboard Moderne et Personnalisable pour Jeedom", 
     description = "Transformez votre domotique Jeedom avec EasyDash. Créez facilement une interface design, fluide et sur-mesure pour votre tablette murale ou votre smartphone.", 
     keywords = "Jeedom, dashboard Jeedom, interface domotique, tablette murale, smart home, EasyDash, widget domotique, design Jeedom",
-    image = "/og-image.jpg", // Assurez-vous d'avoir une image par défaut dans public/
-    url = "https://easydash.fr" // Remplacez par votre URL de production
+    image = "https://easydash.fr/logo.png",
+    url = "https://easydash.fr"
 }) => {
     return (
         <Helmet>
@@ -30,6 +30,8 @@ const SEO: React.FC<SEOProps> = ({
             <meta property="og:title" content={title} />
             <meta property="og:description" content={description} />
             <meta property="og:image" content={image} />
+            <meta property="og:locale" content="fr_FR" />
+            <meta property="og:site_name" content="EasyDash" />
 
             {/* Twitter */}
             <meta property="twitter:card" content="summary_large_image" />
