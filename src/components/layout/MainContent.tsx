@@ -6,6 +6,7 @@ import { WidgetConfig, Dashboard } from '../../types';
 import SortableWidget from '../SortableWidget';
 import { ICONS } from '../../constants';
 import WidgetCard from '../WidgetCard';
+import WidgetErrorBoundary from '../WidgetErrorBoundary';
 import { JeedomCommand } from '../../types';
 
 interface MainContentProps {
@@ -158,16 +159,18 @@ const MainContent: React.FC<MainContentProps> = ({
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 auto-rows-[minmax(140px,auto)] gap-4">
                 {currentWidgets.map(widget => (
                   <SortableWidget key={widget.id} id={widget.id} size={widget.size || "small"} isEditMode={isEditMode}>
-                    <WidgetCard
-                      widget={widget}
-                      commands={commands}
-                      scenarios={scenarios}
-                      settings={settings}
-                      editMode={isEditMode}
-                      onEdit={() => onEditWidget(widget)}
-                      onDelete={() => onDeleteWidget(widget.id)}
-                      onScenarioClick={onScenarioClick}
-                    />
+                    <WidgetErrorBoundary widgetName={widget.name}>
+                      <WidgetCard
+                        widget={widget}
+                        commands={commands}
+                        scenarios={scenarios}
+                        settings={settings}
+                        editMode={isEditMode}
+                        onEdit={() => onEditWidget(widget)}
+                        onDelete={() => onDeleteWidget(widget.id)}
+                        onScenarioClick={onScenarioClick}
+                      />
+                    </WidgetErrorBoundary>
                   </SortableWidget>
                 ))}
               </div>
