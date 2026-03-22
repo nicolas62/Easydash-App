@@ -97,6 +97,7 @@ export function useJeedomData(settings: AppSettings, isSettingsLoaded: boolean, 
               if (w.currentTempCmdId) idsToFetch.add(w.currentTempCmdId);
               if (w.setpointCmdId) idsToFetch.add(w.setpointCmdId);
               if (w.stateCmdId) idsToFetch.add(w.stateCmdId);
+              if (w.modeInfoCmdId) idsToFetch.add(w.modeInfoCmdId);
           }
           else if (w.type === 'slider') {
               if (w.sliderInfoId) idsToFetch.add(w.sliderInfoId);

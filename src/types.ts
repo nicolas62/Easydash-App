@@ -10,9 +10,11 @@ export interface WidgetConfig {
   type: 'info' | 'action' | 'toggle' | 'slider' | 'scenario' | 'chart' | 'camera' | 'thermostat' | 'weather';
   category?: WidgetCategory; // New field for filtering
   isFavorite?: boolean; // New field for Home/Favorites display
-  historyPeriod?: '24h' | '7d' | '30d'; // For chart widgets
+  historyPeriod?: '24h' | '7d' | '30d' | 'custom'; // For chart widgets
   chartType?: 'line' | 'bar'; // New field for chart type
   chartAggregation?: 'none' | 'daily_avg' | 'daily_max' | 'daily_sum'; // New field for data aggregation
+  chartCustomStart?: string; // ISO date 'YYYY-MM-DD' quand historyPeriod === 'custom'
+  chartCustomEnd?: string;
   
   // Camera specific
   streamUrl?: string;
@@ -24,6 +26,9 @@ export interface WidgetConfig {
   actionUpCmdId?: string;
   actionDownCmdId?: string;
   stateCmdId?: string; // e.g. "heating", "cooling", "off"
+  modeInfoCmdId?: string; // commande info pour le mode actuel (absent, eco, …)
+  awayModeCmdId?: string; // commande action pour activer le mode Absent
+  ecoModeCmdId?: string;  // commande action pour activer le mode Éco
 
   // Weather specific
   tempCmdId?: string;
@@ -41,6 +46,7 @@ export interface WidgetConfig {
   commandId?: string; // The ID to execute action or read info
   commandOffId?: string; // Specific ID for OFF action (for toggles)
   scenarioId?: string; // The ID of the scenario to execute
+  scenarioTags?: { name: string; value: string }[]; // Tags passés au scénario au lancement
   additionalCommandIds?: string[]; // For batch actions or legacy sequence
   sequenceSteps?: string[][]; // For multi-command sequence steps
   actionExecutionMode?: 'sequence' | 'batch'; // 'sequence' = cycle (1 click = 1 step), 'batch' = all at once
