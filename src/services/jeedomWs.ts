@@ -100,7 +100,19 @@ class JeedomWebSocketService {
             // Zombie detection : aucun message depuis trop longtemps
             if (Date.now() - this.lastMessageTime > HEARTBEAT_TIMEOUT_MS) {
                 console.warn('[JeedomWS] ❤️ Connexion zombie détectée (aucun message depuis 90s). Reconnexion forcée.');
-                this.ws?.close();
+                // On ne se fie pas à onclose (peut ne pas se déclencher sur réseau mort).
+                // On force la reconnexion directement ici.
+                this.stopHeartbeat();
+                this.isConnecting = false;
+                if (this.ws) {
+                    this.ws.onclose = null;
+                    this.ws.onerror = null;
+                    this.ws.close();
+                    this.ws = null;
+                }
+                this.setStatus('CLOSED');
+                this.currentAttempt = 'A';
+                this.scheduleReconnect();
                 return;
             }
             // Ping applicatif vers Jeedom
