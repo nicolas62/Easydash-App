@@ -3,6 +3,22 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.8.4",
+        date: "22 Mars 2026",
+        features: [
+            { type: 'new', text: "Nouveau widget Slider : curseur interactif pour contrôler des valeurs numériques (luminosité, volets, etc.). Valeur temps réel via WebSocket, commit sur relâchement, min/max/step configurables." },
+            { type: 'new', text: "Thermostat : ajout des modes Absent et Éco avec icônes dédiées (lune / feuille), mis en surbrillance selon le mode actif. Correction complète de l'affichage des données et des actions." },
+            { type: 'new', text: "Graphiques : sélecteur de période (24h / 7j / 30j) et mode dates personnalisées avec champs de saisie." },
+            { type: 'new', text: "Scénarios : support des tags (paires clé=valeur) transmis à Jeedom lors du déclenchement d'un scénario." },
+            { type: 'new', text: "Error Boundary : chaque widget est isolé — en cas de crash JS, une carte d'erreur s'affiche avec un bouton Réessayer sans perturber le reste du tableau de bord." },
+            { type: 'improvement', text: "Optimisation des performances : React.memo appliqué sur WidgetCard (comparateur personnalisé sur les IDs de commandes), SortableWidget, InfoWidget et ActionWidget — seuls les widgets dont les données changent se re-rendent." },
+            { type: 'improvement', text: "Lazy loading caméra : le flux et l'intervalle de rafraîchissement ne démarrent que lorsque le widget est visible dans le viewport (IntersectionObserver)." },
+            { type: 'improvement', text: "SEO : balises meta complètes (description, keywords, Open Graph, Twitter Card) sur toutes les pages, intégration react-helmet-async." },
+            { type: 'fix', text: "Sécurité : correction de la CVE haute sur serialize-javascript — forcé en >=7.0.3 via overrides npm." },
+            { type: 'fix', text: "WidgetEditorModal : correction d'une erreur JSX dans la branche scénario (fragment React manquant)." },
+        ]
+    },
+    {
         version: "0.8.3",
         date: "19 Mars 2026",
         features: [
