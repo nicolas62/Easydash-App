@@ -389,4 +389,32 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
 });
 
 WidgetCard.displayName = 'WidgetCard';
-export default WidgetCard;
+
+const areWidgetCardPropsEqual = (prev: WidgetCardProps & React.RefAttributes<HTMLDivElement>, next: WidgetCardProps & React.RefAttributes<HTMLDivElement>): boolean => {
+    if (prev.widget !== next.widget) return false;
+    if (prev.editMode !== next.editMode) return false;
+    if (prev.settings !== next.settings) return false;
+    if (prev.isConnected !== next.isConnected) return false;
+    if (prev.scenarios !== next.scenarios) return false;
+
+    const ids = [
+        prev.widget.commandId,
+        prev.widget.infoId,
+        prev.widget.displayInfoId,
+        prev.widget.currentTempCmdId,
+        prev.widget.setpointCmdId,
+        prev.widget.stateCmdId,
+        prev.widget.sliderInfoId,
+        prev.widget.modeInfoCmdId,
+    ].filter((id): id is string => !!id);
+
+    for (const id of ids) {
+        const prevCmd = prev.commands.find(c => String(c.id) === id);
+        const nextCmd = next.commands.find(c => String(c.id) === id);
+        if (String(prevCmd?.value) !== String(nextCmd?.value)) return false;
+    }
+
+    return true;
+};
+
+export default React.memo(WidgetCard, areWidgetCardPropsEqual);
