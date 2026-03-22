@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { WidgetConfig, AppSettings, JeedomCommand } from '../types';
 import { useJeedomCommand } from '../hooks/useJeedomCommand';
 import { executeJeedomCommand } from '../services/jeedomService';
-import { Plus, Minus, Thermometer, Flame, Snowflake } from 'lucide-react';
+import { Plus, Minus, Thermometer, Flame, Snowflake, Moon, Leaf } from 'lucide-react';
 
 interface ThermostatWidgetProps {
     widget: WidgetConfig;
@@ -39,12 +39,21 @@ const ThermostatWidget: React.FC<ThermostatWidgetProps> = ({ widget, settings, i
 
     const isActive = isHeating || isCooling;
 
+    // --- MODE ---
+    const modeInfo = useJeedomCommand(widget.modeInfoCmdId, findInitialValue(widget.modeInfoCmdId));
+    const modeStr  = modeInfo !== undefined ? String(modeInfo).toLowerCase() : '';
+    const isAway   = modeStr.includes('absent') || modeStr.includes('away') || modeStr === 'absent';
+    const isEco    = modeStr.includes('eco');
+
     // --- HANDLERS ---
     const handleSetpointChange = async (direction: 'up' | 'down') => {
         const cmdId = direction === 'up' ? widget.actionUpCmdId : widget.actionDownCmdId;
-        if (cmdId) {
-            await executeJeedomCommand(settings, cmdId);
-        }
+        if (cmdId) await executeJeedomCommand(settings, cmdId);
+    };
+
+    const handleMode = async (mode: 'away' | 'eco') => {
+        const cmdId = mode === 'away' ? widget.awayModeCmdId : widget.ecoModeCmdId;
+        if (cmdId) await executeJeedomCommand(settings, cmdId);
     };
 
     // --- STYLES ---
@@ -117,6 +126,30 @@ const ThermostatWidget: React.FC<ThermostatWidgetProps> = ({ widget, settings, i
                     </button>
                 </div>
             </div>
+
+            {/* Mode buttons: Absent / Éco */}
+            {(widget.awayModeCmdId || widget.ecoModeCmdId) && (
+                <div className="flex gap-2 w-full z-10">
+                    {widget.awayModeCmdId && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); handleMode('away'); }}
+                            className={`flex-1 flex items-center justify-center gap-1 text-[10px] py-1 rounded-full border transition-all
+                                ${isAway ? 'bg-blue-500/80 border-blue-400 text-white' : 'border-white/20 text-white/60 hover:text-white hover:border-white/40'}`}
+                        >
+                            <Moon size={10} /> Absent
+                        </button>
+                    )}
+                    {widget.ecoModeCmdId && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); handleMode('eco'); }}
+                            className={`flex-1 flex items-center justify-center gap-1 text-[10px] py-1 rounded-full border transition-all
+                                ${isEco ? 'bg-green-500/80 border-green-400 text-white' : 'border-white/20 text-white/60 hover:text-white hover:border-white/40'}`}
+                        >
+                            <Leaf size={10} /> Éco
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Background Glow Effect */}
             {isActive && (

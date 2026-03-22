@@ -58,6 +58,9 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     const [chartData, setChartData] = useState<{ time: number; value: number }[]>([]);
     const [chartError, setChartError] = useState<string | null>(null);
     const [optimisticValue, setOptimisticValue] = useState<string | number | undefined>(undefined);
+    const [chartPeriod, setChartPeriod] = useState<string>(widget.historyPeriod || '24h');
+    const [customStart, setCustomStart] = useState(widget.chartCustomStart || '');
+    const [customEnd, setCustomEnd] = useState(widget.chartCustomEnd || '');
 
     const isGridLayout = className?.includes('react-grid-item');
     const isScenario = widget.type === 'scenario';
@@ -71,17 +74,22 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     // Fetch chart history
     useEffect(() => {
         if (!isChart || !widget.commandId) return;
+        if (chartPeriod === 'custom' && (!customStart || !customEnd)) return;
 
         const fetchHistory = async () => {
-            const end = new Date();
-            const start = new Date();
-            switch (widget.historyPeriod) {
-                case '7d': start.setDate(end.getDate() - 7); break;
-                case '30d': start.setDate(end.getDate() - 30); break;
-                default: start.setDate(end.getDate() - 1);
-            }
             const formatDate = (d: Date) => d.toISOString().slice(0, 19).replace('T', ' ');
-            const cacheKey = `chart_${widget.commandId}_${widget.historyPeriod || '24h'}_${widget.chartAggregation || 'none'}`;
+            let start: Date, end: Date;
+            if (chartPeriod === 'custom') {
+                start = new Date(customStart + 'T00:00:00');
+                end   = new Date(customEnd   + 'T23:59:59');
+            } else {
+                end   = new Date();
+                start = new Date();
+                if (chartPeriod === '7d')  start.setDate(end.getDate() - 7);
+                else if (chartPeriod === '30d') start.setDate(end.getDate() - 30);
+                else start.setDate(end.getDate() - 1);
+            }
+            const cacheKey = `chart_${widget.commandId}_${chartPeriod}_${customStart}_${customEnd}_${widget.chartAggregation || 'none'}`;
 
             const cachedData = cacheService.get<{ time: number; value: number }[]>(cacheKey, 5 * 60 * 1000);
             if (cachedData) { setChartData(cachedData); return; }
@@ -109,7 +117,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
         };
 
         fetchHistory();
-    }, [isChart, widget.commandId, widget.historyPeriod, widget.chartAggregation, settings]);
+    }, [isChart, widget.commandId, chartPeriod, customStart, customEnd, widget.chartAggregation, settings]);
 
     // Find commands
     const mainCommand = useMemo(() => {
@@ -206,7 +214,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
             if (widget.type === 'scenario') {
                 if (widget.scenarioId) {
                     if (onScenarioClick) onScenarioClick(widget.scenarioId);
-                    else await executeScenario(settings, widget.scenarioId);
+                    else await executeScenario(settings, widget.scenarioId, widget.scenarioTags);
                 }
             } else if (widget.type === 'action' || widget.type === 'toggle' || widget.type === 'slider') {
                 if (widget.type === 'toggle' || widget.type === 'action') {
@@ -330,6 +338,11 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                             widget={widget}
                             chartData={chartData}
                             isColorized={isColorized}
+                            period={chartPeriod}
+                            onPeriodChange={setChartPeriod}
+                            customStart={customStart}
+                            customEnd={customEnd}
+                            onCustomChange={(s, e) => { setCustomStart(s); setCustomEnd(e); }}
                         />
                     )
                 ) : (

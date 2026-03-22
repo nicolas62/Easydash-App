@@ -459,6 +459,7 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                     {/* Commands Link */}
                     <div className="space-y-3">
                         {widget.type === 'scenario' ? (
+                            <>
                             <div>
                                 <label className="block text-sm font-medium text-content-secondary flex items-center gap-2 mb-2">
                                      <Workflow size={14} className="text-jeedom-500"/>
@@ -504,6 +505,60 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                     )}
                                 </select>
                             </div>
+
+                            {/* Tags de scénario */}
+                            <div className="mt-4">
+                                <label className="block text-sm font-medium text-content-secondary mb-2">
+                                    Tags passés au scénario (optionnel)
+                                </label>
+                                <div className="space-y-2">
+                                    {(widget.scenarioTags || []).map((tag, i) => (
+                                        <div key={i} className="flex gap-2 items-center">
+                                            <input
+                                                type="text"
+                                                value={tag.name}
+                                                onChange={e => {
+                                                    const tags = [...(widget.scenarioTags || [])];
+                                                    tags[i] = { ...tags[i], name: e.target.value };
+                                                    setWidget({...widget, scenarioTags: tags});
+                                                }}
+                                                placeholder="nom_tag"
+                                                className="flex-1 bg-input-bg border border-border text-content-primary rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-jeedom-500"
+                                            />
+                                            <span className="text-content-secondary text-sm">=</span>
+                                            <input
+                                                type="text"
+                                                value={tag.value}
+                                                onChange={e => {
+                                                    const tags = [...(widget.scenarioTags || [])];
+                                                    tags[i] = { ...tags[i], value: e.target.value };
+                                                    setWidget({...widget, scenarioTags: tags});
+                                                }}
+                                                placeholder="valeur"
+                                                className="flex-1 bg-input-bg border border-border text-content-primary rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-jeedom-500"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const tags = (widget.scenarioTags || []).filter((_, idx) => idx !== i);
+                                                    setWidget({...widget, scenarioTags: tags});
+                                                }}
+                                                className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => setWidget({...widget, scenarioTags: [...(widget.scenarioTags || []), { name: '', value: '' }]})}
+                                        className="flex items-center gap-1 text-xs text-jeedom-500 hover:text-jeedom-400 transition-colors mt-1"
+                                    >
+                                        <Plus size={12} /> Ajouter un tag
+                                    </button>
+                                </div>
+                            </div>
+                            </>
                         ) : (
                             <>
                         {/* CONFIGURATION POUR INFO */}
@@ -678,7 +733,7 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                     <label className="block text-sm font-medium text-content-secondary mb-1">
                                         État (Chauffe/Clim/Arrêt) - Optionnel
                                     </label>
-                                    <CommandSelector 
+                                    <CommandSelector
                                         value={widget.stateCmdId}
                                         onChange={(val) => setWidget({...widget, stateCmdId: val})}
                                         availableEqLogics={availableEqLogics}
@@ -686,6 +741,47 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                         placeholder="Sélectionner l'état..."
                                         disabled={!hasAvailableData}
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Mode actuel (Info) - Optionnel
+                                    </label>
+                                    <CommandSelector
+                                        value={widget.modeInfoCmdId}
+                                        onChange={(val) => setWidget({...widget, modeInfoCmdId: val})}
+                                        availableEqLogics={availableEqLogics}
+                                        filterType="info"
+                                        placeholder="Sélectionner le mode..."
+                                        disabled={!hasAvailableData}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-content-secondary mb-1">
+                                            Action Mode Absent
+                                        </label>
+                                        <CommandSelector
+                                            value={widget.awayModeCmdId}
+                                            onChange={(val) => setWidget({...widget, awayModeCmdId: val})}
+                                            availableEqLogics={availableEqLogics}
+                                            filterType="action"
+                                            placeholder="Mode absent..."
+                                            disabled={!hasAvailableData}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-content-secondary mb-1">
+                                            Action Mode Éco
+                                        </label>
+                                        <CommandSelector
+                                            value={widget.ecoModeCmdId}
+                                            onChange={(val) => setWidget({...widget, ecoModeCmdId: val})}
+                                            availableEqLogics={availableEqLogics}
+                                            filterType="action"
+                                            placeholder="Mode éco..."
+                                            disabled={!hasAvailableData}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}

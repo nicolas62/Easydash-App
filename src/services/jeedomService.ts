@@ -603,13 +603,16 @@ const executeScenarioAction = async (
     settings: AppSettings,
     scenarioId: string,
     rpcState: string,
-    httpAction: string
+    httpAction: string,
+    tags?: string
 ): Promise<void> => {
     // Tentative 1 : JSON-RPC
     let rpcError: any = null;
     try {
+        const rpcParams: Record<string, string> = { id: scenarioId, state: rpcState };
+        if (tags) rpcParams.tags = tags;
         console.log(`[scenario] RPC attempt: scenario::changeState id=${scenarioId} state=${rpcState}`);
-        await jeedomJsonRpcCall(settings, 'scenario::changeState', { id: scenarioId, state: rpcState });
+        await jeedomJsonRpcCall(settings, 'scenario::changeState', rpcParams);
         console.log(`[scenario] RPC success: state=${rpcState}`);
         return; // succès → on sort
     } catch (e: any) {
@@ -620,7 +623,9 @@ const executeScenarioAction = async (
     // Tentative 2 : HTTP API fallback
     try {
         console.log(`[scenario] HTTP fallback attempt: type=scenario id=${scenarioId} action=${httpAction}`);
-        const result = await jeedomApiCall(settings, { type: 'scenario', id: scenarioId, action: httpAction });
+        const httpParams: Record<string, string> = { type: 'scenario', id: scenarioId, action: httpAction };
+        if (tags) httpParams.tags = tags;
+        const result = await jeedomApiCall(settings, httpParams);
         console.log(`[scenario] HTTP fallback success:`, result);
         return; // succès → on sort
     } catch (e: any) {
@@ -634,9 +639,14 @@ const executeScenarioAction = async (
     }
 };
 
-export const executeScenario = async (settings: AppSettings, scenarioId: string): Promise<void> => {
+export const executeScenario = async (
+    settings: AppSettings,
+    scenarioId: string,
+    tags?: { name: string; value: string }[]
+): Promise<void> => {
     if (settings.useDemoMode) return;
-    await executeScenarioAction(settings, scenarioId, 'run', 'start');
+    const tagsStr = tags?.length ? tags.map(t => `${t.name}=${t.value}`).join('|') : undefined;
+    await executeScenarioAction(settings, scenarioId, 'run', 'start', tagsStr);
 };
 
 export const stopScenario = async (settings: AppSettings, scenarioId: string): Promise<void> => {
