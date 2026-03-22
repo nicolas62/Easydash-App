@@ -11,6 +11,7 @@ import WeatherWidget from './WeatherWidget';
 import ChartWidget from './widgets/ChartWidget';
 import InfoWidget from './widgets/InfoWidget';
 import ActionWidget from './widgets/ActionWidget';
+import SliderWidget from './widgets/SliderWidget';
 
 // --- HELPER ---
 const aggregateChartData = (data: { time: number; value: number }[], method: string = 'none') => {
@@ -64,6 +65,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     const isCamera = widget.type === 'camera';
     const isThermostat = widget.type === 'thermostat';
     const isWeather = widget.type === 'weather';
+    const isSlider = widget.type === 'slider';
     const isInfoType = widget.type === 'info';
 
     // Fetch chart history
@@ -304,6 +306,8 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                 {/* Widget content — routed by type */}
                 {isCamera ? (
                     <CameraWidget widget={widget} settings={settings} isColorized={isColorized} />
+                ) : isSlider ? (
+                    <SliderWidget widget={widget} settings={settings} isColorized={isColorized} commands={commands} />
                 ) : isThermostat ? (
                     <ThermostatWidget widget={widget} settings={settings} isColorized={isColorized} commands={commands} />
                 ) : isWeather ? (

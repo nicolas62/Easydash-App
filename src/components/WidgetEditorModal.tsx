@@ -436,6 +436,7 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                 <option value="scenario">Scénario</option>
                                 <option value="chart">Graphique (Historique)</option>
                                 <option value="camera">Caméra</option>
+                                <option value="slider">Curseur (Slider)</option>
                                 <option value="thermostat">Thermostat</option>
                                 <option value="weather">Météo</option>
                             </select>
@@ -551,6 +552,67 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                         className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
                                         placeholder="Ex: 5000 pour 5s"
                                     />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* CONFIGURATION POUR SLIDER */}
+                        {widget.type === 'slider' && (
+                            <div className="mt-4 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Commande Info (valeur courante)
+                                    </label>
+                                    <CommandSelector
+                                        value={widget.sliderInfoId}
+                                        onChange={(val) => setWidget({...widget, sliderInfoId: val})}
+                                        availableEqLogics={availableEqLogics}
+                                        filterType="info"
+                                        placeholder="Sélectionner la commande info..."
+                                        disabled={!hasAvailableData}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Commande Action (envoyer la valeur)
+                                    </label>
+                                    <CommandSelector
+                                        value={widget.sliderActionId}
+                                        onChange={(val) => setWidget({...widget, sliderActionId: val})}
+                                        availableEqLogics={availableEqLogics}
+                                        filterType="action"
+                                        placeholder="Sélectionner la commande action..."
+                                        disabled={!hasAvailableData}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium text-content-secondary mb-1">Min</label>
+                                        <input
+                                            type="number"
+                                            value={widget.sliderMin ?? 0}
+                                            onChange={e => setWidget({...widget, sliderMin: Number(e.target.value)})}
+                                            className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-content-secondary mb-1">Max</label>
+                                        <input
+                                            type="number"
+                                            value={widget.sliderMax ?? 100}
+                                            onChange={e => setWidget({...widget, sliderMax: Number(e.target.value)})}
+                                            className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-content-secondary mb-1">Pas</label>
+                                        <input
+                                            type="number"
+                                            value={widget.sliderStep ?? 1}
+                                            onChange={e => setWidget({...widget, sliderStep: Number(e.target.value)})}
+                                            className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
