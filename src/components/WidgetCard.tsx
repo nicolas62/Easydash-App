@@ -91,7 +91,14 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
             }
             const cacheKey = `chart_${widget.commandId}_${chartPeriod}_${customStart}_${customEnd}_${widget.chartAggregation || 'none'}`;
 
-            const cachedData = cacheService.get<{ time: number; value: number }[]>(cacheKey, 5 * 60 * 1000);
+            // TTL adaptatif : les données historiques longues changent rarement
+            const cacheTTL: Record<string, number> = {
+                '24h':   15 * 60 * 1000,      // 15 min
+                '7d':     2 * 60 * 60 * 1000,  // 2 h
+                '30d':    6 * 60 * 60 * 1000,  // 6 h
+                'custom': 30 * 60 * 1000,       // 30 min
+            };
+            const cachedData = cacheService.get<{ time: number; value: number }[]>(cacheKey, cacheTTL[chartPeriod] ?? 15 * 60 * 1000);
             if (cachedData) { setChartData(cachedData); return; }
 
             try {

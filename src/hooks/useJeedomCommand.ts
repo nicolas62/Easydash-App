@@ -8,7 +8,6 @@ export const useJeedomCommand = (cmdId: string | undefined, initialValue: string
         if (!cmdId) return;
 
         const handleUpdate = (newValue: any) => {
-            console.log(`[useJeedomCommand] Update for ${cmdId}:`, newValue);
             setValue(newValue);
         };
 
