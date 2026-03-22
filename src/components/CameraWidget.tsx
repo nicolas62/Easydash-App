@@ -13,16 +13,26 @@ const CameraWidget: React.FC<CameraWidgetProps> = ({ widget, settings, isColoriz
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
     const imgRef = useRef<HTMLImageElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Determine if it's a snapshot (needs refresh) or a stream
-    // Simple heuristic: if it ends with .jpg or .png or .php, treat as snapshot unless specified otherwise
-    // But usually MJPEG streams are just one long request.
-    // Let's assume if refreshInterval is set > 0, it's a snapshot.
     const isSnapshot = (widget.refreshInterval && widget.refreshInterval > 0) || false;
 
+    // Lazy load: only start streaming when the widget is in the viewport
     useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => setIsVisible(entry.isIntersecting),
+            { threshold: 0.1 }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+        if (!isVisible) return;
         if (!widget.streamUrl) {
             setError(true);
             return;
@@ -32,21 +42,19 @@ const CameraWidget: React.FC<CameraWidgetProps> = ({ widget, settings, isColoriz
 
         const updateUrl = () => {
             let url = widget.streamUrl!;
-            
-            // Append API Key if needed (often required for Jeedom cameras)
+
             if (url.includes('apikey=') === false && settings.apiKey) {
                 const separator = url.includes('?') ? '&' : '?';
                 url += `${separator}apikey=${settings.apiKey}`;
             }
 
-            // Add timestamp for snapshots to prevent caching
             if (isSnapshot) {
                 const separator = url.includes('?') ? '&' : '?';
                 url += `${separator}t=${Date.now()}`;
             }
 
             setImageUrl(url);
-            setIsLoading(true); // Will be set to false on onLoad
+            setIsLoading(true);
         };
 
         updateUrl();
@@ -58,7 +66,7 @@ const CameraWidget: React.FC<CameraWidgetProps> = ({ widget, settings, isColoriz
         return () => {
             if (intervalId) clearInterval(intervalId);
         };
-    }, [widget.streamUrl, widget.refreshInterval, settings.apiKey, isSnapshot]);
+    }, [isVisible, widget.streamUrl, widget.refreshInterval, settings.apiKey, isSnapshot]);
 
     const handleImageLoad = () => {
         setIsLoading(false);
