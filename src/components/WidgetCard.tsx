@@ -415,10 +415,13 @@ const areWidgetCardPropsEqual = (prev: WidgetCardProps & React.RefAttributes<HTM
         prev.widget.modeInfoCmdId,
     ].filter((id): id is string => !!id);
 
+    // Build Maps for O(1) lookup instead of O(n) Array.find() per ID.
+    // With 200 commands and 8 IDs per widget, this goes from ~1600 ops to ~208.
+    const prevIndex = new Map(prev.commands.map(c => [String(c.id), String(c.value)]));
+    const nextIndex = new Map(next.commands.map(c => [String(c.id), String(c.value)]));
+
     for (const id of ids) {
-        const prevCmd = prev.commands.find(c => String(c.id) === id);
-        const nextCmd = next.commands.find(c => String(c.id) === id);
-        if (String(prevCmd?.value) !== String(nextCmd?.value)) return false;
+        if (prevIndex.get(id) !== nextIndex.get(id)) return false;
     }
 
     return true;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AppSettings } from '../types';
 import { DEFAULT_SETTINGS } from '../constants';
 import { encryptData, decryptData } from '../services/cryptoService';
@@ -6,6 +6,8 @@ import { encryptData, decryptData } from '../services/cryptoService';
 export function useSettings() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
+  // Track the last plaintext apiKey we encrypted to avoid re-encrypting on unrelated changes
+  const prevApiKeyRef = useRef<string>('');
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -34,7 +36,19 @@ export function useSettings() {
     const saveSettings = async () => {
       const settingsToSave = { ...settings };
       if (settingsToSave.apiKey) {
-        settingsToSave.apiKey = await encryptData(settingsToSave.apiKey);
+        if (settingsToSave.apiKey !== prevApiKeyRef.current) {
+          // API key changed — re-encrypt and update the ref
+          settingsToSave.apiKey = await encryptData(settingsToSave.apiKey);
+          prevApiKeyRef.current = settings.apiKey;
+        } else {
+          // API key unchanged — reuse the already-encrypted value from storage
+          // to avoid a costly Web Crypto operation on every settings change
+          try {
+            const stored = localStorage.getItem('jeedom_settings');
+            const parsed = stored ? JSON.parse(stored) : {};
+            if (parsed.apiKey) settingsToSave.apiKey = parsed.apiKey;
+          } catch { /* fall back to re-encrypting */ }
+        }
       }
       localStorage.setItem('jeedom_settings', JSON.stringify(settingsToSave));
     };
