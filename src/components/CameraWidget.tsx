@@ -16,6 +16,14 @@ const CameraWidget: React.FC<CameraWidgetProps> = ({ widget, settings, isColoriz
     const [isVisible, setIsVisible] = useState(false);
     const imgRef = useRef<HTMLImageElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const blobUrlRef = useRef<string>('');
+
+    // Revoke blob URL on unmount to avoid memory leaks
+    useEffect(() => {
+        return () => {
+            if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+        };
+    }, []);
 
     const isSnapshot = (widget.refreshInterval && widget.refreshInterval > 0) || false;
 
@@ -40,19 +48,41 @@ const CameraWidget: React.FC<CameraWidgetProps> = ({ widget, settings, isColoriz
 
         let intervalId: NodeJS.Timeout;
 
-        const updateUrl = () => {
+        const buildUrl = () => {
             let url = widget.streamUrl!;
+            if (!url.includes('apikey=') && settings.apiKey) {
+                url += `${url.includes('?') ? '&' : '?'}apikey=${settings.apiKey}`;
+            }
+            return url;
+        };
 
-            if (url.includes('apikey=') === false && settings.apiKey) {
-                const separator = url.includes('?') ? '&' : '?';
-                url += `${separator}apikey=${settings.apiKey}`;
+        const updateUrl = async () => {
+            // When the proxy is enabled and it's a snapshot, fetch through the server
+            // so the API key never appears in the <img src> or browser cache.
+            if (settings.useProxy && isSnapshot) {
+                try {
+                    const response = await fetch('/api/camera', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: buildUrl() }),
+                    });
+                    if (!response.ok) throw new Error('proxy error');
+                    const blob = await response.blob();
+                    if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+                    blobUrlRef.current = URL.createObjectURL(blob);
+                    setImageUrl(blobUrlRef.current);
+                } catch {
+                    setError(true);
+                }
+                setIsLoading(false);
+                return;
             }
 
+            // Direct mode or MJPEG stream: set URL directly (api key visible in src)
+            let url = buildUrl();
             if (isSnapshot) {
-                const separator = url.includes('?') ? '&' : '?';
-                url += `${separator}t=${Date.now()}`;
+                url += `${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
             }
-
             setImageUrl(url);
             setIsLoading(true);
         };
