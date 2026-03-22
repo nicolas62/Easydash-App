@@ -31,6 +31,13 @@ export interface WidgetConfig {
   minCmdId?: string;
   maxCmdId?: string;
 
+  // Slider specific
+  sliderInfoId?: string;   // commande info pour lire la valeur courante
+  sliderActionId?: string; // commande action (subType: slider) pour envoyer la valeur
+  sliderMin?: number;
+  sliderMax?: number;
+  sliderStep?: number;
+
   commandId?: string; // The ID to execute action or read info
   commandOffId?: string; // Specific ID for OFF action (for toggles)
   scenarioId?: string; // The ID of the scenario to execute
