@@ -28,6 +28,7 @@ const SliderWidget: React.FC<SliderWidgetProps> = ({ widget, settings, commands,
     const [localValue, setLocalValue] = useState<number | null>(null);
     const [sending, setSending] = useState(false);
     const sendTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const rafRef = useRef<number | null>(null);
 
     const displayValue = localValue !== null ? localValue : remoteValue;
     const percent = max > min ? ((displayValue - min) / (max - min)) * 100 : 0;
@@ -35,8 +36,15 @@ const SliderWidget: React.FC<SliderWidgetProps> = ({ widget, settings, commands,
     const Icon = ICONS[widget.icon] || ICONS['help-circle'];
     const unit = infoCmd?.unite || '';
 
+    // Throttle state updates to one per animation frame to avoid
+    // 60 re-renders/second on mobile during drag.
     const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        setLocalValue(Number(e.target.value));
+        const newValue = Number(e.target.value);
+        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(() => {
+            setLocalValue(newValue);
+            rafRef.current = null;
+        });
     }, []);
 
     const commitValue = useCallback(async (value: number) => {
