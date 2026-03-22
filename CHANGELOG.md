@@ -4,6 +4,25 @@ All notable changes to EasyDash are documented here.
 
 ---
 
+## [0.8.5] — 2026-03-22
+
+### Sécurité
+- **Proxy caméra** : les images sont récupérées côté serveur via `/api/camera` — la clé API n'apparaît plus dans l'attribut `src`, le DOM ou le cache disque du navigateur.
+- **Protection SSRF** : toutes les requêtes passant par `/api/proxy` et `/api/camera` sont filtrées par `isSafeUrl()` — blocage de `169.254.169.254` (métadonnées cloud AWS/GCP/Azure), `::1`, protocoles non HTTP/HTTPS.
+- **TLS conditionnel** : `NODE_TLS_REJECT_UNAUTHORIZED` n'est plus désactivé par défaut. Requiert désormais `ALLOW_INSECURE_TLS=true` pour les Jeedom avec certificat auto-signé.
+
+### Performances
+- **Comparateur WidgetCard O(1)** : `areWidgetCardPropsEqual` construit deux `Map` avant la boucle de comparaison → lookup O(1) par ID au lieu de `Array.find()` O(n). ~1 600 → ~208 opérations par widget.
+- **Slider sans jank** : `handleChange` utilise `requestAnimationFrame` pour throttler les mises à jour d'état à 60fps max pendant le drag.
+- **Chiffrement apiKey conditionnel** : `encryptData` (AES-GCM) n'est appelé que si `settings.apiKey` a réellement changé (suivi par `prevApiKeyRef`).
+- **Cache graphiques TTL adaptatif** : 15 min (24h) / 2h (7j) / 6h (30j) au lieu d'un TTL fixe de 5 min.
+
+### Corrections
+- **Reconnexion zombie** : le heartbeat WebSocket force la reconnexion directement sans attendre `onclose` (non garanti sur réseau mort).
+- **Hot path WebSocket** : suppression du `console.log` dans `useJeedomCommand` appelé à chaque message reçu.
+
+---
+
 ## [0.8.4] — 2026-03-22
 
 ### Nouveaux widgets

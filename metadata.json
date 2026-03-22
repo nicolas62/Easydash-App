@@ -1,6 +1,6 @@
 {
   "name": "EasyDash",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "A modern, mobile-first dashboard for your Jeedom home automation system. Create custom dashboards, control devices, and visualize data with ease.",
   "requestFramePermissions": []
 }

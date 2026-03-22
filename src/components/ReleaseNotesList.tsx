@@ -3,6 +3,21 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.8.5",
+        date: "22 Mars 2026",
+        features: [
+            { type: 'improvement', text: "Sécurité — proxy caméra : les images sont désormais récupérées côté serveur via /api/camera, la clé API n'apparaît plus dans l'attribut src, le DOM ou le cache navigateur." },
+            { type: 'improvement', text: "Sécurité — protection SSRF : toutes les requêtes passant par le proxy Express sont filtrées (blocage des endpoints de métadonnées cloud 169.254.169.254, protocoles non-HTTP)." },
+            { type: 'improvement', text: "Sécurité — TLS conditionnel : la désactivation de la vérification SSL n'est plus active par défaut. Elle s'active via la variable d'environnement ALLOW_INSECURE_TLS=true pour les Jeedom avec certificat auto-signé." },
+            { type: 'improvement', text: "Performances — comparateur WidgetCard O(1) : l'index des commandes est maintenant construit en Map avant la comparaison, réduisant de ~1 600 à ~208 opérations par widget lors des mises à jour." },
+            { type: 'improvement', text: "Performances — slider sans jank : les mises à jour d'état pendant le drag passent par requestAnimationFrame, limitant les re-renders à 60fps maximum sur mobile." },
+            { type: 'improvement', text: "Performances — chiffrement apiKey conditionnel : AES-GCM n'est déclenché que si la clé API a réellement changé, évitant une opération coûteuse à chaque modification des paramètres." },
+            { type: 'fix', text: "WebSocket — reconnexion zombie fiable : la détection de connexion morte ne dépend plus de l'événement onclose (non garanti sur réseau mort) et force directement la reconnexion." },
+            { type: 'fix', text: "WebSocket — suppression du console.log sur le hot path : les logs par message reçu ont été retirés pour éviter des centaines d'entrées par minute avec de nombreux widgets." },
+            { type: 'improvement', text: "Cache graphiques — TTL adaptatif : 15 min pour 24h, 2h pour 7j, 6h pour 30j (au lieu d'un TTL fixe de 5 min qui générait jusqu'à 288 requêtes par jour)." },
+        ]
+    },
+    {
         version: "0.8.4",
         date: "22 Mars 2026",
         features: [
