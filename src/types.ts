@@ -123,6 +123,52 @@ export interface JeedomFullDataResponse {
   scenes: any[];
 }
 
+// ─── Alert System ────────────────────────────────────────────────────────────
+
+export type AlertConditionType = 'above' | 'below' | 'equals' | 'change';
+export type AlertSeverity = 'info' | 'warning' | 'critical';
+export type AlertChannel = 'toast' | 'notification' | 'both';
+
+export interface AlertRule {
+  id: string;
+  name: string;
+  cmdId: string;
+  cmdName?: string;         // cache du nom pour l'affichage
+  cmdUnit?: string;         // cache de l'unité
+  conditionType: AlertConditionType;
+  threshold: number | string;
+  severity: AlertSeverity;
+  channel: AlertChannel;
+  enabled: boolean;
+  cooldownMs: number;       // délai minimum entre deux déclenchements (ms)
+  hysteresis?: number;      // marge évitant les oscillations autour du seuil
+  enabledFrom?: string;     // HH:MM — plage horaire de début
+  enabledTo?: string;       // HH:MM — plage horaire de fin
+  createdAt: number;
+}
+
+export interface AlertHistory {
+  id: string;
+  ruleId: string;
+  ruleName: string;
+  cmdId: string;
+  cmdName?: string;
+  value: string | number;
+  threshold: string | number;
+  conditionType: AlertConditionType;
+  severity: AlertSeverity;
+  triggeredAt: number;
+  acknowledged: boolean;
+}
+
+export interface AlertState {
+  ruleId: string;
+  lastValue: string | number | undefined;
+  lastAlertAt: number;      // timestamp du dernier déclenchement
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface JeedomHealthItem {
   id: string;
   name: string;

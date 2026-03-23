@@ -11,7 +11,7 @@ interface ActionWidgetProps {
   loading: boolean;
 }
 
-const ActionWidget: React.FC<ActionWidgetProps> = ({
+const ActionWidget = React.memo(({
   widget,
   Icon,
   displayValue,
@@ -19,7 +19,7 @@ const ActionWidget: React.FC<ActionWidgetProps> = ({
   isColorized,
   animateValue,
   loading,
-}) => {
+}: ActionWidgetProps) => {
   const showValue =
     (widget.type !== 'action' || !!widget.infoId) &&
     (displayValue || secondaryDisplayValue);
@@ -62,6 +62,7 @@ const ActionWidget: React.FC<ActionWidgetProps> = ({
       </div>
     </div>
   );
-};
+});
 
+ActionWidget.displayName = 'ActionWidget';
 export default ActionWidget;

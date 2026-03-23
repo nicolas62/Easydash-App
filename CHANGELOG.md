@@ -4,6 +4,23 @@ All notable changes to EasyDash are documented here.
 
 ---
 
+## [0.9.0] — 2026-03-23
+
+### Nouveau — Notifications Push Web (Web Push API)
+- **Service Worker push** : migration PWA vers `injectManifest` — le SW personnalisé (`src/sw.ts`) gère le précache Workbox, le fallback SPA, l'événement `push` et le clic sur notification. Les notifications arrivent même lorsque l'app est fermée.
+- **Endpoints push** : `/api/push/vapid-public-key`, `/api/push/subscribe`, `/api/push/subscribe/:id` (DELETE), `/api/push/devices`, `/api/push/broadcast`, `/api/push/test/:id` — avec nettoyage automatique des abonnements expirés (statut 404/410).
+- **Stockage des abonnements** : fichier JSON persisté dans un volume Docker dédié (`data/subscriptions.json`), chargé au démarrage du serveur.
+- **Hook `useAlertSubscription`** : gestion complète (permission, clé VAPID, subscribe PushManager, POST serveur, unsubscribe, test, liste appareils). L'ID d'appareil est conservé en `localStorage`.
+- **`useAlerts` broadcast** : quand une règle avec canal `notification` ou `both` se déclenche, un `POST /api/push/broadcast` est envoyé en fire-and-forget vers tous les appareils abonnés.
+- **UI onglet Push** : nouvel onglet "Push" dans Alertes (Settings) — statut d'abonnement, bouton activer/désactiver, test de notification, liste des appareils enregistrés.
+
+### Corrections / Améliorations
+- **Build script corrigé** : `vite build --config src/vite.config.ts` — VitePWA était silencieusement ignoré depuis l'origine faute de ce flag.
+- **VAPID configurable** : clés injectées via `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (env vars). Si absentes, le push est désactivé proprement sans crash.
+- **docker-compose.local.yml** : ajout des env vars VAPID + volume persistant pour les abonnements.
+
+---
+
 ## [0.8.5] — 2026-03-22
 
 ### Sécurité

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AppSettings, Dashboard, WidgetConfig } from '../types';
+import { AppSettings, Dashboard, WidgetConfig, JeedomCommand } from '../types';
 import { testJeedomConnection } from '../services/jeedomService';
-import { Save, X, Moon, Sun, Activity, RefreshCw, Download, Upload, FileJson, Wifi, WifiOff, Lock, CloudUpload, CloudDownload, LogIn, LogOut, Shield } from 'lucide-react';
+import { Save, X, Moon, Sun, Activity, RefreshCw, Download, Upload, FileJson, Wifi, WifiOff, Lock, CloudUpload, CloudDownload, LogIn, LogOut, Shield, Bell } from 'lucide-react';
 import SettingsHealthTab from './SettingsHealthTab';
+import AlertsTab from './alerts/AlertsTab';
 import { useGoogleDrive } from '../hooks/useGoogleDrive';
 import PrivacyPolicyModal from './PrivacyPolicyModal';
 import KioskToggleButton from './KioskToggleButton';
@@ -14,12 +15,14 @@ interface SettingsModalProps {
     onSave: (settings: AppSettings) => void;
     dashboards?: Dashboard[];
     widgets?: WidgetConfig[];
+    commands?: JeedomCommand[];
+    alertHistoryRefreshKey?: number;
     onImport?: (data: { settings?: AppSettings, dashboards?: Dashboard[], widgets?: WidgetConfig[] }, mode: 'replace' | 'merge') => void;
 }
 
-type Tab = 'general' | 'health' | 'data';
+type Tab = 'general' | 'health' | 'data' | 'alerts';
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings, onSave, dashboards, widgets, onImport }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings, onSave, dashboards, widgets, commands = [], alertHistoryRefreshKey, onImport }) => {
     const [activeTab, setActiveTab] = useState<Tab>('general');
     const [formData, setFormData] = useState<AppSettings>(settings);
     
@@ -210,12 +213,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                             Santé
                             {activeTab === 'health' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-jeedom-500 rounded-full" />}
                         </button>
-                        <button 
+                        <button
                             onClick={() => setActiveTab('data')}
                             className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'data' ? 'text-jeedom-500' : 'text-content-secondary hover:text-content-primary'}`}
                         >
                             Données
                             {activeTab === 'data' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-jeedom-500 rounded-full" />}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('alerts')}
+                            className={`pb-3 text-sm font-medium transition-colors relative flex items-center gap-1.5 ${activeTab === 'alerts' ? 'text-jeedom-500' : 'text-content-secondary hover:text-content-primary'}`}
+                        >
+                            <Bell size={13} />
+                            Alertes
+                            {activeTab === 'alerts' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-jeedom-500 rounded-full" />}
                         </button>
                     </div>
                 </div>
@@ -400,6 +411,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                     {/* HEALTH TAB */}
                     {activeTab === 'health' && (
                         <SettingsHealthTab settings={formData} />
+                    )}
+
+                    {/* ALERTS TAB */}
+                    {activeTab === 'alerts' && (
+                        <div className="p-6">
+                            <AlertsTab commands={commands} historyRefreshKey={alertHistoryRefreshKey} />
+                        </div>
                     )}
 
                     {/* DATA TAB */}

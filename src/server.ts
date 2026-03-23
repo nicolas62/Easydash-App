@@ -1,5 +1,7 @@
 import express from "express";
 import path from "path";
+import webpush from "web-push";
+import fs from "fs";
 
 
 // Disable SSL verification ONLY when explicitly requested via env var.
@@ -31,6 +33,72 @@ const isSafeUrl = (urlStr: string): boolean => {
         return false;
     }
 };
+
+// ─── Web Push ─────────────────────────────────────────────────────────────────
+
+const VAPID_PUBLIC  = process.env.VAPID_PUBLIC_KEY  || '';
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT     || 'mailto:admin@easydash.local';
+
+let pushEnabled = false;
+if (VAPID_PUBLIC && VAPID_PRIVATE) {
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
+    pushEnabled = true;
+    console.log('[push] Web Push enabled');
+} else {
+    console.warn('[push] VAPID keys not set — Web Push disabled. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY env vars to enable.');
+}
+
+interface PushDevice {
+    id: string;
+    subscription: webpush.PushSubscription;
+    deviceName: string;
+    createdAt: number;
+}
+
+// Subscriptions store: in-memory + optional JSON persistence
+const SUBS_FILE = path.join(process.cwd(), 'data', 'subscriptions.json');
+const subscriptions = new Map<string, PushDevice>();
+
+function loadSubscriptions(): void {
+    try {
+        if (fs.existsSync(SUBS_FILE)) {
+            const data: PushDevice[] = JSON.parse(fs.readFileSync(SUBS_FILE, 'utf-8'));
+            data.forEach(d => subscriptions.set(d.id, d));
+            console.log(`[push] Loaded ${subscriptions.size} subscriptions`);
+        }
+    } catch { /* ignore */ }
+}
+
+function saveSubscriptions(): void {
+    try {
+        fs.mkdirSync(path.dirname(SUBS_FILE), { recursive: true });
+        fs.writeFileSync(SUBS_FILE, JSON.stringify([...subscriptions.values()], null, 2));
+    } catch { /* ignore */ }
+}
+
+loadSubscriptions();
+
+async function broadcastPush(payload: { title: string; body: string; severity?: string }): Promise<void> {
+    if (!pushEnabled || subscriptions.size === 0) return;
+    const dead: string[] = [];
+    await Promise.allSettled(
+        [...subscriptions.values()].map(async device => {
+            try {
+                await webpush.sendNotification(device.subscription, JSON.stringify(payload));
+            } catch (err: any) {
+                if (err.statusCode === 404 || err.statusCode === 410) {
+                    // Subscription expired or unregistered
+                    dead.push(device.id);
+                }
+            }
+        })
+    );
+    if (dead.length > 0) {
+        dead.forEach(id => subscriptions.delete(id));
+        saveSubscriptions();
+    }
+}
 
 async function startServer() {
   try {
@@ -115,6 +183,70 @@ async function startServer() {
         }
     });
 
+
+    // ── Push subscription endpoints ─────────────────────────────────────────
+
+    app.get("/api/push/vapid-public-key", (_req: any, res: any) => {
+        if (!pushEnabled) return res.status(503).json({ error: 'Push not configured' });
+        res.json({ publicKey: VAPID_PUBLIC });
+    });
+
+    app.post("/api/push/subscribe", (req: any, res: any) => {
+        if (!pushEnabled) return res.status(503).json({ error: 'Push not configured' });
+        const { subscription, deviceName } = req.body || {};
+        if (!subscription?.endpoint) return res.status(400).json({ error: 'Missing subscription' });
+
+        const id = Buffer.from(subscription.endpoint).toString('base64').slice(0, 32);
+        const device: PushDevice = {
+            id,
+            subscription: subscription as webpush.PushSubscription,
+            deviceName: String(deviceName || 'Unknown device').slice(0, 120),
+            createdAt: Date.now(),
+        };
+        subscriptions.set(id, device);
+        saveSubscriptions();
+        console.log(`[push] Subscribed device: ${id}`);
+        res.json({ id });
+    });
+
+    app.delete("/api/push/subscribe/:id", (req: any, res: any) => {
+        const { id } = req.params;
+        subscriptions.delete(id);
+        saveSubscriptions();
+        res.json({ ok: true });
+    });
+
+    app.get("/api/push/devices", (_req: any, res: any) => {
+        const list = [...subscriptions.values()].map(d => ({
+            id:         d.id,
+            deviceName: d.deviceName,
+            createdAt:  d.createdAt,
+        }));
+        res.json(list);
+    });
+
+    app.post("/api/push/broadcast", async (req: any, res: any) => {
+        if (!pushEnabled) return res.status(503).json({ error: 'Push not configured' });
+        const { title, body, severity } = req.body || {};
+        if (!title || !body) return res.status(400).json({ error: 'Missing title or body' });
+        await broadcastPush({ title, body, severity });
+        res.json({ ok: true, sent: subscriptions.size });
+    });
+
+    app.post("/api/push/test/:id", async (req: any, res: any) => {
+        if (!pushEnabled) return res.status(503).json({ error: 'Push not configured' });
+        const device = subscriptions.get(req.params.id);
+        if (!device) return res.status(404).json({ error: 'Device not found' });
+        try {
+            await webpush.sendNotification(
+                device.subscription,
+                JSON.stringify({ title: 'EasyDash Test', body: 'Push notifications are working!', severity: 'info' })
+            );
+            res.json({ ok: true });
+        } catch (e: any) {
+            res.status(500).json({ error: e.message });
+        }
+    });
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
