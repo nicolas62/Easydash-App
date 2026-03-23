@@ -9,7 +9,9 @@ dist-server/
 .env
 .env.local
 .env.*.local
-.env.production
+# .env.production est commité volontairement : ne contient que des clés
+# Google publiques (VITE_*) restreintes par domaine dans Google Cloud Console.
+# Ne jamais y mettre de secrets serveur (VAPID, PUSH_SECRET, etc.)
 .env.development
 
 # Docker local overrides — contain secrets (VAPID keys, etc.)
