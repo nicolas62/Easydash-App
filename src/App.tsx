@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RefreshCw } from 'lucide-react';
 
@@ -12,6 +12,8 @@ import { usePolling } from './hooks/usePolling';
 import { useSwipe } from './hooks/useSwipe';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useNotifications } from './hooks/useNotifications';
+import { useAlertRules } from './hooks/useAlertRules';
+import { useAlerts } from './hooks/useAlerts';
 import { jeedomWs } from './services/jeedomWs';
 
 import Header from './components/layout/Header';
@@ -87,9 +89,31 @@ const App: React.FC = () => {
   const { handleTouchStart: handleSwipeTouchStart, handleTouchEnd: handleSwipeTouchEnd } = useSwipe(dashboards, activeDashboardId, setActiveDashboardId);
   
   const { sensors, handleDragEnd } = useDnd(setWidgets);
-  
+
   usePolling(settings, isSettingsLoaded, refreshWidgetValues, widgets, activeDashboardId);
   useWebSocket(settings, isSettingsLoaded, updateCommandValues);
+
+  // ── Système d'alertes ──────────────────────────────────────────────────────
+  const { rules } = useAlertRules();
+  const [alertHistoryRefreshKey, setAlertHistoryRefreshKey] = useState(0);
+
+  useAlerts({
+    rules,
+    commands,
+    onNewAlerts: () => setAlertHistoryRefreshKey(k => k + 1),
+  });
+
+  // Écoute les toasts d'alerte émis par alertService.dispatchNotification()
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { title, body, severity } = (e as CustomEvent).detail;
+      const type = severity === 'critical' ? 'error' : severity === 'warning' ? 'warning' : 'success';
+      setNotification({ message: `${title} — ${body}`, type });
+    };
+    window.addEventListener('easydash:alert', handler);
+    return () => window.removeEventListener('easydash:alert', handler);
+  }, [setNotification]);
+  // ──────────────────────────────────────────────────────────────────────────
 
   // Rafraîchit les valeurs au changement de dashboard uniquement si le WS ne gère pas les updates
   useEffect(() => {
@@ -240,6 +264,8 @@ const App: React.FC = () => {
         onSaveSettings={setSettings}
         dashboards={dashboards}
         widgets={widgets}
+        commands={commands}
+        alertHistoryRefreshKey={alertHistoryRefreshKey}
         onImportConfig={(data, mode) => {
           importDashboards(data, mode);
           importSettings(data);
@@ -250,7 +276,6 @@ const App: React.FC = () => {
         editingWidget={editingWidget}
         onSaveWidget={(widget) => handleSaveWidget(widget, editingWidget)}
         eqLogics={eqLogics}
-        commands={commands}
         activeDashboardId={activeDashboardId}
         isDashboardModalOpen={isDashboardModalOpen}
         closeDashboardModal={() => {

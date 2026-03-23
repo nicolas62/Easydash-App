@@ -3,6 +3,19 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.9.0",
+        date: "23 Mars 2026",
+        features: [
+            { type: 'new', text: "Notifications Push Web (Approach 3) : les alertes arrivent maintenant sur votre appareil même lorsque l'application est fermée, via le Web Push API (RFC 8030). Un Service Worker dédié reçoit les messages serveur et affiche la notification système." },
+            { type: 'new', text: "Service Worker personnalisé : migration de la PWA vers le mode injectManifest — le SW gère désormais le précache Workbox, le fallback SPA et les événements push/notificationclick." },
+            { type: 'new', text: "Gestion des abonnements push : nouvel onglet 'Push' dans Alertes — abonnement en un clic, liste des appareils enregistrés, bouton de test, et désabonnement. Les abonnements sont persistés dans un volume Docker dédié." },
+            { type: 'new', text: "Endpoints push côté serveur : /api/push/vapid-public-key, /api/push/subscribe, /api/push/devices, /api/push/broadcast, /api/push/test/:id — avec nettoyage automatique des abonnements expirés (410/404)." },
+            { type: 'improvement', text: "Règles d'alerte avec canal 'Notification' ou 'Les deux' : en plus de la Notification API locale, une diffusion push est envoyée à tous les appareils abonnés via /api/push/broadcast." },
+            { type: 'improvement', text: "Script de build corrigé : vite build utilise désormais --config src/vite.config.ts, ce qui activait VitePWA qui était silencieusement ignoré depuis l'origine." },
+            { type: 'improvement', text: "Hook useAlertSubscription : gestion complète du cycle de vie (permission, VAPID, subscribe, unsubscribe, test, fetchDevices) avec persistance de l'ID d'appareil en localStorage." },
+        ]
+    },
+    {
         version: "0.8.5",
         date: "22 Mars 2026",
         features: [

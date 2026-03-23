@@ -21,6 +21,13 @@ export default defineConfig(({ mode }) => {
         react(),
         VitePWA({
           registerType: 'autoUpdate',
+          strategies: 'injectManifest',
+          srcDir: 'src',
+          filename: 'sw.ts',
+          injectManifest: {
+            // Exclude large files (logo.png is 6 MB — too large to precache)
+            globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
+          },
           includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
           manifest: {
             short_name: "EasyDash",
@@ -43,31 +50,6 @@ export default defineConfig(({ mode }) => {
             background_color: "#121212",
             orientation: "portrait"
           },
-          workbox: {
-            cleanupOutdatedCaches: true,
-            navigateFallback: '/index.html',
-            navigateFallbackDenylist: [/^\/core\/api/, /^\/core\/jeeApi\.php/],
-            runtimeCaching: [
-              {
-                urlPattern: ({ request, url }) => {
-                  return request.method === 'POST' || 
-                         url.hostname.includes('homenico.ddns.net') ||
-                         url.pathname.includes('jeeApi');
-                },
-                handler: 'NetworkOnly'
-              },
-              {
-                urlPattern: ({ request, url }) => {
-                  return request.destination === 'script' ||
-                         request.destination === 'style' ||
-                         request.destination === 'image' ||
-                         request.destination === 'font' ||
-                         url.pathname.endsWith('.html');
-                },
-                handler: 'StaleWhileRevalidate'
-              }
-            ]
-          }
         })
       ],
       define: {

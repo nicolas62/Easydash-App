@@ -9,7 +9,7 @@ interface InfoWidgetProps {
   animateValue: boolean;
 }
 
-const InfoWidget: React.FC<InfoWidgetProps> = ({ widget, Icon, displayValue, isColorized, animateValue }) => {
+const InfoWidget = React.memo(({ widget, Icon, displayValue, isColorized, animateValue }: InfoWidgetProps) => {
   return (
     <>
       {/* Background icon (watermark) */}
@@ -44,6 +44,7 @@ const InfoWidget: React.FC<InfoWidgetProps> = ({ widget, Icon, displayValue, isC
       </div>
     </>
   );
-};
+});
 
+InfoWidget.displayName = 'InfoWidget';
 export default InfoWidget;

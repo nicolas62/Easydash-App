@@ -17,13 +17,14 @@ interface ModalsProps {
   onSaveSettings: (settings: AppSettings) => void;
   dashboards: Dashboard[];
   widgets: WidgetConfig[];
+  commands: JeedomCommand[];
+  alertHistoryRefreshKey?: number;
   onImportConfig: (data: any, mode: 'replace' | 'merge') => void;
   isWidgetEditorOpen: boolean;
   closeWidgetEditor: () => void;
   editingWidget?: WidgetConfig;
   onSaveWidget: (widget: WidgetConfig) => void;
   eqLogics: JeedomEqLogic[];
-  commands: JeedomCommand[];
   activeDashboardId: string;
   isDashboardModalOpen: boolean;
   closeDashboardModal: () => void;
@@ -62,13 +63,14 @@ const Modals: React.FC<ModalsProps> = ({
   onSaveSettings,
   dashboards,
   widgets,
+  commands,
+  alertHistoryRefreshKey,
   onImportConfig,
   isWidgetEditorOpen,
   closeWidgetEditor,
   editingWidget,
   onSaveWidget,
   eqLogics,
-  commands,
   activeDashboardId,
   isDashboardModalOpen,
   closeDashboardModal,
@@ -108,6 +110,8 @@ const Modals: React.FC<ModalsProps> = ({
         onSave={onSaveSettings}
         dashboards={dashboards}
         widgets={widgets}
+        commands={commands}
+        alertHistoryRefreshKey={alertHistoryRefreshKey}
         onImport={onImportConfig}
       />
       <WidgetEditorModal
