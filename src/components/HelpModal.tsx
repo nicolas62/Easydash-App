@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, LayoutDashboard, PlusSquare, ToggleLeft, Activity, MousePointerClick, Edit3, Database, Workflow, Play, Power, Star, Settings, RotateCw, Layers, Smartphone, HelpCircle, Cloud, Cookie, AlertTriangle, Wrench } from 'lucide-react';
+import { X, LayoutDashboard, Smartphone, Cloud, Cookie, AlertTriangle, Wrench, Bell, ShieldCheck, SlidersHorizontal, BarChart2, Clapperboard } from 'lucide-react';
 import { APP_VERSION } from '../constants';
 
 interface HelpModalProps {
@@ -13,7 +13,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-dark-bg/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-dark-surface w-full max-w-2xl rounded-2xl shadow-2xl border border-border flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-4 duration-300">
-                
+
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-border bg-dark-surface/50 rounded-t-2xl">
                     <h2 className="text-xl font-bold text-content-primary flex items-center gap-2">
@@ -27,7 +27,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
                 {/* Content */}
                 <div className="p-6 overflow-y-auto custom-scrollbar space-y-8 text-content-primary">
-                    
+
                     {/* Intro */}
                     <section className="space-y-3">
                         <h3 className="text-lg font-bold flex items-center gap-2 text-jeedom-500">
@@ -36,9 +36,43 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                         <p className="text-content-secondary leading-relaxed">
                             Ce tableau de bord vous permet de contrôler et de surveiller la maison en temps réel. Dès qu'un équipement change d'état (une lumière qui s'allume, une température qui monte), l'écran se met à jour instantanément !
                         </p>
-                        <p className="text-content-secondary">
-                            Voici un petit guide pour vous aider à utiliser toutes les fonctionnalités.
-                        </p>
+                    </section>
+
+                    {/* Vie privée & stockage — mis en avant */}
+                    <section className="space-y-3">
+                        <h3 className="text-lg font-bold flex items-center gap-2 text-jeedom-500">
+                            <ShieldCheck size={20} />
+                            Vie privée & stockage des données
+                        </h3>
+                        <div className="bg-input-bg border border-border rounded-xl p-4 text-sm space-y-3">
+                            <p className="text-content-secondary leading-relaxed">
+                                EasyDash est conçu pour ne <strong className="text-content-primary">rien stocker côté serveur</strong>. Toute votre configuration (dashboards, widgets, règles d'alerte, historique) est conservée <strong className="text-content-primary">uniquement dans le stockage local de votre navigateur</strong> (localStorage). Aucune donnée personnelle ne transite ni n'est stockée sur nos serveurs.
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-3 text-xs">
+                                <div className="bg-dark-card border border-green-500/20 rounded-lg p-3 space-y-1">
+                                    <p className="font-semibold text-green-400">✅ Stocké uniquement chez vous</p>
+                                    <ul className="text-content-secondary space-y-0.5 list-disc list-inside ml-1">
+                                        <li>Dashboards & widgets</li>
+                                        <li>URL et clé API Jeedom</li>
+                                        <li>Règles d'alerte</li>
+                                        <li>Historique des alertes</li>
+                                        <li>Préférences & paramètres</li>
+                                    </ul>
+                                </div>
+                                <div className="bg-dark-card border border-orange-500/20 rounded-lg p-3 space-y-1">
+                                    <p className="font-semibold text-orange-400">⚠️ Exception : notifications push</p>
+                                    <p className="text-content-secondary leading-relaxed">
+                                        Si vous activez les <strong>notifications push</strong>, votre navigateur génère un <em>endpoint</em> unique (URL anonyme fournie par Google/Mozilla/Apple) stocké dans le fichier <code className="bg-dark-surface px-1 rounded">subscriptions.json</code> sur le serveur.
+                                        Ce fichier ne contient <strong>aucun nom, email ni donnée personnelle</strong> — uniquement des identifiants techniques nécessaires à l'envoi des notifications. Vous pouvez vous désabonner à tout moment depuis l'onglet <strong>Alertes → Push</strong>.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <p className="text-xs text-content-secondary italic">
+                                La clé API Jeedom est chiffrée (AES-GCM) avant d'être sauvegardée dans votre navigateur. Elle ne quitte jamais votre appareil en clair.
+                            </p>
+                        </div>
                     </section>
 
                     {/* Installation Mobile */}
@@ -48,14 +82,13 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             Installer l'application sur votre téléphone
                         </h3>
                         <div className="bg-input-bg border border-border rounded-xl p-4 text-sm space-y-4">
-                            <p>Pour un accès plus rapide, vous pouvez installer ce tableau de bord comme une vraie application sur votre smartphone (sans avoir à ouvrir le navigateur à chaque fois) :</p>
-                            
+                            <p>Pour un accès plus rapide, installez EasyDash comme une vraie application sur votre smartphone :</p>
                             <div className="grid md:grid-cols-2 gap-4">
                                 <div className="bg-dark-card p-3 rounded-lg border border-border/50">
                                     <h4 className="font-bold text-content-primary mb-2">🍎 Sur iPhone / iPad (Safari) :</h4>
                                     <ol className="list-decimal list-inside text-content-secondary space-y-1 ml-1 text-xs">
-                                        <li>Touchez l'icône de <strong>Partage</strong> (le carré avec une flèche vers le haut, en bas de l'écran).</li>
-                                        <li>Descendez et choisissez <strong>"Sur l'écran d'accueil"</strong>.</li>
+                                        <li>Touchez l'icône de <strong>Partage</strong> (carré avec flèche, en bas).</li>
+                                        <li>Choisissez <strong>"Sur l'écran d'accueil"</strong>.</li>
                                         <li>Confirmez en touchant <strong>"Ajouter"</strong>.</li>
                                     </ol>
                                 </div>
@@ -63,7 +96,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                     <h4 className="font-bold text-content-primary mb-2">🤖 Sur Android (Chrome) :</h4>
                                     <ol className="list-decimal list-inside text-content-secondary space-y-1 ml-1 text-xs">
                                         <li>Touchez les <strong>3 petits points</strong> en haut à droite.</li>
-                                        <li>Choisissez <strong>"Ajouter à l'écran d'accueil"</strong> (ou "Installer l'application").</li>
+                                        <li>Choisissez <strong>"Ajouter à l'écran d'accueil"</strong>.</li>
                                         <li>Suivez les instructions à l'écran.</li>
                                     </ol>
                                 </div>
@@ -78,29 +111,72 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             Comment utiliser les Widgets ?
                         </h3>
                         <div className="bg-input-bg border border-border rounded-xl p-4 text-sm space-y-3">
-                            <p className="mb-2">Votre écran est composé de plusieurs "blocs" appelés widgets. Voici comment ils fonctionnent :</p>
+                            <p>Votre écran est composé de "blocs" appelés widgets. Voici comment ils fonctionnent :</p>
                             <ul className="space-y-2 text-content-secondary">
                                 <li className="flex gap-2">
                                     <span className="text-lg">💡</span>
-                                    <span><strong>Interrupteurs et Prises :</strong> Un simple clic sur le bouton permet d'allumer ou d'éteindre l'équipement. L'icône change de couleur quand c'est allumé.</span>
+                                    <span><strong>Interrupteurs et Prises :</strong> Un clic allume ou éteint. L'icône change de couleur quand c'est actif.</span>
                                 </li>
                                 <li className="flex gap-2">
                                     <span className="text-lg">🌡️</span>
-                                    <span><strong>Thermostat :</strong> Affiche la température actuelle en grand. Utilisez les petits boutons + et - pour ajuster la température souhaitée (la consigne). La couleur du widget peut changer selon si le chauffage/clim est en route !</span>
+                                    <span><strong>Thermostat :</strong> Affiche la température actuelle. Utilisez + et − pour ajuster la consigne.</span>
                                 </li>
-                                <li className="flex gap-2">
-                                    <span className="text-lg">📷</span>
-                                    <span><strong>Caméra :</strong> Affiche la vue en direct. Si la fonctionnalité est activée, cliquez sur l'image pour la voir en plein écran.</span>
+                                <li className="flex gap-2 items-start">
+                                    <SlidersHorizontal size={16} className="text-jeedom-500 mt-0.5 shrink-0" />
+                                    <span><strong>Slider :</strong> Curseur pour ajuster une valeur numérique (luminosité, volet, volume…). La valeur se met à jour en temps réel via WebSocket et est envoyée à Jeedom au relâchement.</span>
                                 </li>
-                                <li className="flex gap-2">
-                                    <span className="text-lg">📈</span>
-                                    <span><strong>Graphiques :</strong> Ces blocs vous montrent l'historique d'une donnée (comme la température de la journée). Selon la configuration, vous verrez une courbe continue ou des barres regroupées par jour.</span>
+                                <li className="flex gap-2 items-start">
+                                    <Clapperboard size={16} className="text-jeedom-500 mt-0.5 shrink-0" />
+                                    <span><strong>Caméra :</strong> Affiche la vue en direct. En mode proxy, l'image transite par le serveur pour ne jamais exposer votre clé API dans le navigateur.</span>
+                                </li>
+                                <li className="flex gap-2 items-start">
+                                    <BarChart2 size={16} className="text-jeedom-500 mt-0.5 shrink-0" />
+                                    <span><strong>Graphiques :</strong> Historique d'une donnée sur 24h, 7j ou 30j avec sélection de période personnalisée.</span>
                                 </li>
                                 <li className="flex gap-2">
                                     <span className="text-lg">☀️</span>
-                                    <span><strong>Météo :</strong> Vous donne les conditions actuelles et les prévisions (températures minimales et maximales) en un clin d'œil.</span>
+                                    <span><strong>Météo :</strong> Conditions actuelles et prévisions min/max en un coup d'œil.</span>
                                 </li>
                             </ul>
+                        </div>
+                    </section>
+
+                    {/* Alertes & Notifications */}
+                    <section className="space-y-3">
+                        <h3 className="text-lg font-bold flex items-center gap-2 text-jeedom-500">
+                            <Bell size={20} />
+                            Alertes & Notifications Push
+                        </h3>
+                        <div className="bg-input-bg border border-border rounded-xl p-4 text-sm space-y-3">
+                            <p className="text-content-secondary leading-relaxed">
+                                Le système d'alertes vous permet de surveiller n'importe quelle commande Jeedom et de recevoir une notification dès qu'un seuil est franchi — même lorsque l'application est fermée.
+                            </p>
+
+                            <div className="space-y-2 text-content-secondary">
+                                <p className="font-semibold text-content-primary text-xs uppercase tracking-wide">Créer une règle (Paramètres → Alertes → Règles)</p>
+                                <ul className="space-y-1.5 list-disc list-inside ml-1 text-xs">
+                                    <li><strong>Commande :</strong> choisissez le capteur à surveiller (température, humidité, présence…).</li>
+                                    <li><strong>Condition :</strong> supérieur à, inférieur à, égal à, ou changement de valeur.</li>
+                                    <li><strong>Seuil & hystérésis :</strong> évite les fausses alertes répétées autour d'une valeur limite.</li>
+                                    <li><strong>Plage horaire :</strong> la règle ne se déclenche que pendant la période définie (ex : uniquement la nuit).</li>
+                                    <li><strong>Cooldown :</strong> délai minimum entre deux alertes successives.</li>
+                                    <li><strong>Canal :</strong> <em>Toast</em> (bandeau dans l'app), <em>Notification</em> (push même app fermée), ou <em>Les deux</em>.</li>
+                                </ul>
+                            </div>
+
+                            <div className="space-y-2 text-content-secondary">
+                                <p className="font-semibold text-content-primary text-xs uppercase tracking-wide">Activer les notifications push (Paramètres → Alertes → Push)</p>
+                                <ul className="space-y-1.5 list-disc list-inside ml-1 text-xs">
+                                    <li>Cliquez sur <strong>"Activer les notifications"</strong> — votre navigateur demandera la permission.</li>
+                                    <li>Une fois abonné, les alertes avec canal <em>Notification</em> ou <em>Les deux</em> arrivent directement sur votre écran, même si EasyDash est fermé.</li>
+                                    <li>Utilisez <strong>"Tester"</strong> pour vérifier que tout fonctionne.</li>
+                                    <li>Chaque appareil (téléphone, tablette, PC) doit s'abonner séparément.</li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-dark-card border border-border/50 rounded-lg p-3 text-xs text-content-secondary">
+                                💡 <strong>Historique des alertes</strong> disponible dans l'onglet <em>Historique</em> — vous pouvez y acquitter chaque alerte et tout effacer.
+                            </div>
                         </div>
                     </section>
 
@@ -111,28 +187,25 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             Sauvegarde et Restauration (Google Drive)
                         </h3>
                         <div className="bg-input-bg border border-border rounded-xl p-4 text-sm space-y-3">
-                            <p>Vous avez passé du temps à organiser vos widgets parfaitement ? Vous pouvez sauvegarder votre configuration !</p>
+                            <p>Vous pouvez sauvegarder votre configuration (dashboards, widgets, paramètres) sur Google Drive :</p>
                             <ol className="list-decimal list-inside text-content-secondary space-y-1 ml-1">
-                                <li>Allez dans les paramètres et cliquez sur <strong>"Sauvegarder sur Google Drive"</strong>.</li>
-                                <li>Une fenêtre Google va s'ouvrir pour vous demander de vous connecter.</li>
+                                <li>Allez dans <strong>Paramètres → Données</strong> et cliquez sur <strong>"Sauvegarder sur Google Drive"</strong>.</li>
+                                <li>Une fenêtre Google s'ouvre pour vous authentifier.</li>
+                                <li>Pour restaurer, cliquez sur <strong>"Importer depuis Google Drive"</strong> et choisissez Fusionner ou Remplacer.</li>
                             </ol>
-                            
+
                             <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 text-xs text-orange-200 flex gap-2 items-start">
                                 <AlertTriangle size={16} className="shrink-0 mt-0.5" />
                                 <div>
-                                    <strong>⚠️ Attention - Message de sécurité Google :</strong>
+                                    <strong>Message de sécurité Google :</strong>
                                     <p className="mt-1 opacity-90">
-                                        Comme il s'agit d'une application privée et familiale, Google affichera un avertissement rouge indiquant que "Google n'a pas validé cette application". C'est tout à fait normal !
+                                        Google peut afficher un avertissement "application non vérifiée". C'est normal pour une application privée. Cliquez sur <strong>"Paramètres avancés"</strong> puis <strong>"Accéder à l'application (non sécurisé)"</strong>.
                                     </p>
-                                    <ul className="list-disc list-inside mt-1 ml-1 opacity-80">
-                                        <li>Cliquez sur le lien en bas <strong>"Paramètres avancés"</strong>.</li>
-                                        <li>Puis cliquez sur <strong>"Accéder à l'application (non sécurisé)"</strong>.</li>
-                                    </ul>
                                 </div>
                             </div>
 
-                            <p className="text-xs text-content-secondary mt-2 italic">
-                                L'application ne lira jamais vos emails ou vos fichiers personnels. Elle a uniquement l'autorisation de créer un petit fichier de configuration caché pour sauvegarder l'ordre de vos widgets.
+                            <p className="text-xs text-content-secondary italic">
+                                L'application ne lit jamais vos emails ni vos fichiers personnels. Elle crée uniquement un fichier de configuration caché dans votre Drive.
                             </p>
                         </div>
                     </section>
@@ -141,14 +214,11 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <section className="space-y-3">
                         <h3 className="text-lg font-bold flex items-center gap-2 text-jeedom-500">
                             <Cookie size={20} />
-                            Vie privée et Cookies
+                            Cookies & Analytics
                         </h3>
                         <div className="bg-input-bg border border-border rounded-xl p-4 text-sm space-y-2">
                             <p className="text-content-secondary">
-                                Nous utilisons un outil statistique (Google Analytics) de manière totalement anonyme pour comprendre comment le tableau de bord est utilisé et l'améliorer.
-                            </p>
-                            <p className="text-content-secondary">
-                                Un bandeau s'affiche en bas de votre écran lors de votre première visite : vous êtes totalement libre de cliquer sur "Accepter" ou "Refuser". Cela ne bloquera en aucun cas le fonctionnement de la maison !
+                                Nous utilisons Google Analytics de manière anonyme pour comprendre comment le tableau de bord est utilisé et l'améliorer. Un bandeau s'affiche lors de votre première visite — vous êtes libre d'accepter ou de refuser sans impact sur le fonctionnement.
                             </p>
                         </div>
                     </section>
@@ -160,19 +230,21 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             Dépannage rapide
                         </h3>
                         <div className="bg-input-bg border border-border rounded-xl p-4 text-sm space-y-3">
-                            <p className="mb-2">Un petit souci ? Voici les solutions aux problèmes les plus courants :</p>
                             <ul className="space-y-3 text-content-secondary">
                                 <li>
-                                    <strong>L'écran ne répond plus ou affiche des valeurs bizarres :</strong> Si la connexion internet saute, le tableau de bord essaiera de se reconnecter tout seul. Si rien ne bouge après quelques secondes, rechargez simplement la page (glissez votre doigt vers le bas sur mobile).
+                                    <strong>L'écran ne répond plus ou affiche des valeurs bizarres :</strong> Le tableau de bord essaiera de se reconnecter automatiquement. Sinon, rechargez la page (glissez vers le bas sur mobile).
                                 </li>
                                 <li>
-                                    <strong>Écran noir après une mise à jour :</strong> Si nous avons fait une mise à jour du système et que votre écran reste noir, c'est que votre téléphone a gardé l'ancienne version en mémoire. Rafraîchissez la page une ou deux fois, ou videz le cache de votre navigateur.
+                                    <strong>Écran noir après une mise à jour :</strong> Votre navigateur a conservé l'ancienne version en cache. Rafraîchissez une ou deux fois, ou videz le cache.
                                 </li>
                                 <li>
-                                    <strong>Un widget a disparu :</strong> Vérifiez dans les paramètres (l'icône engrenage) si vous ne l'avez pas masqué par erreur.
+                                    <strong>Les notifications push n'arrivent plus :</strong> Désabonnez-vous puis réabonnez-vous depuis <strong>Paramètres → Alertes → Push</strong>. Cela arrive notamment après une réinstallation du navigateur.
                                 </li>
                                 <li>
-                                    <strong>Connexion impossible depuis l'extérieur :</strong> Si vous utilisez l'application en dehors de chez vous (4G/5G), assurez-vous d'avoir ouvert les ports <strong>HTTPS (443)</strong> pour l'interface et <strong>RPC (8012)</strong> pour le temps réel sur votre box internet.
+                                    <strong>Un widget a disparu :</strong> Vérifiez dans les Paramètres si vous ne l'avez pas masqué par erreur.
+                                </li>
+                                <li>
+                                    <strong>Connexion impossible depuis l'extérieur :</strong> Assurez-vous d'avoir ouvert les ports <strong>HTTPS (443)</strong> et <strong>RPC (8012)</strong> sur votre box internet.
                                 </li>
                             </ul>
                         </div>
@@ -182,7 +254,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
                 {/* Footer */}
                 <div className="p-6 border-t border-border bg-dark-surface/50 rounded-b-2xl">
-                    <button 
+                    <button
                         onClick={onClose}
                         className="w-full bg-jeedom-600 hover:bg-jeedom-500 text-white py-3 rounded-xl font-medium transition-colors"
                     >
