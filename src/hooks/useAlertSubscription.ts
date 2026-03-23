@@ -1,6 +1,32 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const DEVICE_ID_KEY = 'easydash_push_device_id';
+const DEVICE_ID_KEY    = 'easydash_push_device_id';
+const PUSH_TOKEN_KEY   = 'easydash_push_token';
+
+/** Return the cached server token, or fetch a fresh one. */
+async function getPushToken(): Promise<string | null> {
+    const cached = sessionStorage.getItem(PUSH_TOKEN_KEY);
+    if (cached) return cached;
+    try {
+        const res = await fetch('/api/push/vapid-public-key');
+        if (!res.ok) return null;
+        const { token } = await res.json();
+        if (token) sessionStorage.setItem(PUSH_TOKEN_KEY, token);
+        return token ?? null;
+    } catch { return null; }
+}
+
+/** Fetch wrapper that includes the push auth token. */
+async function pushFetch(url: string, init: RequestInit = {}): Promise<Response> {
+    const token = await getPushToken();
+    return fetch(url, {
+        ...init,
+        headers: {
+            ...(init.headers as Record<string, string> ?? {}),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+    });
+}
 
 /** Convert a VAPID URL-safe base64 public key to a Uint8Array. */
 async function urlBase64ToUint8Array(base64: string): Promise<Uint8Array> {
@@ -37,8 +63,8 @@ export function useAlertSubscription() {
         setPermission(Notification.permission);
 
         // Check server-side availability
-        fetch('/api/push/vapid-public-key')
-            .then(r => setPushAvailable(r.ok))
+        getPushToken()
+            .then(t => setPushAvailable(t !== null))
             .catch(() => setPushAvailable(false));
 
         // Check existing subscription
@@ -60,7 +86,8 @@ export function useAlertSubscription() {
 
             const keyRes = await fetch('/api/push/vapid-public-key');
             if (!keyRes.ok) throw new Error('Push not configured on server');
-            const { publicKey } = await keyRes.json();
+            const { publicKey, token } = await keyRes.json();
+            if (token) sessionStorage.setItem(PUSH_TOKEN_KEY, token);
 
             const reg = await navigator.serviceWorker.ready;
             const subscription = await reg.pushManager.subscribe({
@@ -68,7 +95,7 @@ export function useAlertSubscription() {
                 applicationServerKey: await urlBase64ToUint8Array(publicKey),
             });
 
-            const res = await fetch('/api/push/subscribe', {
+            const res = await pushFetch('/api/push/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -99,7 +126,7 @@ export function useAlertSubscription() {
 
             const id = localStorage.getItem(DEVICE_ID_KEY);
             if (id) {
-                await fetch(`/api/push/subscribe/${id}`, { method: 'DELETE' }).catch(() => {});
+                await pushFetch(`/api/push/subscribe/${id}`, { method: 'DELETE' }).catch(() => {});
                 localStorage.removeItem(DEVICE_ID_KEY);
             }
             setDeviceId(null);
@@ -114,12 +141,12 @@ export function useAlertSubscription() {
     const sendTest = useCallback(async (): Promise<void> => {
         const id = deviceId;
         if (!id) return;
-        await fetch(`/api/push/test/${id}`, { method: 'POST' }).catch(() => {});
+        await pushFetch(`/api/push/test/${id}`, { method: 'POST' }).catch(() => {});
     }, [deviceId]);
 
     const fetchDevices = useCallback(async (): Promise<PushDeviceInfo[]> => {
         try {
-            const res = await fetch('/api/push/devices');
+            const res = await pushFetch('/api/push/devices');
             return res.ok ? res.json() : [];
         } catch { return []; }
     }, []);

@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import crypto from "crypto";
 import webpush from "web-push";
 import fs from "fs";
 
@@ -33,6 +34,57 @@ const isSafeUrl = (urlStr: string): boolean => {
         return false;
     }
 };
+
+// ─── Push security helpers ────────────────────────────────────────────────────
+
+// Token generated at startup — any client that can reach the server can fetch it
+// via GET /api/push/token. It protects against blind external requests (scanners,
+// cross-origin CSRF) but is not a substitute for network-level access control.
+const PUSH_SERVER_TOKEN: string =
+    process.env.PUSH_SECRET || crypto.randomBytes(32).toString('hex');
+
+if (!process.env.PUSH_SECRET) {
+    console.info('[push] No PUSH_SECRET env var set — generated ephemeral token (resets on restart).');
+}
+
+// Simple in-memory rate limiter (no extra dependency)
+const _rateBuckets = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(key: string, maxPerWindow: number, windowMs: number): boolean {
+    const now = Date.now();
+    const bucket = _rateBuckets.get(key);
+    if (!bucket || now > bucket.resetAt) {
+        _rateBuckets.set(key, { count: 1, resetAt: now + windowMs });
+        return true;
+    }
+    if (bucket.count >= maxPerWindow) return false;
+    bucket.count++;
+    return true;
+}
+
+// CSRF / origin guard — reject requests whose Origin header doesn't match the server host.
+// Browsers always send Origin on cross-site requests; same-origin requests either omit it
+// or send the correct value. Direct CLI tools (curl) have no Origin — allowed but rate-limited.
+function isAllowedOrigin(req: any): boolean {
+    const origin: string | undefined = req.headers['origin'];
+    if (!origin) return true; // direct / curl — rely on rate limiting
+    const host: string = req.headers['host'] || '';
+    const allowed = new Set([
+        `http://${host}`,
+        `https://${host}`,
+        ...(process.env.PUSH_ALLOWED_ORIGIN ? [process.env.PUSH_ALLOWED_ORIGIN] : []),
+    ]);
+    return allowed.has(origin);
+}
+
+// Bearer token check
+function hasPushToken(req: any): boolean {
+    const auth: string | undefined = req.headers['authorization'];
+    return auth === `Bearer ${PUSH_SERVER_TOKEN}`;
+}
+
+// Max subscriptions to prevent memory DOS
+const MAX_SUBSCRIPTIONS = 50;
 
 // ─── Web Push ─────────────────────────────────────────────────────────────────
 
@@ -119,7 +171,7 @@ async function startServer() {
       res.status(200).send("OK");
     });
 
-    app.use(express.json());
+    app.use(express.json({ limit: '512kb' }));
 
     // Proxy HTTP → Jeedom (résout les problèmes CORS pour les accès externes)
     app.post("/api/proxy", async (req: any, res: any) => {
@@ -186,15 +238,33 @@ async function startServer() {
 
     // ── Push subscription endpoints ─────────────────────────────────────────
 
+    // Public endpoint — returns VAPID public key and a server token so the
+    // frontend can authenticate subsequent write requests.
     app.get("/api/push/vapid-public-key", (_req: any, res: any) => {
         if (!pushEnabled) return res.status(503).json({ error: 'Push not configured' });
-        res.json({ publicKey: VAPID_PUBLIC });
+        res.json({ publicKey: VAPID_PUBLIC, token: PUSH_SERVER_TOKEN });
     });
 
+    // Subscribe — rate-limited to 5 new subscriptions per IP per hour
     app.post("/api/push/subscribe", (req: any, res: any) => {
         if (!pushEnabled) return res.status(503).json({ error: 'Push not configured' });
+        if (!isAllowedOrigin(req)) return res.status(403).json({ error: 'Origin not allowed' });
+
+        const ip = String(req.ip || '');
+        if (!checkRateLimit(`sub:${ip}`, 5, 3_600_000)) {
+            return res.status(429).json({ error: 'Too many subscription requests' });
+        }
+        if (subscriptions.size >= MAX_SUBSCRIPTIONS) {
+            return res.status(429).json({ error: 'Subscription limit reached' });
+        }
+
         const { subscription, deviceName } = req.body || {};
-        if (!subscription?.endpoint) return res.status(400).json({ error: 'Missing subscription' });
+        if (!subscription?.endpoint || typeof subscription.endpoint !== 'string') {
+            return res.status(400).json({ error: 'Missing or invalid subscription' });
+        }
+        if (subscription.endpoint.length > 500) {
+            return res.status(400).json({ error: 'Subscription endpoint too long' });
+        }
 
         const id = Buffer.from(subscription.endpoint).toString('base64').slice(0, 32);
         const device: PushDevice = {
@@ -209,14 +279,19 @@ async function startServer() {
         res.json({ id });
     });
 
+    // Unsubscribe — requires token + origin check
     app.delete("/api/push/subscribe/:id", (req: any, res: any) => {
+        if (!isAllowedOrigin(req)) return res.status(403).json({ error: 'Origin not allowed' });
+        if (!hasPushToken(req))    return res.status(401).json({ error: 'Unauthorized' });
         const { id } = req.params;
         subscriptions.delete(id);
         saveSubscriptions();
         res.json({ ok: true });
     });
 
-    app.get("/api/push/devices", (_req: any, res: any) => {
+    // Device list — requires token
+    app.get("/api/push/devices", (req: any, res: any) => {
+        if (!hasPushToken(req)) return res.status(401).json({ error: 'Unauthorized' });
         const list = [...subscriptions.values()].map(d => ({
             id:         d.id,
             deviceName: d.deviceName,
@@ -225,16 +300,38 @@ async function startServer() {
         res.json(list);
     });
 
+    // Broadcast — requires token + origin + rate limit (20/hour global)
     app.post("/api/push/broadcast", async (req: any, res: any) => {
         if (!pushEnabled) return res.status(503).json({ error: 'Push not configured' });
+        if (!isAllowedOrigin(req)) return res.status(403).json({ error: 'Origin not allowed' });
+        if (!hasPushToken(req))    return res.status(401).json({ error: 'Unauthorized' });
+
+        if (!checkRateLimit('broadcast', 20, 3_600_000)) {
+            return res.status(429).json({ error: 'Broadcast rate limit exceeded' });
+        }
+
         const { title, body, severity } = req.body || {};
-        if (!title || !body) return res.status(400).json({ error: 'Missing title or body' });
-        await broadcastPush({ title, body, severity });
+        if (!title || !body || typeof title !== 'string' || typeof body !== 'string') {
+            return res.status(400).json({ error: 'Missing or invalid title/body' });
+        }
+        await broadcastPush({
+            title: title.slice(0, 200),
+            body:  body.slice(0, 500),
+            severity,
+        });
         res.json({ ok: true, sent: subscriptions.size });
     });
 
+    // Test notification — requires token + rate limit (5/hour per device)
     app.post("/api/push/test/:id", async (req: any, res: any) => {
         if (!pushEnabled) return res.status(503).json({ error: 'Push not configured' });
+        if (!hasPushToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+
+        const ip = String(req.ip || '');
+        if (!checkRateLimit(`test:${ip}`, 5, 3_600_000)) {
+            return res.status(429).json({ error: 'Too many test requests' });
+        }
+
         const device = subscriptions.get(req.params.id);
         if (!device) return res.status(404).json({ error: 'Device not found' });
         try {
