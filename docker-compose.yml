@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   easydash:
     image: ghcr.io/nicolas62/easydash:latest
@@ -6,8 +5,16 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    volumes:
+      - easydash_push_data:/app/data
     environment:
       - NODE_ENV=production
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VAPID_SUBJECT=${VAPID_SUBJECT:-mailto:admin@easydash.local}
+      - PUSH_SECRET=${PUSH_SECRET}
+      - PUSH_ALLOWED_ORIGIN=${PUSH_ALLOWED_ORIGIN:-}
+      - ALLOW_INSECURE_TLS=${ALLOW_INSECURE_TLS:-false}
     networks:
       - test_wp_wordpress_network
     labels:
@@ -16,6 +23,10 @@ services:
       - "traefik.http.routers.easydash.entrypoints=websecure"
       - "traefik.http.routers.easydash.tls.certresolver=letsencrypt"
       - "traefik.http.services.easydash.loadbalancer.server.port=3000"
+
+volumes:
+  easydash_push_data:
+    name: easydash_push_data
 
 networks:
   test_wp_wordpress_network:
