@@ -56,19 +56,25 @@ export function useAlerts({ rules, commands, onNewAlerts }: UseAlertsOptions) {
             onNewAlerts?.(allHistory);
 
             // Broadcast via Web Push (works even when app is closed)
-            for (const entry of allHistory) {
-                const rule = rules.find(r => r.id === entry.ruleId);
-                if (rule && (rule.channel === 'notification' || rule.channel === 'both')) {
-                    const unit = rule.cmdUnit || '';
-                    fetch('/api/push/broadcast', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            title: rule.name,
-                            body: `${entry.cmdName ?? entry.cmdId} : ${entry.value}${unit} (seuil ${entry.threshold}${unit})`,
-                            severity: entry.severity,
-                        }),
-                    }).catch(() => {}); // fire-and-forget
+            const pushToken = sessionStorage.getItem('easydash_push_token');
+            if (pushToken) {
+                for (const entry of allHistory) {
+                    const rule = rules.find(r => r.id === entry.ruleId);
+                    if (rule && (rule.channel === 'notification' || rule.channel === 'both')) {
+                        const unit = rule.cmdUnit || '';
+                        fetch('/api/push/broadcast', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${pushToken}`,
+                            },
+                            body: JSON.stringify({
+                                title: rule.name,
+                                body: `${entry.cmdName ?? entry.cmdId} : ${entry.value}${unit} (seuil ${entry.threshold}${unit})`,
+                                severity: entry.severity,
+                            }),
+                        }).catch(() => {}); // fire-and-forget
+                    }
                 }
             }
         }
