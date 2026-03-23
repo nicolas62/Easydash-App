@@ -43,37 +43,46 @@ export interface PushDeviceInfo {
 }
 
 export function useAlertSubscription() {
-    const [isSupported, setIsSupported]   = useState(false);
-    const [isSubscribed, setIsSubscribed] = useState(false);
-    const [isLoading, setIsLoading]       = useState(false);
-    const [pushAvailable, setPushAvailable] = useState<boolean | null>(null); // null = checking
-    const [deviceId, setDeviceId]         = useState<string | null>(() => localStorage.getItem(DEVICE_ID_KEY));
-    const [permission, setPermission]     = useState<NotificationPermission>('default');
+    const [isSupported, setIsSupported]     = useState(false);
+    const [pushAvailable, setPushAvailable] = useState<boolean | null>(null);
+    const [isLoading, setIsLoading]         = useState(false);
+    const [deviceId, setDeviceId]           = useState<string | null>(() => localStorage.getItem(DEVICE_ID_KEY));
+    const [permission, setPermission]       = useState<NotificationPermission>('default');
 
-    // Check if push is supported and already subscribed
+    // Initialisation optimiste : si un deviceId existe en localStorage,
+    // on suppose l'abonnement actif. Le check SW ci-dessous corrige si nécessaire.
+    const [isSubscribed, setIsSubscribed]   = useState<boolean>(() => !!localStorage.getItem(DEVICE_ID_KEY));
+
+    // Check support + disponibilité serveur + confirmation SW
     useEffect(() => {
         const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
         setIsSupported(supported);
 
         if (!supported) {
             setPushAvailable(false);
+            setIsSubscribed(false);
             return;
         }
 
         setPermission(Notification.permission);
 
-        // Check server-side availability
+        // Disponibilité serveur
         getPushToken()
             .then(t => setPushAvailable(t !== null))
             .catch(() => setPushAvailable(false));
 
-        // Check existing subscription
-        navigator.serviceWorker.ready.then(reg =>
+        // Confirmation SW : corrige l'état optimiste si la souscription
+        // a été révoquée côté navigateur (ex : user a vidé le cache)
+        navigator.serviceWorker.getRegistration().then(reg => {
+            if (!reg) { setIsSubscribed(false); return; }
             reg.pushManager.getSubscription().then(sub => {
                 const storedId = localStorage.getItem(DEVICE_ID_KEY);
-                setIsSubscribed(!!sub && !!storedId);
-            })
-        ).catch(() => {});
+                const active = !!sub && !!storedId;
+                setIsSubscribed(active);
+                // Nettoyage si le navigateur a révoqué la souscription
+                if (!sub && storedId) localStorage.removeItem(DEVICE_ID_KEY);
+            }).catch(() => {});
+        }).catch(() => {});
     }, []);
 
     const subscribe = useCallback(async (): Promise<void> => {
