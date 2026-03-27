@@ -1,24 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     LayoutDashboard, Activity, History, ArrowRight, CheckCircle,
     Zap, Smartphone, Bell, ShieldCheck, Sliders, MonitorSmartphone,
-    Puzzle, BarChart3, Camera, Thermometer, AlarmSmoke
+    Puzzle, BarChart3, Camera, Thermometer, AlarmSmoke, ExternalLink
 } from 'lucide-react';
 import SEO from './SEO';
+import ReleaseNotesModal from './ReleaseNotesModal';
+import ContactModal from './ContactModal';
 import { APP_VERSION } from '../constants';
 
 interface LandingPageProps {
-    onConnect?: () => void;
-    onDemo?: () => void;
+    onConnect?: () => void; // Opens SettingsModal to configure Jeedom
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onConnect }) => {
+    const [showReleaseNotes, setShowReleaseNotes] = useState(false);
+    const [showContact, setShowContact]           = useState(false);
+
+    const handleDemo = () => {
+        window.open(window.location.origin + '?demo=true', '_blank', 'noopener');
+    };
+
     return (
         <>
             <SEO />
             <div className="min-h-screen bg-dark-bg text-content-primary font-sans animate-in fade-in duration-500">
 
-                {/* ── Header ─────────────────────────────────────────── */}
+                {/* ── Header ───────────────────────────────────────────── */}
                 <header className="fixed top-0 w-full z-50 bg-dark-surface/80 backdrop-blur-md border-b border-border">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex justify-between items-center py-4">
@@ -35,14 +43,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
                                 <a href="#comment" className="text-sm font-medium text-content-secondary hover:text-jeedom-500 transition-colors hidden md:block">
                                     Comment ça marche
                                 </a>
-                                {onDemo && (
-                                    <button
-                                        onClick={onDemo}
-                                        className="text-sm font-medium text-content-secondary hover:text-jeedom-500 transition-colors hidden sm:block"
-                                    >
-                                        Démo
-                                    </button>
-                                )}
+                                <button
+                                    onClick={handleDemo}
+                                    className="text-sm font-medium text-content-secondary hover:text-jeedom-500 transition-colors hidden sm:flex items-center gap-1"
+                                >
+                                    Démo <ExternalLink size={12} aria-hidden="true" />
+                                </button>
                                 {onConnect && (
                                     <button
                                         onClick={onConnect}
@@ -59,7 +65,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
 
                 <main className="pt-24">
 
-                    {/* ── Hero ───────────────────────────────────────────── */}
+                    {/* ── Hero ─────────────────────────────────────────────── */}
                     <section className="relative py-20 lg:py-32 overflow-hidden" aria-labelledby="hero-heading">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-jeedom-500/10 text-jeedom-500 text-xs font-bold uppercase tracking-wider mb-6 border border-jeedom-500/20">
@@ -90,15 +96,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
                                         <ArrowRight size={20} className="text-white/70" aria-hidden="true" />
                                     </button>
                                 )}
-                                {onDemo && (
-                                    <button
-                                        onClick={onDemo}
-                                        className="bg-dark-surface border border-border hover:bg-input-bg text-content-primary px-8 py-4 rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-2"
-                                        aria-label="Essayer la démo en ligne sans configuration"
-                                    >
-                                        Essayer la Démo
-                                    </button>
-                                )}
+                                <button
+                                    onClick={handleDemo}
+                                    className="bg-dark-surface border border-border hover:bg-input-bg text-content-primary px-8 py-4 rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-2"
+                                    aria-label="Essayer la démo en ligne sans configuration"
+                                >
+                                    Essayer la Démo
+                                    <ExternalLink size={16} className="text-content-secondary/60" aria-hidden="true" />
+                                </button>
                             </div>
 
                             <ul className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-content-secondary" aria-label="Points clés">
@@ -114,7 +119,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-jeedom-500/20 rounded-full blur-[120px] -z-10 pointer-events-none" aria-hidden="true" />
                     </section>
 
-                    {/* ── Pourquoi EasyDash ? ────────────────────────────── */}
+                    {/* ── Pourquoi EasyDash ? ──────────────────────────────── */}
                     <section id="pourquoi" className="py-24 bg-dark-surface/30 border-y border-border/50" aria-labelledby="pourquoi-heading">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="text-center mb-16">
@@ -202,7 +207,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
                         </div>
                     </section>
 
-                    {/* ── Comment ça marche ──────────────────────────────── */}
+                    {/* ── Comment ça marche ────────────────────────────────── */}
                     <section id="comment" className="py-24" aria-labelledby="comment-heading">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="text-center mb-16">
@@ -216,31 +221,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
 
                             <ol className="grid md:grid-cols-3 gap-8 list-none" aria-label="Étapes de configuration">
                                 {[
-                                    {
-                                        step: "01",
-                                        icon: Zap,
-                                        title: "Déployez EasyDash",
-                                        text: "Lancez l'image Docker officielle sur votre NAS, Raspberry Pi ou serveur local. Une seule commande suffit. EasyDash tourne en parallèle de votre Jeedom existant.",
-                                        color: "jeedom"
-                                    },
-                                    {
-                                        step: "02",
-                                        icon: Puzzle,
-                                        title: "Connectez votre Jeedom",
-                                        text: "Entrez l'URL de votre box Jeedom et votre clé API dans les paramètres. EasyDash interroge l'API officielle Jeedom pour récupérer tous vos équipements et commandes automatiquement.",
-                                        color: "blue"
-                                    },
-                                    {
-                                        step: "03",
-                                        icon: LayoutDashboard,
-                                        title: "Créez vos tableaux de bord",
-                                        text: "Ajoutez des widgets par glisser-déposer, choisissez vos commandes Jeedom, personnalisez couleurs et icônes. Votre interface tablette domotique est prête en quelques minutes.",
-                                        color: "green"
-                                    },
+                                    { step: "01", icon: Zap,             title: "Déployez EasyDash",          color: "jeedom", text: "Lancez l'image Docker officielle sur votre NAS, Raspberry Pi ou serveur local. Une seule commande suffit. EasyDash tourne en parallèle de votre Jeedom existant." },
+                                    { step: "02", icon: Puzzle,          title: "Connectez votre Jeedom",     color: "blue",   text: "Entrez l'URL de votre box Jeedom et votre clé API dans les paramètres. EasyDash interroge l'API officielle pour récupérer tous vos équipements et commandes automatiquement." },
+                                    { step: "03", icon: LayoutDashboard, title: "Créez vos tableaux de bord", color: "green",  text: "Ajoutez des widgets par glisser-déposer, choisissez vos commandes Jeedom, personnalisez couleurs et icônes. Votre interface tablette domotique est prête en quelques minutes." },
                                 ].map(({ step, icon: Icon, title, text, color }) => (
-                                    <li key={step} className={`relative bg-dark-card border border-${color === 'jeedom' ? 'jeedom' : color}-500/20 p-8 rounded-2xl`}>
-                                        <span className={`text-5xl font-black text-${color === 'jeedom' ? 'jeedom' : color}-500/20 absolute top-6 right-6`} aria-hidden="true">{step}</span>
-                                        <div className={`w-12 h-12 bg-${color === 'jeedom' ? 'jeedom' : color}-500/10 text-${color === 'jeedom' ? 'jeedom' : color}-500 rounded-xl flex items-center justify-center mb-6`}>
+                                    <li key={step} className="relative bg-dark-card border border-border p-8 rounded-2xl">
+                                        <span className="text-5xl font-black text-content-secondary/10 absolute top-6 right-6" aria-hidden="true">{step}</span>
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 ${color === 'jeedom' ? 'bg-jeedom-500/10 text-jeedom-500' : color === 'blue' ? 'bg-blue-500/10 text-blue-500' : 'bg-green-500/10 text-green-500'}`}>
                                             <Icon size={24} aria-hidden="true" />
                                         </div>
                                         <h3 className="text-xl font-bold text-content-primary mb-3">{title}</h3>
@@ -251,7 +238,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
                         </div>
                     </section>
 
-                    {/* ── Widgets disponibles ────────────────────────────── */}
+                    {/* ── Widgets ──────────────────────────────────────────── */}
                     <section className="py-24 bg-dark-surface/30 border-y border-border/50" aria-labelledby="widgets-heading">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="text-center mb-16">
@@ -265,14 +252,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {[
-                                    { icon: LayoutDashboard, label: "Actions & Interrupteurs", desc: "Boutons, toggles, séquences multi-commandes" },
-                                    { icon: Sliders,         label: "Curseur (Slider)",         desc: "Luminosité, volets, tout équipement numérique" },
-                                    { icon: BarChart3,       label: "Graphiques historiques",   desc: "Courbes et histogrammes depuis Jeedom" },
-                                    { icon: Thermometer,     label: "Thermostat",               desc: "Consigne, température, modes éco/absent" },
-                                    { icon: Camera,          label: "Caméra",                   desc: "Flux MJPEG ou snapshot avec proxy sécurisé" },
-                                    { icon: Bell,            label: "Alertes & Notifications",  desc: "Push Web même application fermée" },
-                                    { icon: AlarmSmoke,      label: "Alarme sécurisée",         desc: "Arm/Désarm avec code PIN chiffré SHA-256" },
-                                    { icon: Activity,        label: "Santé & Supervision",      desc: "État de la box, CPU, mémoire, réseau" },
+                                    { icon: LayoutDashboard, label: "Actions & Interrupteurs",  desc: "Boutons, toggles, séquences multi-commandes" },
+                                    { icon: Sliders,         label: "Curseur (Slider)",          desc: "Luminosité, volets, tout équipement numérique" },
+                                    { icon: BarChart3,       label: "Graphiques historiques",    desc: "Courbes et histogrammes depuis Jeedom" },
+                                    { icon: Thermometer,     label: "Thermostat",                desc: "Consigne, température, modes éco/absent" },
+                                    { icon: Camera,          label: "Caméra",                    desc: "Flux MJPEG ou snapshot avec proxy sécurisé" },
+                                    { icon: Bell,            label: "Alertes & Notifications",   desc: "Push Web même application fermée" },
+                                    { icon: AlarmSmoke,      label: "Alarme sécurisée",          desc: "Arm/Désarm avec code PIN chiffré SHA-256" },
+                                    { icon: Activity,        label: "Santé & Supervision",       desc: "État de la box, CPU, mémoire, réseau" },
                                 ].map(({ icon: Icon, label, desc }) => (
                                     <article key={label} className="bg-dark-card border border-border p-5 rounded-xl hover:border-jeedom-500/40 transition-all group">
                                         <div className="w-10 h-10 bg-jeedom-500/10 text-jeedom-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
@@ -286,7 +273,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
                         </div>
                     </section>
 
-                    {/* ── Features complémentaires ───────────────────────── */}
+                    {/* ── Features ─────────────────────────────────────────── */}
                     <section className="py-24" aria-labelledby="features-heading">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="text-center mb-16">
@@ -297,43 +284,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
                                     Au-delà des widgets, EasyDash intègre des fonctionnalités pensées pour une utilisation quotidienne fiable.
                                 </p>
                             </div>
-
                             <div className="grid md:grid-cols-3 gap-8">
-                                <article className="bg-dark-card border border-border p-8 rounded-2xl hover:border-jeedom-500/50 transition-all hover:shadow-xl hover:shadow-jeedom-500/5 group">
-                                    <div className="w-12 h-12 bg-jeedom-500/10 text-jeedom-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                        <Bell size={24} aria-hidden="true" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-content-primary mb-3">Notifications Push Web</h3>
-                                    <p className="text-content-secondary leading-relaxed">
-                                        Recevez des alertes domotiques sur votre téléphone ou tablette <strong className="text-content-primary">même lorsque l'application est fermée</strong>.
-                                        Basé sur le Web Push API standard (RFC 8030).
-                                    </p>
-                                </article>
-
-                                <article className="bg-dark-card border border-border p-8 rounded-2xl hover:border-blue-500/50 transition-all hover:shadow-xl hover:shadow-blue-500/5 group">
-                                    <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                        <History size={24} aria-hidden="true" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-content-primary mb-3">Historique & Graphiques</h3>
-                                    <p className="text-content-secondary leading-relaxed">
-                                        Visualisez l'évolution de vos capteurs (température, consommation électrique, humidité) avec des graphiques interactifs sur 24h, 7j ou 30j — intégrés directement dans vos tuiles.
-                                    </p>
-                                </article>
-
-                                <article className="bg-dark-card border border-border p-8 rounded-2xl hover:border-green-500/50 transition-all hover:shadow-xl hover:shadow-green-500/5 group">
-                                    <div className="w-12 h-12 bg-green-500/10 text-green-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                        <ShieldCheck size={24} aria-hidden="true" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-content-primary mb-3">Vie Privée & Sécurité</h3>
-                                    <p className="text-content-secondary leading-relaxed">
-                                        Vos données restent chez vous : dashboards, widgets et règles d'alertes sont stockés <strong className="text-content-primary">uniquement dans votre navigateur</strong> (localStorage). Clé API chiffrée AES-GCM. Aucun cloud tiers.
-                                    </p>
-                                </article>
+                                {[
+                                    { icon: Bell,           color: "jeedom", title: "Notifications Push Web",   text: "Recevez des alertes domotiques sur votre téléphone ou tablette même lorsque l'application est fermée. Basé sur le Web Push API standard (RFC 8030)." },
+                                    { icon: History,        color: "blue",   title: "Historique & Graphiques",  text: "Visualisez l'évolution de vos capteurs (température, consommation électrique, humidité) avec des graphiques interactifs sur 24h, 7j ou 30j — intégrés directement dans vos tuiles." },
+                                    { icon: ShieldCheck,    color: "green",  title: "Vie Privée & Sécurité",    text: "Vos données restent chez vous : stockées uniquement dans votre navigateur. Clé API chiffrée AES-GCM. Aucun cloud tiers." },
+                                ].map(({ icon: Icon, color, title, text }) => (
+                                    <article key={title} className="bg-dark-card border border-border p-8 rounded-2xl hover:shadow-xl transition-all group">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${color === 'jeedom' ? 'bg-jeedom-500/10 text-jeedom-500' : color === 'blue' ? 'bg-blue-500/10 text-blue-500' : 'bg-green-500/10 text-green-500'}`}>
+                                            <Icon size={24} aria-hidden="true" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-content-primary mb-3">{title}</h3>
+                                        <p className="text-content-secondary leading-relaxed">{text}</p>
+                                    </article>
+                                ))}
                             </div>
                         </div>
                     </section>
 
-                    {/* ── FAQ / Contenu sémantique ───────────────────────── */}
+                    {/* ── FAQ ──────────────────────────────────────────────── */}
                     <section className="py-24 bg-dark-surface/30 border-t border-border/50" aria-labelledby="faq-heading">
                         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                             <h2 id="faq-heading" className="text-3xl font-bold text-content-primary mb-12 text-center">
@@ -341,22 +310,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
                             </h2>
                             <dl className="space-y-8">
                                 {[
-                                    {
-                                        q: "EasyDash est-il compatible avec ma version de Jeedom ?",
-                                        a: "Oui. EasyDash utilise l'API JSON-RPC officielle de Jeedom, compatible avec toutes les versions récentes (V4+). Il suffit d'avoir une clé API valide et d'autoriser les appels depuis le navigateur (ou d'activer le mode Proxy intégré pour contourner les restrictions CORS)."
-                                    },
-                                    {
-                                        q: "Comment configurer un dashboard Jeedom sur tablette murale ?",
-                                        a: "Activez le mode Kiosque dans les paramètres d'EasyDash : la navigation disparaît, l'écran reste allumé et l'interface occupe tout l'espace. Idéal pour une tablette Amazon Fire, iPad ou Android fixée au mur dans votre cuisine ou couloir."
-                                    },
-                                    {
-                                        q: "Mes données Jeedom sont-elles envoyées vers un serveur externe ?",
-                                        a: "Non. EasyDash communique exclusivement en direct avec votre box Jeedom locale. Vos dashboards, widgets et règles d'alertes sont stockés dans le localStorage de votre navigateur. Rien ne transite par un serveur cloud tiers."
-                                    },
-                                    {
-                                        q: "Quelle est la différence avec les designs natifs Jeedom ?",
-                                        a: "Les designs Jeedom natifs (Jeedom, Material, etc.) sont des thèmes CSS qui modifient l'interface existante de Jeedom. EasyDash est une application indépendante qui se connecte à votre Jeedom via l'API : pas de CSS à écrire, interface drag-and-drop, mode tablette intégré, alertes push, et compatibilité avec tous les designs existants."
-                                    },
+                                    { q: "EasyDash est-il compatible avec ma version de Jeedom ?", a: "Oui. EasyDash utilise l'API JSON-RPC officielle de Jeedom, compatible avec toutes les versions récentes (V4+). Il suffit d'avoir une clé API valide et d'autoriser les appels depuis le navigateur (ou d'activer le mode Proxy intégré pour contourner les restrictions CORS)." },
+                                    { q: "Comment configurer un dashboard Jeedom sur tablette murale ?", a: "Activez le mode Kiosque dans les paramètres d'EasyDash : la navigation disparaît, l'écran reste allumé et l'interface occupe tout l'espace. Idéal pour une tablette Amazon Fire, iPad ou Android fixée au mur dans votre cuisine ou couloir." },
+                                    { q: "Mes données Jeedom sont-elles envoyées vers un serveur externe ?", a: "Non. EasyDash communique exclusivement en direct avec votre box Jeedom locale. Vos dashboards, widgets et règles d'alertes sont stockés dans le localStorage de votre navigateur. Rien ne transite par un serveur cloud tiers." },
+                                    { q: "Quelle est la différence avec les designs natifs Jeedom ?", a: "Les designs Jeedom natifs sont des thèmes CSS qui modifient l'interface existante de Jeedom. EasyDash est une application indépendante connectée à votre Jeedom via l'API : pas de CSS à écrire, interface drag-and-drop, mode tablette intégré, alertes push, compatible avec tous les designs existants." },
                                 ].map(({ q, a }) => (
                                     <div key={q}>
                                         <dt className="text-lg font-bold text-content-primary mb-2">{q}</dt>
@@ -367,7 +324,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
                         </div>
                     </section>
 
-                    {/* ── CTA final ──────────────────────────────────────── */}
+                    {/* ── CTA ──────────────────────────────────────────────── */}
                     <section className="py-24" aria-labelledby="cta-heading">
                         <div className="max-w-3xl mx-auto px-4 text-center">
                             <h2 id="cta-heading" className="text-3xl md:text-4xl font-bold text-content-primary mb-4">
@@ -385,21 +342,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
                                         Commencer maintenant <ArrowRight size={20} aria-hidden="true" />
                                     </button>
                                 )}
-                                {onDemo && (
-                                    <button
-                                        onClick={onDemo}
-                                        className="bg-dark-surface border border-border hover:bg-input-bg text-content-primary px-8 py-4 rounded-xl font-medium text-lg transition-colors"
-                                    >
-                                        Voir la démo
-                                    </button>
-                                )}
+                                <button
+                                    onClick={handleDemo}
+                                    className="bg-dark-surface border border-border hover:bg-input-bg text-content-primary px-8 py-4 rounded-xl font-medium text-lg transition-colors flex items-center justify-center gap-2"
+                                >
+                                    Voir la démo <ExternalLink size={16} className="text-content-secondary/60" aria-hidden="true" />
+                                </button>
                             </div>
                         </div>
                     </section>
 
                 </main>
 
-                {/* ── Footer ─────────────────────────────────────────── */}
+                {/* ── Footer ───────────────────────────────────────────── */}
                 <footer className="bg-dark-surface border-t border-border py-12">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-2">
@@ -407,19 +362,36 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect, onDemo }) => {
                                 <span className="font-bold text-white text-xs">J</span>
                             </div>
                             <span className="text-content-primary font-bold">EasyDash</span>
-                            <span className="text-content-secondary text-xs ml-1">v{APP_VERSION}</span>
+                            <button
+                                onClick={() => setShowReleaseNotes(true)}
+                                className="text-content-secondary/50 text-xs ml-1 hover:text-jeedom-400 transition-colors cursor-pointer"
+                                title="Voir les notes de version"
+                            >
+                                v{APP_VERSION}
+                            </button>
                         </div>
                         <p className="text-content-secondary text-sm text-center">
                             Dashboard Jeedom open source — Non affilié à Jeedom SAS.<br />
                             © {new Date().getFullYear()} EasyDash. Tous droits réservés.
                         </p>
                         <div className="flex gap-6">
-                            <a href="#" className="text-content-secondary hover:text-jeedom-500 transition-colors text-sm" aria-label="Mentions légales">Mentions Légales</a>
-                            <a href="#" className="text-content-secondary hover:text-jeedom-500 transition-colors text-sm" aria-label="Contact">Contact</a>
+                            <a href="/legal" className="text-content-secondary hover:text-jeedom-500 transition-colors text-sm">
+                                Mentions Légales
+                            </a>
+                            <button
+                                onClick={() => setShowContact(true)}
+                                className="text-content-secondary hover:text-jeedom-500 transition-colors text-sm"
+                            >
+                                Contact
+                            </button>
                         </div>
                     </div>
                 </footer>
             </div>
+
+            {/* Modals */}
+            <ReleaseNotesModal isOpen={showReleaseNotes} onClose={() => setShowReleaseNotes(false)} />
+            <ContactModal     isOpen={showContact}       onClose={() => setShowContact(false)} />
         </>
     );
 };

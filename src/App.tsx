@@ -24,6 +24,8 @@ import Modals from './components/modals/Modals';
 
 import LandingPage from './components/LandingPage';
 import PrivacyPolicyPage from './components/PrivacyPolicyPage';
+import LegalPage from './components/LegalPage';
+import SettingsModal from './components/SettingsModal';
 import CookieBanner from './components/CookieBanner';
 import RouteTracker from './components/RouteTracker';
 import Toast from './components/Toast';
@@ -39,6 +41,15 @@ const App: React.FC = () => {
         <RouteTracker />
         <PrivacyPolicyPage />
         <CookieBanner />
+      </>
+    );
+  }
+
+  if (location.pathname === '/legal') {
+    return (
+      <>
+        <RouteTracker />
+        <LegalPage />
       </>
     );
   }
@@ -61,7 +72,7 @@ const App: React.FC = () => {
     handleImportConfig: importDashboards
   } = useDashboards();
 
-  const { eqLogics, commands, scenarios, isLoading, loadAvailableData, refreshWidgetValues, updateCommandValues } = useJeedomData(settings, isSettingsLoaded, widgets, setNotification);
+  const { eqLogics, commands, scenarios, isLoading, loadAvailableData, refreshWidgetValues, updateCommandValues } = useJeedomData(effectiveSettings, isSettingsLoaded, widgets, setNotification);
   
   const {
     isSettingsOpen, setIsSettingsOpen,
@@ -90,8 +101,8 @@ const App: React.FC = () => {
   
   const { sensors, handleDragEnd } = useDnd(setWidgets);
 
-  usePolling(settings, isSettingsLoaded, refreshWidgetValues, widgets, activeDashboardId);
-  useWebSocket(settings, isSettingsLoaded, updateCommandValues);
+  usePolling(effectiveSettings, isSettingsLoaded, refreshWidgetValues, widgets, activeDashboardId);
+  useWebSocket(effectiveSettings, isSettingsLoaded, updateCommandValues);
 
   // ── Système d'alertes ──────────────────────────────────────────────────────
   const { rules } = useAlertRules();
@@ -152,14 +163,22 @@ const App: React.FC = () => {
     );
   }
 
-  const isConfigured = settings.useDemoMode || !!(settings.jeedomUrl && settings.apiKey);
+  // ?demo=true in URL → session demo mode without persisting to localStorage
+  const isDemoUrl = useMemo(() => new URLSearchParams(window.location.search).get('demo') === 'true', []);
+  const effectiveSettings = useMemo(() => isDemoUrl ? { ...settings, useDemoMode: true } : settings, [settings, isDemoUrl]);
+
+  const isConfigured = effectiveSettings.useDemoMode || !!(effectiveSettings.jeedomUrl && effectiveSettings.apiKey);
 
   if (!isConfigured) {
     return (
       <>
-        <LandingPage
-          onConnect={() => setIsSettingsOpen(true)}
-          onDemo={() => setSettings({ ...settings, useDemoMode: true })}
+        <CookieBanner />
+        <LandingPage onConnect={() => setIsSettingsOpen(true)} />
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          settings={settings}
+          onSave={setSettings}
         />
       </>
     );
@@ -232,7 +251,7 @@ const App: React.FC = () => {
           />
           <MainContent
             scenarios={scenarios}
-            settings={settings}
+            settings={effectiveSettings}
             onAddWidget={handleAddWidget}
             onScenarioClick={(scenarioId: string) => {
               const scenario = scenarios.find(s => s.id === scenarioId);
