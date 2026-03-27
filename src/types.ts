@@ -7,7 +7,7 @@ export interface WidgetConfig {
   id: string;
   dashboardId: string;
   name: string;
-  type: 'info' | 'action' | 'toggle' | 'slider' | 'scenario' | 'chart' | 'camera' | 'thermostat' | 'weather';
+  type: 'info' | 'action' | 'toggle' | 'slider' | 'scenario' | 'chart' | 'camera' | 'thermostat' | 'weather' | 'alarm';
   category?: WidgetCategory; // New field for filtering
   isFavorite?: boolean; // New field for Home/Favorites display
   historyPeriod?: '24h' | '7d' | '30d' | 'custom'; // For chart widgets
@@ -42,6 +42,13 @@ export interface WidgetConfig {
   sliderMin?: number;
   sliderMax?: number;
   sliderStep?: number;
+
+  // Alarm specific
+  alarmActivateCmdId?: string;   // command action to arm the alarm
+  alarmDeactivateCmdId?: string; // command action to disarm the alarm
+  alarmStateId?: string;         // optional: info command for current alarm state
+  alarmCodeHash?: string;        // SHA-256 hash of the disarm PIN (plain text never stored)
+  alarmArmedValue?: string;      // value that means "armed" (default: '1')
 
   commandId?: string; // The ID to execute action or read info
   commandOffId?: string; // Specific ID for OFF action (for toggles)

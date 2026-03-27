@@ -12,6 +12,7 @@ import ChartWidget from './widgets/ChartWidget';
 import InfoWidget from './widgets/InfoWidget';
 import ActionWidget from './widgets/ActionWidget';
 import SliderWidget from './widgets/SliderWidget';
+import AlarmWidget from './widgets/AlarmWidget';
 
 // --- HELPER ---
 const aggregateChartData = (data: { time: number; value: number }[], method: string = 'none') => {
@@ -55,6 +56,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
 }, ref) => {
     const [loading, setLoading] = useState(false);
     const [animateValue, setAnimateValue] = useState(false);
+    const [alarmArmed, setAlarmArmed] = useState(false);
     const [chartData, setChartData] = useState<{ time: number; value: number }[]>([]);
     const [chartError, setChartError] = useState<string | null>(null);
     const [optimisticValue, setOptimisticValue] = useState<string | number | undefined>(undefined);
@@ -70,6 +72,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     const isWeather = widget.type === 'weather';
     const isSlider = widget.type === 'slider';
     const isInfoType = widget.type === 'info';
+    const isAlarm = widget.type === 'alarm';
 
     // Fetch chart history
     useEffect(() => {
@@ -188,9 +191,11 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
         return ICONS[widget.icon] || ICONS['help-circle'];
     }, [widget.icon, widget.type, mainCommand, mainValue, optimisticValue]);
 
-    // Styles
-    const isColorized = !!widget.color;
-    const bgClass = widget.color || 'bg-dark-card';
+    // Styles — alarm overrides color when armed
+    const isColorized = isAlarm ? alarmArmed : !!widget.color;
+    const bgClass = isAlarm
+        ? (alarmArmed ? 'bg-red-600' : (widget.color || 'bg-dark-card'))
+        : (widget.color || 'bg-dark-card');
     const shadowClass = isColorized ? 'shadow-lg shadow-black/20' : 'shadow-sm';
     const borderColorClass = isColorized ? 'border-transparent' : (widget.borderColor || 'border-border');
 
@@ -212,7 +217,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     const handleAction = async (e: React.MouseEvent) => {
         if (editMode || !isConnected) return;
         e.stopPropagation();
-        if (widget.type === 'info') return;
+        if (widget.type === 'info' || widget.type === 'alarm') return;
 
         setLoading(true);
         const previousValue = mainValue !== undefined ? mainValue : mainCommand?.value;
@@ -319,7 +324,15 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                 )}
 
                 {/* Widget content — routed by type */}
-                {isCamera ? (
+                {isAlarm ? (
+                    <AlarmWidget
+                        widget={widget}
+                        settings={settings}
+                        isColorized={isColorized}
+                        commands={commands}
+                        onArmedChange={setAlarmArmed}
+                    />
+                ) : isCamera ? (
                     <CameraWidget widget={widget} settings={settings} isColorized={isColorized} />
                 ) : isSlider ? (
                     <SliderWidget widget={widget} settings={settings} isColorized={isColorized} commands={commands} />
@@ -413,6 +426,7 @@ const areWidgetCardPropsEqual = (prev: WidgetCardProps & React.RefAttributes<HTM
         prev.widget.stateCmdId,
         prev.widget.sliderInfoId,
         prev.widget.modeInfoCmdId,
+        prev.widget.alarmStateId,
     ].filter((id): id is string => !!id);
 
     // Build Maps for O(1) lookup instead of O(n) Array.find() per ID.

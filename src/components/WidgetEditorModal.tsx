@@ -3,7 +3,8 @@ import { WidgetConfig, JeedomEqLogic, JeedomCommand, JeedomScenario, AppSettings
 import { COLORS, CATEGORIES } from '../constants';
 import IconSelector from './IconSelector';
 import { fetchJeedomScenarios } from '../services/jeedomService';
-import { X, Check, Plus, Trash2, ChevronDown, Search, Command, Layers, RotateCw, Star, Workflow, RefreshCw } from 'lucide-react';
+import { X, Check, Plus, Trash2, ChevronDown, Search, Command, Layers, RotateCw, Star, Workflow, RefreshCw, ShieldAlert } from 'lucide-react';
+import { hashPin } from '../utils/crypto';
 
 interface WidgetEditorModalProps {
     isOpen: boolean;
@@ -157,6 +158,7 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
     const [scenarios, setScenarios] = useState<JeedomScenario[]>(availableScenarios || []);
     const [isLoadingScenarios, setIsLoadingScenarios] = useState(false);
     const [scenarioError, setScenarioError] = useState<string | null>(null);
+    const [alarmCodeInput, setAlarmCodeInput] = useState('');
 
     // Debug logs
     console.log("WidgetEditorModal Render. Scenarios count:", (scenarios || []).length, "Available props:", (availableScenarios || []).length);
@@ -218,6 +220,10 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
     });
     
     useEffect(() => {
+        setAlarmCodeInput(''); // Reset plain-text code input on each open
+    }, [isOpen]);
+
+    useEffect(() => {
         if (initialData) {
             // Migration logic for sequenceSteps
             let steps = initialData.sequenceSteps || [];
@@ -259,11 +265,20 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
-        // Sync commandId with first command of first step for consistency
+
         const finalWidget = { ...widget };
+
+        // Alarm: hash the PIN before saving — never store the plain-text code
+        if (finalWidget.type === 'alarm') {
+            if (alarmCodeInput.trim()) {
+                finalWidget.alarmCodeHash = await hashPin(alarmCodeInput.trim());
+            }
+            // If alarmCodeInput is empty and a hash already exists, keep it (editing without changing the code)
+        }
+
+        // Sync commandId with first command of first step for consistency
         // Only sync for 'action' type where sequence mode is used
         if (finalWidget.type === 'action' && finalWidget.actionExecutionMode === 'sequence' && finalWidget.sequenceSteps && finalWidget.sequenceSteps.length > 0) {
             const firstStep = finalWidget.sequenceSteps[0];
@@ -271,7 +286,7 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                 finalWidget.commandId = firstStep[0];
             }
         }
-        
+
         onSave(finalWidget);
         onClose();
     };
@@ -439,6 +454,7 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                 <option value="slider">Curseur (Slider)</option>
                                 <option value="thermostat">Thermostat</option>
                                 <option value="weather">Météo</option>
+                                <option value="alarm">Alarme</option>
                             </select>
                         </div>
                         <div>
@@ -842,6 +858,100 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                             disabled={!hasAvailableData}
                                         />
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* CONFIGURATION POUR ALARME */}
+                        {widget.type === 'alarm' && (
+                            <div className="mt-4 space-y-4">
+                                <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                    <ShieldAlert size={16} className="text-red-400 shrink-0" />
+                                    <p className="text-xs text-red-300">
+                                        Le widget devient rouge lorsque l'alarme est armée. Le code de désactivation est stocké chiffré (SHA-256) — jamais en clair.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Commande Activer (Action)
+                                    </label>
+                                    <CommandSelector
+                                        value={widget.alarmActivateCmdId}
+                                        onChange={(val) => setWidget({ ...widget, alarmActivateCmdId: val })}
+                                        availableEqLogics={availableEqLogics}
+                                        filterType="action"
+                                        placeholder="Commande pour armer..."
+                                        disabled={!hasAvailableData}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Commande Désactiver (Action)
+                                    </label>
+                                    <CommandSelector
+                                        value={widget.alarmDeactivateCmdId}
+                                        onChange={(val) => setWidget({ ...widget, alarmDeactivateCmdId: val })}
+                                        availableEqLogics={availableEqLogics}
+                                        filterType="action"
+                                        placeholder="Commande pour désarmer..."
+                                        disabled={!hasAvailableData}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        État de l'alarme (Info) — Optionnel
+                                    </label>
+                                    <CommandSelector
+                                        value={widget.alarmStateId}
+                                        onChange={(val) => setWidget({ ...widget, alarmStateId: val })}
+                                        availableEqLogics={availableEqLogics}
+                                        filterType="info"
+                                        placeholder="Commande info pour l'état..."
+                                        disabled={!hasAvailableData}
+                                    />
+                                </div>
+
+                                {widget.alarmStateId && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-content-secondary mb-1">
+                                            Valeur = Armée
+                                            <span className="ml-2 text-[10px] font-normal opacity-70">(défaut: 1)</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={widget.alarmArmedValue ?? '1'}
+                                            onChange={e => setWidget({ ...widget, alarmArmedValue: e.target.value })}
+                                            placeholder="1"
+                                            className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none text-sm"
+                                        />
+                                        <p className="text-[10px] text-content-secondary mt-1">
+                                            Valeur retournée par la commande Info quand l'alarme est armée (ex: 1, "armé", "total"…)
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Code de désactivation
+                                        {widget.alarmCodeHash && !alarmCodeInput && (
+                                            <span className="ml-2 text-[10px] text-green-400 font-normal">Code configuré ✓ — laisser vide pour conserver</span>
+                                        )}
+                                    </label>
+                                    <input
+                                        type="password"
+                                        inputMode="numeric"
+                                        value={alarmCodeInput}
+                                        onChange={e => setAlarmCodeInput(e.target.value)}
+                                        placeholder={widget.alarmCodeHash ? '••••••  (inchangé)' : 'Saisir un code...'}
+                                        className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
+                                        autoComplete="new-password"
+                                    />
+                                    <p className="text-[10px] text-content-secondary mt-1">
+                                        Ce code sera demandé pour désactiver l'alarme. Stocké en SHA-256, jamais visible en clair.
+                                    </p>
                                 </div>
                             </div>
                         )}
