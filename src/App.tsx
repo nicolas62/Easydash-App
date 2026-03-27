@@ -56,6 +56,10 @@ const App: React.FC = () => {
 
   const { notification, setNotification } = useNotifications();
   const { settings, setSettings, isSettingsLoaded, performResetConfig, handleImportConfig: importSettings } = useSettings();
+
+  // Doit être déclaré avant tout hook qui l'utilise (useJeedomData, usePolling, useWebSocket)
+  const isDemoUrl = useMemo(() => new URLSearchParams(window.location.search).get('demo') === 'true', []);
+  const effectiveSettings = useMemo(() => isDemoUrl ? { ...settings, useDemoMode: true } : settings, [settings, isDemoUrl]);
   
   const { 
     dashboards, 
@@ -162,10 +166,6 @@ const App: React.FC = () => {
       </div>
     );
   }
-
-  // ?demo=true in URL → session demo mode without persisting to localStorage
-  const isDemoUrl = useMemo(() => new URLSearchParams(window.location.search).get('demo') === 'true', []);
-  const effectiveSettings = useMemo(() => isDemoUrl ? { ...settings, useDemoMode: true } : settings, [settings, isDemoUrl]);
 
   const isConfigured = effectiveSettings.useDemoMode || !!(effectiveSettings.jeedomUrl && effectiveSettings.apiKey);
 
