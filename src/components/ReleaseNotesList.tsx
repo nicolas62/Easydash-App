@@ -3,6 +3,17 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.9.1",
+        date: "27 Mars 2026",
+        features: [
+            { type: 'new', text: "Nouveau widget Alarme : active/désactive une alarme Jeedom depuis le tableau de bord. Le widget devient rouge lorsque l'alarme est armée (icône ShieldAlert). La désactivation est protégée par un code configurable." },
+            { type: 'new', text: "Sécurité — code d'alarme haché (SHA-256) : le code de désactivation est stocké sous forme de hash SHA-256 via Web Crypto API. Le code en clair n'est jamais sauvegardé (ni dans localStorage, ni dans la config, ni visible dans les DevTools)." },
+            { type: 'new', text: "Widget Alarme — commande info optionnelle : si une commande Jeedom d'état est configurée, l'état réel (armé/désarmé) est lu en temps réel via WebSocket. La valeur 'armée' est configurable (ex: 1, 'armé', 'total'…)." },
+            { type: 'fix', text: "Correction critique — Service Worker désactivé : le SW était désactivé et désenregistré à chaque chargement de page (reliquat d'un ancien workaround de stabilité). Cela empêchait les notifications push de fonctionner après un refresh." },
+            { type: 'fix', text: "Correction — état abonnement push après refresh : l'initialisation de l'état utilisait navigator.serviceWorker.ready (bloquant) au lieu de getRegistration() (instantané). Le widget affichait 'Non abonné' le temps que le SW réponde." },
+        ]
+    },
+    {
         version: "0.9.0",
         date: "23 Mars 2026",
         features: [
