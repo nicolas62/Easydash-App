@@ -110,7 +110,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     jeedomUrl: '',
     apiKey: '',
     refreshInterval: 5000,
-    useDemoMode: true,
+    useDemoMode: false,
     useProxy: false,
     useWebSocket: true,
     theme: 'dark',
