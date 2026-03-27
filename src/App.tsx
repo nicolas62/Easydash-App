@@ -35,40 +35,22 @@ import { useConnectionStatus } from './hooks/useConnectionStatus';
 const App: React.FC = () => {
   const location = useLocation();
 
-  if (location.pathname === '/privacy') {
-    return (
-      <>
-        <RouteTracker />
-        <PrivacyPolicyPage />
-        <CookieBanner />
-      </>
-    );
-  }
-
-  if (location.pathname === '/legal') {
-    return (
-      <>
-        <RouteTracker />
-        <LegalPage />
-      </>
-    );
-  }
-
+  // Tous les hooks doivent être appelés inconditionnellement (règles des hooks React)
   const { notification, setNotification } = useNotifications();
   const { settings, setSettings, isSettingsLoaded, performResetConfig, handleImportConfig: importSettings } = useSettings();
 
-  // Doit être déclaré avant tout hook qui l'utilise (useJeedomData, usePolling, useWebSocket)
+  // Déclaré avant useJeedomData / usePolling / useWebSocket qui en dépendent
   const isDemoUrl = useMemo(() => new URLSearchParams(window.location.search).get('demo') === 'true', []);
   const effectiveSettings = useMemo(() => isDemoUrl ? { ...settings, useDemoMode: true } : settings, [settings, isDemoUrl]);
-  
-  const { 
-    dashboards, 
-    setDashboards, 
-    widgets, 
-    setWidgets, 
-    activeDashboardId, 
-    setActiveDashboardId, 
-    editingDashboard, 
+
+  const {
+    dashboards,
+    setDashboards,
+    widgets,
+    setWidgets,
+    activeDashboardId,
+    setActiveDashboardId,
+    editingDashboard,
     setEditingDashboard,
     handleSaveWidget,
     handleSaveDashboard,
@@ -77,7 +59,7 @@ const App: React.FC = () => {
   } = useDashboards();
 
   const { eqLogics, commands, scenarios, isLoading, loadAvailableData, refreshWidgetValues, updateCommandValues } = useJeedomData(effectiveSettings, isSettingsLoaded, widgets, setNotification);
-  
+
   const {
     isSettingsOpen, setIsSettingsOpen,
     isEditMode, setIsEditMode,
@@ -97,12 +79,12 @@ const App: React.FC = () => {
     handleAddDashboard, handleEditDashboard, handleScenarioClick,
     isReleaseNotesOpen, setIsReleaseNotesOpen
   } = useUI(loadAvailableData, dashboards, activeDashboardId, setActiveDashboardId, setDashboards);
-  
+
   const mainRef = useRef<HTMLElement>(null);
   const { pullChange, handleTouchStart: handlePullToRefreshTouchStart, handleTouchMove, handleTouchEnd: handlePullToRefreshTouchEnd } = usePullToRefresh(mainRef, () => refreshWidgetValues(widgets));
-  
+
   const { handleTouchStart: handleSwipeTouchStart, handleTouchEnd: handleSwipeTouchEnd } = useSwipe(dashboards, activeDashboardId, setActiveDashboardId);
-  
+
   const { sensors, handleDragEnd } = useDnd(setWidgets);
 
   usePolling(effectiveSettings, isSettingsLoaded, refreshWidgetValues, widgets, activeDashboardId);
@@ -149,6 +131,7 @@ const App: React.FC = () => {
     handlePullToRefreshTouchEnd();
     handleSwipeTouchEnd(e);
   };
+
   const currentWidgetsMemo = useMemo(() => widgets.filter(w => {
     if (activeDashboardId === "default") return w.isFavorite;
     return w.dashboardId === activeDashboardId;
@@ -158,6 +141,26 @@ const App: React.FC = () => {
   const widgetToDelete = useMemo(() => widgets.find(w => w.id === deleteWidgetId), [widgets, deleteWidgetId]);
   const dashboardToDelete = useMemo(() => dashboards.find(d => d.id === deleteDashboardId), [dashboards, deleteDashboardId]);
 
+  // ── Routes statiques (après tous les hooks) ────────────────────────────────
+  if (location.pathname === '/privacy') {
+    return (
+      <>
+        <RouteTracker />
+        <PrivacyPolicyPage />
+        <CookieBanner />
+      </>
+    );
+  }
+
+  if (location.pathname === '/legal') {
+    return (
+      <>
+        <RouteTracker />
+        <LegalPage />
+      </>
+    );
+  }
+  // ──────────────────────────────────────────────────────────────────────────
 
   if (!isSettingsLoaded) {
     return (
