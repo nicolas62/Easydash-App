@@ -16,7 +16,7 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({ isOpen, onClose }
                 
                 <div className="flex items-center justify-between p-6 border-b border-border bg-dark-surface/50 rounded-t-2xl">
                     <h2 className="text-xl font-bold text-content-primary flex items-center gap-2">
-                        <span className="bg-jeedom-600 text-white px-2 py-1 rounded text-sm font-mono">v0.9.0</span>
+                        <span className="bg-jeedom-600 text-white px-2 py-1 rounded text-sm font-mono">v0.9.1</span>
                         Notes de version
                     </h2>
                     <button onClick={onClose} className="text-content-secondary hover:text-content-primary p-1 hover:bg-input-bg rounded-full transition-colors">

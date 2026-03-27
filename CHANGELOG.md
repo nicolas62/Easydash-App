@@ -4,6 +4,20 @@ All notable changes to EasyDash are documented here.
 
 ---
 
+## [0.9.1] — 2026-03-27
+
+### Nouveau — Widget Alarme
+- **Widget Alarme** : nouveau type de widget permettant d'activer/désactiver une alarme Jeedom directement depuis le tableau de bord. Le widget devient rouge lorsque l'alarme est armée (icône `ShieldAlert`) et revient à sa couleur normale désarmé (`ShieldCheck`).
+- **Code de désactivation sécurisé** : le code est haché via SHA-256 (Web Crypto API) avant d'être stocké. Le code en clair n'est jamais sauvegardé — ni en `localStorage`, ni dans la config, ni visible dans les DevTools navigateur.
+- **État temps réel optionnel** : si une commande info Jeedom est configurée (`alarmStateId`), l'état armé/désarmé est synchronisé en temps réel via WebSocket. La valeur déclenchant l'état "armé" est configurable (défaut : `1`).
+- **Fallback local** : sans commande d'état, le widget gère l'état localement pour la session en cours.
+
+### Corrections
+- **Service Worker désactivé** (`src/index.tsx`) : le SW était désactivé et désenregistré à chaque chargement de page — reliquat d'un ancien workaround de stabilité qui avait été oublié. Cela empêchait totalement les notifications push de fonctionner après un refresh de page.
+- **État abonnement push après refresh** : initialisation de `isSubscribed` corrigée — passage de `useState(false)` à `useState(() => !!localStorage.getItem(DEVICE_ID_KEY))` (optimiste) et remplacement de `serviceWorker.ready` par `serviceWorker.getRegistration()` pour la confirmation asynchrone.
+
+---
+
 ## [0.9.0] — 2026-03-23
 
 ### Nouveau — Notifications Push Web (Web Push API)
