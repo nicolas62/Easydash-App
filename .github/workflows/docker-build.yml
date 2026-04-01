@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/nicolas62/easydash
+  IMAGE_NAME: ghcr.io/nicolas62/easydash-app
 
 jobs:
   build-and-push:
@@ -32,5 +32,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/nicolas62/easydash:latest
-            ghcr.io/nicolas62/easydash:${{ github.sha }}
+            ghcr.io/nicolas62/easydash-app:latest
+            ghcr.io/nicolas62/easydash-app:${{ github.sha }}
