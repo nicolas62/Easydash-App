@@ -238,6 +238,13 @@ async function startServer() {
 
     // ── Push subscription endpoints ─────────────────────────────────────────
 
+    // ads.txt — required by Google AdSense to authorize ad serving on this domain
+    app.get("/ads.txt", (_req: any, res: any) => {
+        const clientId = process.env.ADSENSE_CLIENT_ID || '';
+        if (!clientId) return res.status(404).send('');
+        res.type('text/plain').send(`google.com, ${clientId}, DIRECT, f08c47fec0942fa0\n`);
+    });
+
     // Public endpoint — returns AdSense config from env vars (values are public by nature)
     app.get("/api/adsense-config", (_req: any, res: any) => {
         const clientId = process.env.ADSENSE_CLIENT_ID || '';
