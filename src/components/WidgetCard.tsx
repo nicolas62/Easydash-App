@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { WidgetConfig, JeedomCommand, JeedomScenario } from '../types';
 import { ICONS, DYNAMIC_ICONS } from '../constants';
-import { executeJeedomCommand, executeScenario, stopScenario, getJeedomHistory } from '../services/jeedomService';
-import { cacheService } from '../services/cacheService';
+import { executeJeedomCommand, executeScenario, stopScenario } from '../services/jeedomService';
 import { useJeedomCommand } from '../hooks/useJeedomCommand';
 import { Loader2, Trash2, Edit3, Star, Square } from 'lucide-react';
+import { useChartData } from '../hooks/useChartData';
 import CameraWidget from './CameraWidget';
 import ThermostatWidget from './ThermostatWidget';
 import WeatherWidget from './WeatherWidget';
@@ -14,27 +14,6 @@ import ActionWidget from './widgets/ActionWidget';
 import SliderWidget from './widgets/SliderWidget';
 import AlarmWidget from './widgets/AlarmWidget';
 
-// --- HELPER ---
-const aggregateChartData = (data: { time: number; value: number }[], method: string = 'none') => {
-    if (!data || data.length === 0) return [];
-    if (method === 'none') return data;
-
-    const grouped: { [key: string]: number[] } = {};
-    data.forEach(item => {
-        const date = new Date(item.time).toISOString().split('T')[0];
-        if (!grouped[date]) grouped[date] = [];
-        grouped[date].push(item.value);
-    });
-
-    return Object.keys(grouped).sort().map(date => {
-        const values = grouped[date];
-        let aggregatedValue = 0;
-        if (method === 'daily_avg') aggregatedValue = values.reduce((a, b) => a + b, 0) / values.length;
-        else if (method === 'daily_max') aggregatedValue = Math.max(...values);
-        else if (method === 'daily_sum') aggregatedValue = values.reduce((a, b) => a + b, 0);
-        return { time: new Date(date + 'T12:00:00').getTime(), value: parseFloat(aggregatedValue.toFixed(2)) };
-    });
-};
 
 interface WidgetCardProps extends React.HTMLAttributes<HTMLDivElement> {
     widget: WidgetConfig;
@@ -57,12 +36,9 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     const [loading, setLoading] = useState(false);
     const [animateValue, setAnimateValue] = useState(false);
     const [alarmArmed, setAlarmArmed] = useState(false);
-    const [chartData, setChartData] = useState<{ time: number; value: number }[]>([]);
-    const [chartError, setChartError] = useState<string | null>(null);
     const [optimisticValue, setOptimisticValue] = useState<string | number | undefined>(undefined);
-    const [chartPeriod, setChartPeriod] = useState<string>(widget.historyPeriod || '24h');
-    const [customStart, setCustomStart] = useState(widget.chartCustomStart || '');
-    const [customEnd, setCustomEnd] = useState(widget.chartCustomEnd || '');
+
+    const { chartData, chartError, chartPeriod, setChartPeriod, customStart, customEnd, setCustomStart, setCustomEnd } = useChartData(widget, settings, isChart);
 
     const isGridLayout = className?.includes('react-grid-item');
     const isScenario = widget.type === 'scenario';
@@ -75,73 +51,22 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     const isAlarm = widget.type === 'alarm';
 
     // Fetch chart history
-    useEffect(() => {
-        if (!isChart || !widget.commandId) return;
-        if (chartPeriod === 'custom' && (!customStart || !customEnd)) return;
-
-        const fetchHistory = async () => {
-            const formatDate = (d: Date) => d.toISOString().slice(0, 19).replace('T', ' ');
-            let start: Date, end: Date;
-            if (chartPeriod === 'custom') {
-                start = new Date(customStart + 'T00:00:00');
-                end   = new Date(customEnd   + 'T23:59:59');
-            } else {
-                end   = new Date();
-                start = new Date();
-                if (chartPeriod === '7d')  start.setDate(end.getDate() - 7);
-                else if (chartPeriod === '30d') start.setDate(end.getDate() - 30);
-                else start.setDate(end.getDate() - 1);
-            }
-            const cacheKey = `chart_${widget.commandId}_${chartPeriod}_${customStart}_${customEnd}_${widget.chartAggregation || 'none'}`;
-
-            // TTL adaptatif : les données historiques longues changent rarement
-            const cacheTTL: Record<string, number> = {
-                '24h':   15 * 60 * 1000,      // 15 min
-                '7d':     2 * 60 * 60 * 1000,  // 2 h
-                '30d':    6 * 60 * 60 * 1000,  // 6 h
-                'custom': 30 * 60 * 1000,       // 30 min
-            };
-            const cachedData = cacheService.get<{ time: number; value: number }[]>(cacheKey, cacheTTL[chartPeriod] ?? 15 * 60 * 1000);
-            if (cachedData) { setChartData(cachedData); return; }
-
-            try {
-                const data = await getJeedomHistory(settings, widget.commandId!, formatDate(start), formatDate(end));
-                const rawData = data.map((item: any) => ({
-                    time: new Date(item.datetime).getTime(),
-                    value: parseFloat(item.value),
-                })).filter((p: { time: number; value: number }) => !isNaN(p.value));
-                const aggregated = aggregateChartData(rawData, widget.chartAggregation || 'none');
-                if (aggregated.length > 0) {
-                    cacheService.set(cacheKey, aggregated); // Ne cache pas les résultats vides
-                    setChartError(null);
-                } else {
-                    setChartError('Aucune donnée historique. Vérifiez que la commande est historisée dans Jeedom.');
-                }
-                setChartData(aggregated);
-            } catch (e: any) {
-                console.error('Failed to load chart data', e);
-                setChartError(e?.message?.includes('CORS') || e?.message?.includes('fetch')
-                    ? 'Erreur réseau — activez le Mode Proxy dans les paramètres.'
-                    : 'Erreur lors du chargement des données.');
-            }
-        };
-
-        fetchHistory();
-    }, [isChart, widget.commandId, chartPeriod, customStart, customEnd, widget.chartAggregation, settings]);
+    // O(1) lookup map — replaces multiple O(n) .find() calls
+    const commandsMap = useMemo(() => new Map(commands.map(c => [String(c.id), c])), [commands]);
 
     // Find commands
     const mainCommand = useMemo(() => {
         if (isScenario) return null;
         if ((widget.type === 'toggle' || widget.type === 'action') && widget.infoId) {
-            const infoCmd = commands.find(c => c.id === widget.infoId);
+            const infoCmd = commandsMap.get(String(widget.infoId));
             if (infoCmd) return infoCmd;
         }
-        return commands.find(c => c.id === widget.commandId) || commands.find(c => c.id === widget.infoId);
-    }, [commands, widget.commandId, widget.infoId, isScenario, widget.type]);
+        return commandsMap.get(String(widget.commandId)) || commandsMap.get(String(widget.infoId));
+    }, [commandsMap, widget.commandId, widget.infoId, isScenario, widget.type]);
 
     const secondaryCommand = useMemo(() =>
-        isScenario ? null : commands.find(c => c.id === widget.displayInfoId),
-        [commands, widget.displayInfoId, isScenario]
+        isScenario || !widget.displayInfoId ? null : (commandsMap.get(String(widget.displayInfoId)) ?? null),
+        [commandsMap, widget.displayInfoId, isScenario]
     );
 
     // Real-time values via WebSocket
