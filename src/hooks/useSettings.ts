@@ -52,7 +52,9 @@ export function useSettings() {
       }
       localStorage.setItem('jeedom_settings', JSON.stringify(settingsToSave));
     };
-    saveSettings();
+    saveSettings().catch(err => {
+      console.error("Sauvegarde des paramètres échouée :", err);
+    });
   }, [settings, isSettingsLoaded]);
   
     // Theme Application

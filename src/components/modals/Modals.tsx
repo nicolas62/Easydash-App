@@ -1,13 +1,14 @@
-import React from 'react';
-import SettingsModal from '../SettingsModal';
-import WidgetEditorModal from '../WidgetEditorModal';
-import DashboardModal from '../DashboardModal';
+import React, { Suspense, lazy } from 'react';
 import ConfirmationModal from '../ConfirmationModal';
-import HelpModal from '../HelpModal';
-import ContactModal from '../ContactModal';
-import ScenarioModal from '../ScenarioModal';
-import ScenarioDetailsModal from '../ScenarioDetailsModal';
-import ReleaseNotesModal from '../ReleaseNotesModal';
+
+const SettingsModal      = lazy(() => import('../SettingsModal'));
+const WidgetEditorModal  = lazy(() => import('../WidgetEditorModal'));
+const DashboardModal     = lazy(() => import('../DashboardModal'));
+const HelpModal          = lazy(() => import('../HelpModal'));
+const ContactModal       = lazy(() => import('../ContactModal'));
+const ScenarioModal      = lazy(() => import('../ScenarioModal'));
+const ScenarioDetailsModal = lazy(() => import('../ScenarioDetailsModal'));
+const ReleaseNotesModal  = lazy(() => import('../ReleaseNotesModal'));
 import { AppSettings, Dashboard, WidgetConfig, JeedomEqLogic, JeedomCommand, JeedomScenario } from '../../types';
 
 interface ModalsProps {
@@ -102,7 +103,7 @@ const Modals: React.FC<ModalsProps> = ({
   closeReleaseNotes,
 }) => {
   return (
-    <>
+    <Suspense fallback={null}>
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={closeSettings}
@@ -167,7 +168,7 @@ const Modals: React.FC<ModalsProps> = ({
         confirmLabel="Réinitialiser"
       />
       <ReleaseNotesModal isOpen={isReleaseNotesOpen} onClose={closeReleaseNotes} />
-    </>
+    </Suspense>
   );
 };
 

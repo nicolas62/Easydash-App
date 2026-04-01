@@ -122,6 +122,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
     };
 
     // Import Logic
+    const validateImport = (data: unknown): data is { settings?: AppSettings; dashboards?: Dashboard[]; widgets?: WidgetConfig[] } => {
+        if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+        const d = data as Record<string, unknown>;
+        if (d.settings !== undefined && (typeof d.settings !== 'object' || Array.isArray(d.settings))) return false;
+        if (d.dashboards !== undefined && !Array.isArray(d.dashboards)) return false;
+        if (d.widgets !== undefined && !Array.isArray(d.widgets)) return false;
+        if (Array.isArray(d.dashboards) && d.dashboards.some(x => typeof x !== 'object' || !x || !('id' in x))) return false;
+        if (Array.isArray(d.widgets) && d.widgets.some(x => typeof x !== 'object' || !x || !('id' in x))) return false;
+        return true;
+    };
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -130,6 +141,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
         reader.onload = (event) => {
             try {
                 const json = JSON.parse(event.target?.result as string);
+                if (!validateImport(json)) {
+                    setImportError("Fichier invalide : structure non reconnue.");
+                    return;
+                }
                 setImportError(null);
                 setPendingImport(json);
             } catch (err) {

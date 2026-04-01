@@ -72,7 +72,7 @@ export const encryptData = async (text: string): Promise<string> => {
         return `${bufferToHex(iv)}:${bufferToHex(encrypted)}`;
     } catch (e) {
         console.error("Encryption failed", e);
-        return text; // Fallback to plain if crypto fails (unlikely)
+        throw new Error("Le chiffrement a échoué — la clé API n'a pas été sauvegardée.");
     }
 };
 
