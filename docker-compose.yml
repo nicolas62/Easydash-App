@@ -15,6 +15,8 @@ services:
       - PUSH_SECRET=${PUSH_SECRET}
       - PUSH_ALLOWED_ORIGIN=${PUSH_ALLOWED_ORIGIN:-}
       - ALLOW_INSECURE_TLS=${ALLOW_INSECURE_TLS:-false}
+      - ADSENSE_CLIENT_ID=${ADSENSE_CLIENT_ID:-}
+      - ADSENSE_SLOT_ID=${ADSENSE_SLOT_ID:-}
     networks:
       - test_wp_wordpress_network
     labels:

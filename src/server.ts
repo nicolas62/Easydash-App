@@ -238,6 +238,14 @@ async function startServer() {
 
     // ── Push subscription endpoints ─────────────────────────────────────────
 
+    // Public endpoint — returns AdSense config from env vars (values are public by nature)
+    app.get("/api/adsense-config", (_req: any, res: any) => {
+        const clientId = process.env.ADSENSE_CLIENT_ID || '';
+        const slotId   = process.env.ADSENSE_SLOT_ID   || '';
+        if (!clientId || !slotId) return res.status(404).json({ error: 'AdSense not configured' });
+        res.json({ clientId, slotId });
+    });
+
     // Public endpoint — returns VAPID public key and a server token so the
     // frontend can authenticate subsequent write requests.
     app.get("/api/push/vapid-public-key", (_req: any, res: any) => {
