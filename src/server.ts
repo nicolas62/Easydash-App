@@ -160,6 +160,14 @@ async function startServer() {
 
     console.log(`Starting server in ${NODE_ENV} mode...`);
 
+    // Generate dist/ads.txt at startup from env var so express.static serves it directly
+    const adsClientId = process.env.ADSENSE_CLIENT_ID || '';
+    if (adsClientId && NODE_ENV === 'production') {
+      const adsPath = path.join(process.cwd(), 'dist', 'ads.txt');
+      fs.writeFileSync(adsPath, `google.com, ${adsClientId}, DIRECT, f08c47fec0942fa0\n`);
+      console.log('[adsense] ads.txt generated');
+    }
+
     // Add security headers to allow OAuth popups
     app.use((_req, res, next) => {
       res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
