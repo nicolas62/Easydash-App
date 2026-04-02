@@ -163,10 +163,23 @@ async function startServer() {
     // Generate dist/ads.txt at startup from env var so express.static serves it directly
     const adsClientId = process.env.ADSENSE_CLIENT_ID || '';
     if (adsClientId && NODE_ENV === 'production') {
-      const adsPath = path.join(process.cwd(), 'dist', 'ads.txt');
-      fs.writeFileSync(adsPath, `google.com, ${adsClientId}, DIRECT, f08c47fec0942fa0\n`);
-      console.log('[adsense] ads.txt generated');
+      try {
+        const adsPath = path.join(process.cwd(), 'dist', 'ads.txt');
+        fs.writeFileSync(adsPath, `google.com, ${adsClientId}, DIRECT, f08c47fec0942fa0\n`);
+        console.log(`[adsense] ads.txt generated at ${adsPath}`);
+      } catch (e) {
+        console.error('[adsense] Failed to write ads.txt:', e);
+      }
+    } else {
+      console.log(`[adsense] skipped — ADSENSE_CLIENT_ID=${adsClientId ? 'set' : 'NOT SET'}, NODE_ENV=${NODE_ENV}`);
     }
+
+    // ads.txt — registered first, before all middleware, to prevent SPA catch-all interference
+    app.get('/ads.txt', (_req: any, res: any) => {
+      const clientId = process.env.ADSENSE_CLIENT_ID || '';
+      if (!clientId) return res.status(404).type('text/plain').send('');
+      res.type('text/plain').send(`google.com, ${clientId}, DIRECT, f08c47fec0942fa0\n`);
+    });
 
     // Add security headers to allow OAuth popups
     app.use((_req, res, next) => {
