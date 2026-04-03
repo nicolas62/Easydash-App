@@ -1,6 +1,6 @@
 services:
   easydash:
-    image: ghcr.io/nicolas62/easydash:latest
+    image: ghcr.io/nicolas62/easydash-app:latest
     container_name: easydash_app
     restart: unless-stopped
     ports:
