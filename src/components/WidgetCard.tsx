@@ -38,11 +38,11 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     const [alarmArmed, setAlarmArmed] = useState(false);
     const [optimisticValue, setOptimisticValue] = useState<string | number | undefined>(undefined);
 
-    const { chartData, chartError, chartPeriod, setChartPeriod, customStart, customEnd, setCustomStart, setCustomEnd } = useChartData(widget, settings, isChart);
-
     const isGridLayout = className?.includes('react-grid-item');
     const isScenario = widget.type === 'scenario';
     const isChart = widget.type === 'chart';
+
+    const { chartData, chartError, chartPeriod, setChartPeriod, customStart, customEnd, setCustomStart, setCustomEnd } = useChartData(widget, settings, isChart);
     const isCamera = widget.type === 'camera';
     const isThermostat = widget.type === 'thermostat';
     const isWeather = widget.type === 'weather';
