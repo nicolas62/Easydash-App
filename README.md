@@ -6,7 +6,7 @@
 
 **Le dashboard moderne et personnalisable pour votre box Jeedom**
 
-[![Version](https://img.shields.io/badge/version-0.9.1-brightgreen?style=flat-square)](https://github.com/nicolas62/EasyDash/releases)
+[![Version](https://img.shields.io/badge/version-0.9.2-brightgreen?style=flat-square)](https://github.com/nicolas62/EasyDash/releases)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/EasyDash/pkgs/container/easydash)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -251,6 +251,11 @@ Quand l'alarme est armée, la card devient **rouge**. Cliquer sur "Désactiver" 
 ---
 
 ## Historique des versions
+
+### v0.9.2 — 17 Avril 2026
+- Nouveau widget **Volet / Portail** : boutons Ouvrir / Stop / Fermer, affichage de position en temps réel, curseur de positionnement optionnel (0–100 %)
+- Mise à jour sécurité : vite 6.4.2 (GHSA-4w7w-66w2-5vf9, GHSA-p9ff-h696-f583), firebase 12.12.0 + override protobufjs ≥ 7.5.5 (GHSA-xq3m-2v4x-88gg)
+- Suppression de la dépendance directe lodash (non utilisée dans le code source)
 
 ### v0.9.1 — 27 Mars 2026
 - Nouveau widget **Alarme** : activation/désactivation, état optionnel, card rouge quand armée
