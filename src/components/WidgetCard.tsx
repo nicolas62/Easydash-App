@@ -13,6 +13,7 @@ import InfoWidget from './widgets/InfoWidget';
 import ActionWidget from './widgets/ActionWidget';
 import SliderWidget from './widgets/SliderWidget';
 import AlarmWidget from './widgets/AlarmWidget';
+import ShutterWidget from './widgets/ShutterWidget';
 
 
 interface WidgetCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -49,6 +50,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     const isSlider = widget.type === 'slider';
     const isInfoType = widget.type === 'info';
     const isAlarm = widget.type === 'alarm';
+    const isShutter = widget.type === 'shutter';
 
     // Fetch chart history
     // O(1) lookup map — replaces multiple O(n) .find() calls
@@ -249,7 +251,9 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                 )}
 
                 {/* Widget content — routed by type */}
-                {isAlarm ? (
+                {isShutter ? (
+                    <ShutterWidget widget={widget} settings={settings} commands={commands} isColorized={isColorized} />
+                ) : isAlarm ? (
                     <AlarmWidget
                         widget={widget}
                         settings={settings}
