@@ -7,7 +7,7 @@ export interface WidgetConfig {
   id: string;
   dashboardId: string;
   name: string;
-  type: 'info' | 'action' | 'toggle' | 'slider' | 'scenario' | 'chart' | 'camera' | 'thermostat' | 'weather' | 'alarm';
+  type: 'info' | 'action' | 'toggle' | 'slider' | 'scenario' | 'chart' | 'camera' | 'thermostat' | 'weather' | 'alarm' | 'shutter';
   category?: WidgetCategory; // New field for filtering
   isFavorite?: boolean; // New field for Home/Favorites display
   historyPeriod?: '24h' | '7d' | '30d' | 'custom'; // For chart widgets
@@ -42,6 +42,13 @@ export interface WidgetConfig {
   sliderMin?: number;
   sliderMax?: number;
   sliderStep?: number;
+
+  // Shutter / Gate specific
+  shutterOpenCmdId?: string;
+  shutterCloseCmdId?: string;
+  shutterStopCmdId?: string;
+  shutterPositionInfoId?: string;   // info command for current position (0-100)
+  shutterPositionCmdId?: string;    // action command to set position (slider)
 
   // Alarm specific
   alarmActivateCmdId?: string;   // command action to arm the alarm

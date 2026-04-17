@@ -455,6 +455,7 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                 <option value="thermostat">Thermostat</option>
                                 <option value="weather">Météo</option>
                                 <option value="alarm">Alarme</option>
+                                <option value="shutter">Volet / Portail</option>
                             </select>
                         </div>
                         <div>
@@ -952,6 +953,84 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                     <p className="text-[10px] text-content-secondary mt-1">
                                         Ce code sera demandé pour désactiver l'alarme. Stocké en SHA-256, jamais visible en clair.
                                     </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* CONFIGURATION POUR VOLET / PORTAIL */}
+                        {widget.type === 'shutter' && (
+                            <div className="mt-4 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Commande Ouvrir / Monter <span className="text-red-400">*</span>
+                                    </label>
+                                    <CommandSelector
+                                        value={widget.shutterOpenCmdId}
+                                        onChange={(val) => setWidget({ ...widget, shutterOpenCmdId: val })}
+                                        availableEqLogics={availableEqLogics}
+                                        filterType="action"
+                                        placeholder="Commande pour monter..."
+                                        disabled={!hasAvailableData}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Commande Fermer / Descendre <span className="text-red-400">*</span>
+                                    </label>
+                                    <CommandSelector
+                                        value={widget.shutterCloseCmdId}
+                                        onChange={(val) => setWidget({ ...widget, shutterCloseCmdId: val })}
+                                        availableEqLogics={availableEqLogics}
+                                        filterType="action"
+                                        placeholder="Commande pour descendre..."
+                                        disabled={!hasAvailableData}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Commande Stop
+                                        <span className="ml-2 text-[10px] font-normal opacity-70">— Optionnel</span>
+                                    </label>
+                                    <CommandSelector
+                                        value={widget.shutterStopCmdId}
+                                        onChange={(val) => setWidget({ ...widget, shutterStopCmdId: val })}
+                                        availableEqLogics={availableEqLogics}
+                                        filterType="action"
+                                        placeholder="Commande pour stopper..."
+                                        disabled={!hasAvailableData}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Position actuelle (Info)
+                                        <span className="ml-2 text-[10px] font-normal opacity-70">— Optionnel, 0-100</span>
+                                    </label>
+                                    <CommandSelector
+                                        value={widget.shutterPositionInfoId}
+                                        onChange={(val) => setWidget({ ...widget, shutterPositionInfoId: val })}
+                                        availableEqLogics={availableEqLogics}
+                                        filterType="info"
+                                        placeholder="Info pour lire la position..."
+                                        disabled={!hasAvailableData}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Définir la position (Action slider)
+                                        <span className="ml-2 text-[10px] font-normal opacity-70">— Optionnel, affiche un curseur</span>
+                                    </label>
+                                    <CommandSelector
+                                        value={widget.shutterPositionCmdId}
+                                        onChange={(val) => setWidget({ ...widget, shutterPositionCmdId: val })}
+                                        availableEqLogics={availableEqLogics}
+                                        filterType="action"
+                                        placeholder="Action pour positionner..."
+                                        disabled={!hasAvailableData}
+                                    />
                                 </div>
                             </div>
                         )}
