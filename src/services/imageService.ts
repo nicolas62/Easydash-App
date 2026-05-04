@@ -46,8 +46,9 @@ const uploadToImgBB = async (file: File, apiKey: string): Promise<string> => {
         const base64Image = await fileToBase64(file);
         const formData = new FormData();
         formData.append('image', base64Image);
+        formData.append('key', apiKey); // Key in POST body, not URL query param
 
-        const response = await fetchWithTimeout(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+        const response = await fetchWithTimeout('https://api.imgbb.com/1/upload', {
             method: 'POST',
             body: formData,
             timeout: 20000

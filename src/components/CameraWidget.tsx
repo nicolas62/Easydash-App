@@ -50,8 +50,17 @@ const CameraWidget: React.FC<CameraWidgetProps> = ({ widget, settings, isColoriz
 
         const buildUrl = () => {
             let url = widget.streamUrl!;
+            try {
+                const parsed = new URL(url);
+                if (!['http:', 'https:'].includes(parsed.protocol)) {
+                    throw new Error('Invalid protocol');
+                }
+            } catch {
+                setError(true);
+                return '';
+            }
             if (!url.includes('apikey=') && settings.apiKey) {
-                url += `${url.includes('?') ? '&' : '?'}apikey=${settings.apiKey}`;
+                url += `${url.includes('?') ? '&' : '?'}apikey=${encodeURIComponent(settings.apiKey)}`;
             }
             return url;
         };

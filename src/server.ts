@@ -160,9 +160,30 @@ async function startServer() {
 
     console.log(`Starting server in ${NODE_ENV} mode...`);
 
-    // Add security headers to allow OAuth popups
+    // Security headers
     app.use((_req, res, next) => {
+      // Allow OAuth popups (Google Drive / Firebase)
       res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+      // Prevent clickjacking
+      res.setHeader('X-Frame-Options', 'DENY');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+      // Content Security Policy
+      // - unsafe-inline required for Tailwind CSS style attributes
+      // - connect-src allows any https/ws origin (Jeedom URL is user-defined)
+      // - img-src allows data: (favicon) and http: (local camera streams)
+      res.setHeader('Content-Security-Policy', [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data: blob: https: http:",
+        "connect-src 'self' https: wss: ws:",
+        "frame-src 'none'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+      ].join('; '));
       next();
     });
 
