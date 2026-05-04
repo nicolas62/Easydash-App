@@ -3,6 +3,21 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.9.2",
+        date: "4 Mai 2026",
+        features: [
+            { type: 'new', text: "Nouveau widget Volet / Portail : boutons Ouvrir / Stop / Fermer pour piloter volets roulants, portes de garage et portails. Le bouton Stop n'apparaît que s'il est configuré." },
+            { type: 'new', text: "Widget Volet — position en temps réel : si une commande info est liée, la position (0–100 %) s'affiche et se met à jour via WebSocket." },
+            { type: 'new', text: "Widget Volet — curseur de positionnement : si une commande action slider est configurée, un curseur 0–100 % permet de définir la position cible directement depuis le widget." },
+            { type: 'fix', text: "Sécurité — mise à jour vite 6.4.2 : correction GHSA-4w7w-66w2-5vf9 (path traversal dans les source maps) et GHSA-p9ff-h696-f583 (lecture arbitraire de fichiers via le WebSocket du dev server)." },
+            { type: 'fix', text: "Sécurité — protobufjs ≥ 7.5.5 (résolu en 8.0.1) : correction GHSA-xq3m-2v4x-88gg (exécution de code arbitraire, critique), via firebase 12.12.0 et override npm." },
+            { type: 'improvement', text: "Suppression de lodash des dépendances directes : la bibliothèque n'était pas utilisée dans le code source, réduisant la surface d'attaque." },
+            { type: 'improvement', text: "Nettoyage — suppression de l'intégration Google AdSense (composant AdBanner, hook useAdSense, routes /ads.txt et /api/adsense-config, variables d'environnement ADSENSE_*)." },
+            { type: 'improvement', text: "Nettoyage — suppression des fichiers Android legacy (AndroidManifest.xml, MainActivity.kt et 7 fichiers Kotlin) obsolètes depuis la migration en PWA." },
+            { type: 'improvement', text: "Aide & Documentation : nouvelle section WebSocket expliquant les deux URLs tentées (port direct 8011/8012, proxy Apache /ws/), la configuration pare-feu Linux et le diagnostic via console navigateur." },
+        ]
+    },
+    {
         version: "0.9.1",
         date: "27 Mars 2026",
         features: [
