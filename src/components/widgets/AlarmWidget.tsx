@@ -3,7 +3,7 @@ import { ShieldAlert, ShieldCheck, Lock, Loader2 } from 'lucide-react';
 import { WidgetConfig, JeedomCommand } from '../../types';
 import { executeJeedomCommand } from '../../services/jeedomService';
 import { useJeedomCommand } from '../../hooks/useJeedomCommand';
-import { hashPin } from '../../utils/crypto';
+import { verifyPin } from '../../utils/crypto';
 
 interface AlarmWidgetProps {
     widget: WidgetConfig;
@@ -20,11 +20,17 @@ const AlarmWidget: React.FC<AlarmWidgetProps> = ({
     commands,
     onArmedChange,
 }) => {
-    const [loading, setLoading]       = useState(false);
-    const [localArmed, setLocalArmed] = useState(false);
-    const [showPin, setShowPin]       = useState(false);
-    const [pinInput, setPinInput]     = useState('');
-    const [pinError, setPinError]     = useState(false);
+    const [loading, setLoading]         = useState(false);
+    const [localArmed, setLocalArmed]   = useState(false);
+    const [showPin, setShowPin]         = useState(false);
+    const [pinInput, setPinInput]       = useState('');
+    const [pinError, setPinError]       = useState(false);
+    const [failedAttempts, setFailedAttempts] = useState(0);
+    const [lockedUntil, setLockedUntil] = useState<number>(0);
+
+    const LOCKOUT_ATTEMPTS = 3;
+    const LOCKOUT_DURATION_MS = 30_000;
+    const isLocked = Date.now() < lockedUntil;
 
     // Real-time state from Jeedom (optional)
     const stateCmd = commands.find(c => c.id === widget.alarmStateId);
@@ -63,7 +69,7 @@ const AlarmWidget: React.FC<AlarmWidgetProps> = ({
         setShowPin(true);
     }, []);
 
-    const handlePinSubmit = useCallback(async (e: React.FormEvent) => {
+    const handlePinSubmit = useCallback(async (e: React.SyntheticEvent) => {
         e.preventDefault();
         if (!widget.alarmDeactivateCmdId) { setShowPin(false); return; }
 
@@ -82,13 +88,24 @@ const AlarmWidget: React.FC<AlarmWidgetProps> = ({
             return;
         }
 
-        const hash = await hashPin(pinInput);
-        if (hash !== widget.alarmCodeHash) {
+        // Rate limiting check
+        if (Date.now() < lockedUntil) return;
+
+        const ok = await verifyPin(pinInput, widget.alarmCodeHash);
+        if (!ok) {
+            const next = failedAttempts + 1;
+            setFailedAttempts(next);
             setPinError(true);
             setPinInput('');
+            if (next >= LOCKOUT_ATTEMPTS) {
+                setLockedUntil(Date.now() + LOCKOUT_DURATION_MS);
+                setFailedAttempts(0);
+            }
             return;
         }
 
+        setFailedAttempts(0);
+        setLockedUntil(0);
         setShowPin(false);
         setLoading(true);
         try {
@@ -99,7 +116,7 @@ const AlarmWidget: React.FC<AlarmWidgetProps> = ({
         } finally {
             setLoading(false);
         }
-    }, [pinInput, settings, widget.alarmDeactivateCmdId, widget.alarmCodeHash, widget.alarmStateId]);
+    }, [pinInput, failedAttempts, lockedUntil, settings, widget.alarmDeactivateCmdId, widget.alarmCodeHash, widget.alarmStateId]);
 
     const textColor    = isColorized ? 'text-white' : 'text-content-primary';
     const subColor     = isColorized ? 'text-white/70' : 'text-content-secondary';
@@ -183,9 +200,13 @@ const AlarmWidget: React.FC<AlarmWidgetProps> = ({
                                         pinError ? 'border-red-500 bg-red-500/5' : 'border-border'
                                     }`}
                                 />
-                                {pinError && (
+                                {isLocked ? (
+                                    <p className="text-xs text-orange-400 mt-1 text-center animate-in fade-in duration-200">
+                                        Trop de tentatives — réessayez dans 30 s
+                                    </p>
+                                ) : pinError && (
                                     <p className="text-xs text-red-400 mt-1 text-center animate-in fade-in duration-200">
-                                        Code incorrect
+                                        Code incorrect ({LOCKOUT_ATTEMPTS - failedAttempts} essai{LOCKOUT_ATTEMPTS - failedAttempts > 1 ? 's' : ''} restant{LOCKOUT_ATTEMPTS - failedAttempts > 1 ? 's' : ''})
                                     </p>
                                 )}
                             </div>
@@ -200,7 +221,8 @@ const AlarmWidget: React.FC<AlarmWidgetProps> = ({
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition-colors"
+                                    disabled={isLocked}
+                                    className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
                                     Valider
                                 </button>
