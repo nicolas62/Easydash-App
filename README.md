@@ -6,13 +6,13 @@
 
 **Le dashboard moderne et personnalisable pour votre box Jeedom**
 
-[![Version](https://img.shields.io/badge/version-0.9.2-brightgreen?style=flat-square)](https://github.com/nicolas62/EasyDash/releases)
-[![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/EasyDash/pkgs/container/easydash)
+[![Version](https://img.shields.io/badge/version-0.9.2-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
+[![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/Easydash-App/pkgs/container/easydash-app)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript)](https://typescriptlang.org)
 
-[🌐 Site officiel](https://easydash.fr) · [🚀 Démo en ligne](https://easydash.fr?demo=true) · [🐛 Signaler un bug](https://github.com/nicolas62/EasyDash/issues)
+[🌐 Site officiel](https://easydash.fr) · [🚀 Démo en ligne](https://easydash.fr?demo=true) · [🐛 Signaler un bug](https://github.com/nicolas62/Easydash-App/issues)
 
 </div>
 
@@ -42,6 +42,7 @@ EasyDash est une interface domotique **moderne, réactive et entièrement person
 | **Caméra** | Flux vidéo ou snapshot MJPEG/HTTP |
 | **Météo** | Prévisions météo intégrées |
 | **Alarme** | Activation/désactivation d'alarme avec code PIN sécurisé (SHA-256), card rouge quand armée |
+| **Volet / Portail** | Boutons Ouvrir / Stop / Fermer, affichage de position en temps réel, curseur de positionnement optionnel |
 
 ### Tailles de widgets
 
@@ -116,7 +117,7 @@ docker run -d \
   -e VAPID_SUBJECT=mailto:contact@exemple.fr \
   -v easydash_push_data:/app/data \
   --restart unless-stopped \
-  ghcr.io/nicolas62/easydash:latest
+  ghcr.io/nicolas62/easydash-app:latest
 ```
 
 ### Avec docker-compose
@@ -124,8 +125,8 @@ docker run -d \
 ```yaml
 services:
   easydash:
-    image: ghcr.io/nicolas62/easydash:latest
-    container_name: easydash
+    image: ghcr.io/nicolas62/easydash-app:latest
+    container_name: easydash_app
     ports:
       - "3000:3000"
     environment:
@@ -166,8 +167,8 @@ Copiez `Public Key` dans `VAPID_PUBLIC_KEY` et `Private Key` dans `VAPID_PRIVATE
 
 ```bash
 # Cloner le dépôt
-git clone https://github.com/nicolas62/EasyDash.git
-cd EasyDash
+git clone https://github.com/nicolas62/Easydash-App.git
+cd Easydash-App
 
 # Installer les dépendances
 npm install
@@ -231,6 +232,20 @@ Quand l'alarme est armée, la card devient **rouge**. Cliquer sur "Désactiver" 
 
 ---
 
+## Widget Volet / Portail — configuration
+
+Le widget Volet / Portail permet de piloter un volet roulant, une porte de garage ou un portail depuis Jeedom.
+
+| Champ | Description |
+|---|---|
+| **Commande Ouvrir** *(requis)* | ID de la commande action pour monter / ouvrir |
+| **Commande Fermer** *(requis)* | ID de la commande action pour descendre / fermer |
+| **Commande Stop** *(optionnel)* | ID de la commande action pour stopper le mouvement — affiche un bouton Stop entre Ouvrir et Fermer |
+| **Position actuelle** *(optionnel)* | ID de la commande info retournant la position en % (0–100) — affichée en temps réel |
+| **Définir la position** *(optionnel)* | ID de la commande action (slider) pour envoyer une position cible — affiche un curseur 0–100 % |
+
+---
+
 ## Stack technique
 
 | Technologie | Usage |
@@ -252,10 +267,11 @@ Quand l'alarme est armée, la card devient **rouge**. Cliquer sur "Désactiver" 
 
 ## Historique des versions
 
-### v0.9.2 — 17 Avril 2026
-- Nouveau widget **Volet / Portail** : boutons Ouvrir / Stop / Fermer, affichage de position en temps réel, curseur de positionnement optionnel (0–100 %)
+### v0.9.2 — 4 Mai 2026
+- Nouveau widget **Volet / Portail** : boutons Ouvrir / Stop / Fermer, position temps réel, curseur de positionnement optionnel (0–100 %)
 - Mise à jour sécurité : vite 6.4.2 (GHSA-4w7w-66w2-5vf9, GHSA-p9ff-h696-f583), firebase 12.12.0 + override protobufjs ≥ 7.5.5 (GHSA-xq3m-2v4x-88gg)
-- Suppression de la dépendance directe lodash (non utilisée dans le code source)
+- Suppression lodash des dépendances directes (non utilisé dans le code source)
+- Suppression de l'intégration Google AdSense et des fichiers Android legacy
 
 ### v0.9.1 — 27 Mars 2026
 - Nouveau widget **Alarme** : activation/désactivation, état optionnel, card rouge quand armée
