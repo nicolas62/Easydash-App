@@ -7,7 +7,7 @@ import {
 import SEO from './SEO';
 import ReleaseNotesModal from './ReleaseNotesModal';
 import ContactModal from './ContactModal';
-import AdBanner from './AdBanner';
+
 import { APP_VERSION } from '../constants';
 
 interface LandingPageProps {
@@ -303,9 +303,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect }) => {
                         </div>
                     </section>
 
-                    {/* ── AdSense ──────────────────────────────────────────── */}
-                    <AdBanner />
-
                     {/* ── FAQ ──────────────────────────────────────────────── */}
                     <section className="py-24 bg-dark-surface/30 border-t border-border/50" aria-labelledby="faq-heading">
                         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -327,9 +324,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect }) => {
                             </dl>
                         </div>
                     </section>
-
-                    {/* ── AdSense ──────────────────────────────────────────── */}
-                    <AdBanner />
 
                     {/* ── CTA ──────────────────────────────────────────────── */}
                     <section className="py-24" aria-labelledby="cta-heading">
