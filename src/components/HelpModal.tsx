@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, LayoutDashboard, Smartphone, Cloud, Cookie, AlertTriangle, Wrench, Bell, ShieldCheck, SlidersHorizontal, BarChart2, Clapperboard } from 'lucide-react';
+import { X, LayoutDashboard, Smartphone, Cloud, Cookie, AlertTriangle, Wrench, Bell, ShieldCheck, SlidersHorizontal, BarChart2, Clapperboard, Wifi } from 'lucide-react';
 import { APP_VERSION } from '../constants';
 
 interface HelpModalProps {
@@ -220,6 +220,72 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             <p className="text-content-secondary">
                                 Nous utilisons Google Analytics de manière anonyme pour comprendre comment le tableau de bord est utilisé et l'améliorer. Un bandeau s'affiche lors de votre première visite — vous êtes libre d'accepter ou de refuser sans impact sur le fonctionnement.
                             </p>
+                        </div>
+                    </section>
+
+                    {/* WebSocket */}
+                    <section className="space-y-3">
+                        <h3 className="text-lg font-bold flex items-center gap-2 text-jeedom-500">
+                            <Wifi size={20} />
+                            Connexion WebSocket temps réel
+                        </h3>
+                        <div className="bg-input-bg border border-border rounded-xl p-4 text-sm space-y-4">
+                            <p className="text-content-secondary leading-relaxed">
+                                EasyDash se connecte à Jeedom en WebSocket pour recevoir les mises à jour d'état instantanément, sans polling HTTP. Si la connexion échoue, il bascule automatiquement en mode polling.
+                            </p>
+
+                            <div className="space-y-2">
+                                <p className="font-semibold text-content-primary text-xs uppercase tracking-wide">Activer dans EasyDash</p>
+                                <p className="text-content-secondary text-xs">
+                                    Dans <strong>Paramètres → Général</strong>, activez <strong>"Connexion WebSocket"</strong>. Si désactivé, EasyDash utilise le polling HTTP classique.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <p className="font-semibold text-content-primary text-xs uppercase tracking-wide">Comment EasyDash se connecte</p>
+                                <p className="text-content-secondary text-xs mb-1">Deux URLs sont tentées dans l'ordre :</p>
+                                <div className="space-y-2">
+                                    <div className="bg-dark-card border border-border/50 rounded-lg p-3 text-xs space-y-1">
+                                        <p className="font-semibold text-content-primary">① Port direct Jeedom (prioritaire)</p>
+                                        <code className="text-jeedom-400 block">ws://votre-jeedom.local:8011</code>
+                                        <code className="text-jeedom-400 block">wss://votre-jeedom.local:8012 <span className="text-content-secondary">(si HTTPS)</span></code>
+                                        <p className="text-content-secondary mt-1">Ports natifs du démon Jeedom. À ouvrir dans le pare-feu si nécessaire.</p>
+                                    </div>
+                                    <div className="bg-dark-card border border-border/50 rounded-lg p-3 text-xs space-y-1">
+                                        <p className="font-semibold text-content-primary">② Proxy Apache/Nginx (repli automatique)</p>
+                                        <code className="text-jeedom-400 block">ws://votre-jeedom.local/ws/</code>
+                                        <p className="text-content-secondary mt-1">Utilisé si les ports directs sont inaccessibles (reverse proxy sans exposition des ports 8011/8012).</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <p className="font-semibold text-content-primary text-xs uppercase tracking-wide">Configuration Linux / Jeedom</p>
+                                <div className="grid md:grid-cols-2 gap-2 text-xs">
+                                    <div className="bg-dark-card border border-border/50 rounded-lg p-3 space-y-1.5">
+                                        <p className="font-semibold text-content-primary">Port direct — ouvrir le pare-feu</p>
+                                        <code className="text-jeedom-400 block">sudo ufw allow 8011/tcp</code>
+                                        <code className="text-jeedom-400 block">sudo ufw allow 8012/tcp</code>
+                                        <p className="text-content-secondary mt-1">Jeedom écoute nativement sur ces ports. Aucune autre config nécessaire.</p>
+                                    </div>
+                                    <div className="bg-dark-card border border-border/50 rounded-lg p-3 space-y-1.5">
+                                        <p className="font-semibold text-content-primary">Proxy Apache — activer les modules</p>
+                                        <code className="text-jeedom-400 block">sudo a2enmod proxy proxy_http proxy_wstunnel rewrite</code>
+                                        <code className="text-jeedom-400 block">sudo systemctl restart apache2</code>
+                                        <p className="text-content-secondary mt-1">Le VirtualHost Jeedom doit contenir <code className="bg-dark-surface px-1 rounded">ProxyPass /ws/ ws://localhost:8011/</code></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-dark-card border border-border/50 rounded-lg p-3 text-xs text-content-secondary space-y-1">
+                                <p className="font-semibold text-content-primary">🔍 Diagnostic</p>
+                                <p>Ouvrez la console du navigateur (F12) et cherchez les messages <code className="bg-dark-surface px-1 rounded">[JeedomWS]</code> :</p>
+                                <ul className="mt-1 space-y-0.5 list-disc list-inside ml-1">
+                                    <li><span className="text-green-400">🟢 Connecté</span> — WebSocket actif, tout fonctionne.</li>
+                                    <li><span className="text-orange-400">Tentative URL B</span> — port direct inaccessible, vérifiez le pare-feu ou activez le proxy Apache.</li>
+                                    <li><span className="text-red-400">Connexion zombie</span> — réseau instable, reconnexion automatique après 90 s.</li>
+                                </ul>
+                            </div>
                         </div>
                     </section>
 
