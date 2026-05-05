@@ -15,19 +15,21 @@ services:
       - PUSH_SECRET=${PUSH_SECRET}
       - PUSH_ALLOWED_ORIGIN=${PUSH_ALLOWED_ORIGIN:-}
       - ALLOW_INSECURE_TLS=${ALLOW_INSECURE_TLS:-false}
-    networks:
-      - test_wp_wordpress_network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.easydash.rule=Host(`devjee.gauthier-nicolas.fr`) || Host(`easydash.fr`) || Host(`www.easydash.fr`)"
-      - "traefik.http.routers.easydash.entrypoints=websecure"
-      - "traefik.http.routers.easydash.tls.certresolver=letsencrypt"
-      - "traefik.http.services.easydash.loadbalancer.server.port=3000"
+    # Uncomment and configure the labels below if you use Traefik as a reverse proxy.
+    # Set TRAEFIK_HOST in your .env file (e.g. TRAEFIK_HOST=easydash.example.com).
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.easydash.rule=Host(`${TRAEFIK_HOST}`)"
+    #   - "traefik.http.routers.easydash.entrypoints=websecure"
+    #   - "traefik.http.routers.easydash.tls.certresolver=letsencrypt"
+    #   - "traefik.http.services.easydash.loadbalancer.server.port=3000"
+    # networks:
+    #   - your_traefik_network
 
 volumes:
   easydash_push_data:
     name: easydash_push_data
 
-networks:
-  test_wp_wordpress_network:
-    external: true
+# networks:
+#   your_traefik_network:
+#     external: true
