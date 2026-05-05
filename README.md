@@ -6,7 +6,7 @@
 
 **Le dashboard moderne et personnalisable pour votre box Jeedom**
 
-[![Version](https://img.shields.io/badge/version-0.9.2-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
+[![Version](https://img.shields.io/badge/version-0.9.3-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/Easydash-App/pkgs/container/easydash-app)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -82,7 +82,9 @@ EasyDash est une interface domotique **moderne, réactive et entièrement person
 
 ### Sécurité
 
-- **Code PIN alarme hashé SHA-256** — le code de désactivation n'est jamais stocké en clair (Web Crypto API)
+- **PIN admin PBKDF2-SHA-256** — protège le mode édition et les paramètres (min. 6 caractères, anti-bruteforce 5 tentatives / 5 min)
+- **Code PIN alarme PBKDF2-SHA-256** — le code de désactivation n'est jamais stocké en clair (sel aléatoire, 100 000 itérations)
+- **En-têtes HTTP** — CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy sur toutes les réponses
 - **Proxy caméra sécurisé** — prévention SSRF, validation d'URL, restriction aux protocoles HTTP/HTTPS
 - **Clé API chiffrée** — AES-GCM en localStorage, jamais exposée en clair
 - **TLS conditionnel** — connexion sécurisée si votre Jeedom est en HTTPS
@@ -266,6 +268,14 @@ Le widget Volet / Portail permet de piloter un volet roulant, une porte de garag
 ---
 
 ## Historique des versions
+
+### v0.9.3 — 5 Mai 2026
+- **Code PIN admin** : le mode édition et les paramètres sont protégés par un code PIN hashé PBKDF2-SHA-256 (min. 6 caractères). Anti-bruteforce : 5 tentatives → verrouillage 5 min. Section "Sécurité" dans les Paramètres.
+- Session admin déverrouillée : une seule saisie par session, bouton cadenas dans le header pour re-verrouiller.
+- Sécurité — code PIN alarme migré de SHA-256 non salé vers PBKDF2-SHA-256 (100 000 itérations, sel 16 octets), rétrocompatible.
+- Sécurité — en-têtes HTTP : CSP, X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy.
+- Sécurité — clé API ImgBB dans le corps POST (au lieu du paramètre d'URL), validation protocole URL caméra.
+- Fix TypeScript : erreur `virtual:pwa-register` corrigée via `tsconfig.json`.
 
 ### v0.9.2 — 4 Mai 2026
 - Nouveau widget **Volet / Portail** : boutons Ouvrir / Stop / Fermer, position temps réel, curseur de positionnement optionnel (0–100 %)

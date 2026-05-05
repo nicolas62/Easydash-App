@@ -88,6 +88,7 @@ export interface AppSettings {
   useWebSocket?: boolean; // Option to disable WebSocket
   theme: 'light' | 'dark';
   imgbbApiKey?: string;
+  dashboardPinHash?: string; // PBKDF2 hash of the admin PIN (pbkdf2v1:<salt>:<hash>)
 }
 
 // Jeedom API Types (Simplified)
