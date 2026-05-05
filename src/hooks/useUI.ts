@@ -37,6 +37,7 @@ export function useUI(loadAvailableData: () => void, dashboards: Dashboard[], ac
   const [deleteDashboardId, setDeleteDashboardId] = useState<string | null>(null);
   const [editingWidget, setEditingWidget] = useState<WidgetConfig | undefined>(undefined);
   const [isReleaseNotesOpen, setIsReleaseNotesOpen] = useState(false);
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
 
   const handleAddWidget = () => {
     if (activeDashboardId === 'default' || activeDashboardId === 'favorites') {
@@ -132,6 +133,8 @@ export function useUI(loadAvailableData: () => void, dashboards: Dashboard[], ac
     handleEditDashboard,
     handleScenarioClick,
     isReleaseNotesOpen,
-    setIsReleaseNotesOpen
+    setIsReleaseNotesOpen,
+    isAdminUnlocked,
+    setIsAdminUnlocked,
   };
 }

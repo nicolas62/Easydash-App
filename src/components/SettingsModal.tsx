@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppSettings, Dashboard, WidgetConfig, JeedomCommand } from '../types';
 import { testJeedomConnection } from '../services/jeedomService';
-import { Save, X, Moon, Sun, Activity, RefreshCw, Download, Upload, FileJson, Wifi, WifiOff, Lock, CloudUpload, CloudDownload, LogIn, LogOut, Shield, Bell } from 'lucide-react';
+import { Save, X, Moon, Sun, Activity, RefreshCw, Download, Upload, FileJson, Wifi, WifiOff, Lock, CloudUpload, CloudDownload, LogIn, LogOut, Shield, Bell, Eye, EyeOff, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { hashPin, verifyPin } from '../utils/crypto';
 import SettingsHealthTab from './SettingsHealthTab';
 import AlertsTab from './alerts/AlertsTab';
 import { useGoogleDrive } from '../hooks/useGoogleDrive';
@@ -20,7 +21,7 @@ interface SettingsModalProps {
     onImport?: (data: { settings?: AppSettings, dashboards?: Dashboard[], widgets?: WidgetConfig[] }, mode: 'replace' | 'merge') => void;
 }
 
-type Tab = 'general' | 'health' | 'data' | 'alerts';
+type Tab = 'general' | 'health' | 'data' | 'alerts' | 'security';
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings, onSave, dashboards, widgets, commands = [], alertHistoryRefreshKey, onImport }) => {
     const [activeTab, setActiveTab] = useState<Tab>('general');
@@ -39,6 +40,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
     const [pendingImport, setPendingImport] = useState<{ settings?: AppSettings, dashboards?: Dashboard[], widgets?: WidgetConfig[] } | null>(null);
     const [importError, setImportError] = useState<string | null>(null);
 
+    // Security tab state
+    const [currentPin, setCurrentPin] = useState('');
+    const [newPin, setNewPin] = useState('');
+    const [confirmPin, setConfirmPin] = useState('');
+    const [showPins, setShowPins] = useState(false);
+    const [pinError, setPinError] = useState<string | null>(null);
+    const [pinSuccess, setPinSuccess] = useState<string | null>(null);
+    const [isHashingPin, setIsHashingPin] = useState(false);
+
     // Sync form data when settings change or modal opens
     useEffect(() => {
         if (isOpen) {
@@ -46,6 +56,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
             setActiveTab('general'); // Reset to general tab on open
             setTestStatus('idle');
             setTestMessage('');
+            setCurrentPin(''); setNewPin(''); setConfirmPin('');
+            setPinError(null); setPinSuccess(null);
         }
     }, [isOpen, settings]);
 
@@ -242,6 +254,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                             <Bell size={13} />
                             Alertes
                             {activeTab === 'alerts' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-jeedom-500 rounded-full" />}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('security')}
+                            className={`pb-3 text-sm font-medium transition-colors relative flex items-center gap-1.5 ${activeTab === 'security' ? 'text-jeedom-500' : 'text-content-secondary hover:text-content-primary'}`}
+                        >
+                            <Shield size={13} />
+                            Sécurité
+                            {activeTab === 'security' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-jeedom-500 rounded-full" />}
                         </button>
                     </div>
                 </div>
@@ -600,6 +620,140 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                             </div>
                         </div>
                     )}
+
+                    {/* SECURITY TAB */}
+                    {activeTab === 'security' && (() => {
+                        const hasPinSet = !!settings.dashboardPinHash;
+
+                        const handleSavePin = async (e: React.FormEvent) => {
+                            e.preventDefault();
+                            setPinError(null);
+                            setPinSuccess(null);
+                            if (newPin.length < 6) { setPinError('Le code PIN doit contenir au moins 6 caractères.'); return; }
+                            if (newPin !== confirmPin) { setPinError('Les codes PIN ne correspondent pas.'); return; }
+                            if (hasPinSet) {
+                                const ok = await verifyPin(currentPin, settings.dashboardPinHash!);
+                                if (!ok) { setPinError('Code PIN actuel incorrect.'); return; }
+                            }
+                            setIsHashingPin(true);
+                            try {
+                                const hash = await hashPin(newPin);
+                                onSave({ ...settings, dashboardPinHash: hash });
+                                setCurrentPin(''); setNewPin(''); setConfirmPin('');
+                                setPinSuccess('Code PIN enregistré avec succès.');
+                            } finally {
+                                setIsHashingPin(false);
+                            }
+                        };
+
+                        const handleRemovePin = async () => {
+                            setPinError(null);
+                            setPinSuccess(null);
+                            if (hasPinSet) {
+                                const ok = await verifyPin(currentPin, settings.dashboardPinHash!);
+                                if (!ok) { setPinError('Code PIN actuel incorrect.'); return; }
+                            }
+                            onSave({ ...settings, dashboardPinHash: undefined });
+                            setCurrentPin(''); setNewPin(''); setConfirmPin('');
+                            setPinSuccess('Code PIN supprimé.');
+                        };
+
+                        const inputType = showPins ? 'text' : 'password';
+                        const inputClass = 'w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none transition-all text-sm';
+
+                        return (
+                            <div className="p-6 space-y-6">
+                                <div className="flex items-start gap-3 p-4 rounded-xl bg-jeedom-600/10 border border-jeedom-600/20">
+                                    <Shield size={18} className="text-jeedom-500 mt-0.5 shrink-0" />
+                                    <div className="text-xs text-content-secondary leading-relaxed">
+                                        {hasPinSet
+                                            ? 'Un code PIN est actif. Il protège le mode édition et les paramètres contre les accès non autorisés.'
+                                            : 'Aucun code PIN configuré. Définissez-en un pour protéger le mode édition et les paramètres.'}
+                                    </div>
+                                </div>
+
+                                <form onSubmit={handleSavePin} className="space-y-4">
+                                    {hasPinSet && (
+                                        <div>
+                                            <label className="block text-xs font-medium text-content-secondary mb-1">Code PIN actuel</label>
+                                            <input
+                                                type={inputType}
+                                                inputMode="numeric"
+                                                value={currentPin}
+                                                onChange={e => { setCurrentPin(e.target.value); setPinError(null); }}
+                                                placeholder="••••••"
+                                                className={inputClass}
+                                                autoComplete="current-password"
+                                            />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <label className="block text-xs font-medium text-content-secondary mb-1">Nouveau code PIN <span className="text-content-secondary/60">(min. 6 caractères)</span></label>
+                                        <input
+                                            type={inputType}
+                                            inputMode="numeric"
+                                            value={newPin}
+                                            onChange={e => { setNewPin(e.target.value); setPinError(null); }}
+                                            placeholder="••••••"
+                                            className={inputClass}
+                                            autoComplete="new-password"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-content-secondary mb-1">Confirmer le code PIN</label>
+                                        <input
+                                            type={inputType}
+                                            inputMode="numeric"
+                                            value={confirmPin}
+                                            onChange={e => { setConfirmPin(e.target.value); setPinError(null); }}
+                                            placeholder="••••••"
+                                            className={inputClass}
+                                            autoComplete="new-password"
+                                        />
+                                    </div>
+
+                                    <label className="flex items-center gap-2 text-xs text-content-secondary cursor-pointer select-none">
+                                        <input type="checkbox" checked={showPins} onChange={e => setShowPins(e.target.checked)} className="rounded" />
+                                        <span className="flex items-center gap-1">{showPins ? <EyeOff size={13} /> : <Eye size={13} />} Afficher les codes</span>
+                                    </label>
+
+                                    {pinError && (
+                                        <div className="flex items-center gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                                            <AlertTriangle size={13} className="shrink-0" />
+                                            {pinError}
+                                        </div>
+                                    )}
+                                    {pinSuccess && (
+                                        <div className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                                            <CheckCircle2 size={13} className="shrink-0" />
+                                            {pinSuccess}
+                                        </div>
+                                    )}
+
+                                    <div className="flex gap-3 pt-1">
+                                        <button
+                                            type="submit"
+                                            disabled={isHashingPin || newPin.length < 6}
+                                            className="flex-1 bg-jeedom-600 hover:bg-jeedom-500 text-white py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        >
+                                            {isHashingPin ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                                            {hasPinSet ? 'Modifier le PIN' : 'Définir le PIN'}
+                                        </button>
+                                        {hasPinSet && (
+                                            <button
+                                                type="button"
+                                                onClick={handleRemovePin}
+                                                disabled={isHashingPin}
+                                                className="px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 text-sm transition-colors disabled:opacity-40"
+                                            >
+                                                Supprimer
+                                            </button>
+                                        )}
+                                    </div>
+                                </form>
+                            </div>
+                        );
+                    })()}
                 </div>
 
                 {/* Footer (Only for General Tab) */}

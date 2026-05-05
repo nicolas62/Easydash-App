@@ -3,6 +3,21 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.9.3",
+        date: "5 Mai 2026",
+        features: [
+            { type: 'new', text: "Code PIN admin : le mode édition et les paramètres sont désormais protégés par un code PIN hashé PBKDF2-SHA-256 (minimum 6 caractères). À configurer dans Paramètres → Sécurité." },
+            { type: 'new', text: "Anti-bruteforce admin : 5 tentatives échouées entraînent un verrouillage de 5 minutes. Le compteur et le temps restant s'affichent en temps réel. L'état est persisté en localStorage." },
+            { type: 'new', text: "Session admin déverrouillée : une seule saisie de PIN suffit par session. Un bouton cadenas (orange) apparaît dans le header pour re-verrouiller manuellement. Quitter le mode édition ne demande jamais de PIN." },
+            { type: 'new', text: "Section 'Sécurité' dans les Paramètres : création, modification et suppression du PIN admin avec vérification de l'ancien code avant tout changement." },
+            { type: 'improvement', text: "Sécurité — code PIN alarme : migration de SHA-256 non salé vers PBKDF2-SHA-256 (100 000 itérations, sel aléatoire 16 octets). Rétrocompatible avec les hashes SHA-256 existants." },
+            { type: 'improvement', text: "Sécurité — en-têtes HTTP : ajout Content-Security-Policy, X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy sur toutes les réponses serveur." },
+            { type: 'improvement', text: "Sécurité — clé API ImgBB : déplacée du paramètre d'URL vers le corps de la requête POST pour éviter son exposition dans les logs serveur et l'historique navigateur." },
+            { type: 'fix', text: "Sécurité — validation protocole URL caméra : seuls http: et https: sont acceptés, bloquant les URLs javascript: ou data: potentiellement malveillantes." },
+            { type: 'fix', text: "TypeScript : correction de l'erreur 'Cannot find module virtual:pwa-register' lors du typecheck hors build Vite — ajout de vite-plugin-pwa/client dans tsconfig.json." },
+        ]
+    },
+    {
         version: "0.9.2",
         date: "4 Mai 2026",
         features: [

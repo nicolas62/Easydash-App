@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Edit3, Menu, Workflow, BookOpen, Mail, RotateCcw } from 'lucide-react';
+import { Settings, Edit3, Menu, Workflow, BookOpen, Mail, RotateCcw, Lock } from 'lucide-react';
 import { useMainMenu } from '../../hooks/useMainMenu';
 import { APP_VERSION } from '../../constants';
 
@@ -13,6 +13,9 @@ interface HeaderProps {
   openResetConfirmation: () => void;
   openReleaseNotes: () => void;
   useDemoMode: boolean;
+  isAdminUnlocked?: boolean;
+  hasPinProtection?: boolean;
+  onLock?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -25,6 +28,9 @@ const Header: React.FC<HeaderProps> = ({
   openResetConfirmation,
   openReleaseNotes,
   useDemoMode,
+  isAdminUnlocked,
+  hasPinProtection,
+  onLock,
 }) => {
   const { isMainMenuOpen, isMainMenuPopping, mainMenuRef, toggleMainMenu, setIsMainMenuOpen } = useMainMenu();
 
@@ -109,6 +115,16 @@ const Header: React.FC<HeaderProps> = ({
         <span className="text-xs font-medium text-content-secondary mr-2 hidden sm:flex items-center gap-2">
           {useDemoMode ? <span className="bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded border border-orange-500/30">DÉMO</span> : null}
         </span>
+
+        {hasPinProtection && isAdminUnlocked && onLock && (
+          <button
+            onClick={onLock}
+            className="p-2 text-orange-400 hover:bg-orange-500/10 rounded-full transition-colors"
+            title="Re-verrouiller l'accès admin"
+          >
+            <Lock size={20} />
+          </button>
+        )}
 
         <button
           onClick={toggleEditMode}

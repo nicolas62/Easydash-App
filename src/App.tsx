@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RefreshCw } from 'lucide-react';
 
@@ -30,6 +30,7 @@ import CookieBanner from './components/CookieBanner';
 import RouteTracker from './components/RouteTracker';
 import Toast from './components/Toast';
 import SEO from './components/SEO';
+import PinUnlockModal from './components/PinUnlockModal';
 import { useConnectionStatus } from './hooks/useConnectionStatus';
 
 const App: React.FC = () => {
@@ -37,6 +38,7 @@ const App: React.FC = () => {
 
   // Tous les hooks doivent être appelés inconditionnellement (règles des hooks React)
   const { notification, setNotification } = useNotifications();
+  const [pendingAdminAction, setPendingAdminAction] = useState<(() => void) | null>(null);
   const { settings, setSettings, isSettingsLoaded, performResetConfig, handleImportConfig: importSettings } = useSettings();
 
   // Déclaré avant useJeedomData / usePolling / useWebSocket qui en dépendent
@@ -77,8 +79,17 @@ const App: React.FC = () => {
     handleAddWidget, handleEditWidget, handleDeleteWidgetClick, confirmDeleteWidget,
     handleDeleteDashboardClick, cancelDeleteDashboard,
     handleAddDashboard, handleEditDashboard, handleScenarioClick,
-    isReleaseNotesOpen, setIsReleaseNotesOpen
+    isReleaseNotesOpen, setIsReleaseNotesOpen,
+    isAdminUnlocked, setIsAdminUnlocked,
   } = useUI(loadAvailableData, dashboards, activeDashboardId, setActiveDashboardId, setDashboards);
+
+  const requirePin = useCallback((action: () => void) => {
+    if (!settings.dashboardPinHash || isAdminUnlocked) {
+      action();
+    } else {
+      setPendingAdminAction(() => action);
+    }
+  }, [settings.dashboardPinHash, isAdminUnlocked]);
 
   const mainRef = useRef<HTMLElement>(null);
   const { pullChange, handleTouchStart: handlePullToRefreshTouchStart, handleTouchMove, handleTouchEnd: handlePullToRefreshTouchEnd } = usePullToRefresh(mainRef, () => refreshWidgetValues(widgets));
@@ -205,14 +216,17 @@ const App: React.FC = () => {
 
       <Header
         isEditMode={isEditMode}
-        toggleEditMode={() => setIsEditMode(!isEditMode)}
-        openSettings={() => setIsSettingsOpen(true)}
+        toggleEditMode={() => isEditMode ? setIsEditMode(false) : requirePin(() => setIsEditMode(true))}
+        openSettings={() => requirePin(() => setIsSettingsOpen(true))}
         openScenarios={() => setIsScenarioModalOpen(true)}
         openHelp={() => setIsHelpModalOpen(true)}
         openContact={() => setIsContactModalOpen(true)}
         openResetConfirmation={() => setIsResetConfirmationOpen(true)}
         openReleaseNotes={() => setIsReleaseNotesOpen(true)}
         useDemoMode={settings.useDemoMode}
+        isAdminUnlocked={isAdminUnlocked}
+        hasPinProtection={!!settings.dashboardPinHash}
+        onLock={() => setIsAdminUnlocked(false)}
       />
 
       <div className="flex h-screen pt-16">
@@ -334,6 +348,18 @@ const App: React.FC = () => {
         isReleaseNotesOpen={isReleaseNotesOpen}
         closeReleaseNotes={() => setIsReleaseNotesOpen(false)}
       />
+
+      {pendingAdminAction && settings.dashboardPinHash && (
+        <PinUnlockModal
+          storedHash={settings.dashboardPinHash}
+          onSuccess={() => {
+            setIsAdminUnlocked(true);
+            pendingAdminAction();
+            setPendingAdminAction(null);
+          }}
+          onCancel={() => setPendingAdminAction(null)}
+        />
+      )}
     </div>
   );
 };
