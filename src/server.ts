@@ -178,7 +178,7 @@ async function startServer() {
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
         "img-src 'self' data: blob: https: http:",
-        "connect-src 'self' https: wss: ws:",
+        "connect-src 'self' https: http: wss: ws:",
         "frame-src 'none'",
         "object-src 'none'",
         "base-uri 'self'",
