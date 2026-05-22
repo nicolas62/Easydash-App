@@ -6,7 +6,7 @@
 
 **Le dashboard moderne et personnalisable pour votre box Jeedom**
 
-[![Version](https://img.shields.io/badge/version-0.9.3-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
+[![Version](https://img.shields.io/badge/version-0.9.4-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/Easydash-App/pkgs/container/easydash-app)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -268,6 +268,10 @@ Le widget Volet / Portail permet de piloter un volet roulant, une porte de garag
 ---
 
 ## Historique des versions
+
+### v0.9.4 — 10 Mai 2026
+- Sécurité — **protobufjs** : 6 CVE high/moderate corrigées (code injection, DoS, prototype pollution) — override forcé à `>=8.2.0`, version installée `8.4.2` via firebase → @grpc/proto-loader.
+- Sécurité — **CSP** `connect-src` : ajout de `http:` pour les instances Jeedom en réseau local (était bloqué par la politique HTTPS uniquement).
 
 ### v0.9.3 — 5 Mai 2026
 - **Code PIN admin** : le mode édition et les paramètres sont protégés par un code PIN hashé PBKDF2-SHA-256 (min. 6 caractères). Anti-bruteforce : 5 tentatives → verrouillage 5 min. Section "Sécurité" dans les Paramètres.
