@@ -3,6 +3,14 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.9.4",
+        date: "10 Mai 2026",
+        features: [
+            { type: 'fix', text: "Sécurité — protobufjs : correction de 6 CVE high/moderate (code injection, DoS, prototype pollution) via override >=8.2.0. La version installée passe de 8.0.1 à 8.4.2 (firebase → @grpc/proto-loader)." },
+            { type: 'fix', text: "Sécurité — CSP connect-src : ajout de http: pour autoriser les connexions vers les instances Jeedom en réseau local (http://192.168.x.x). Seul https: était autorisé, bloquant l'API REST sur HTTP." },
+        ]
+    },
+    {
         version: "0.9.3",
         date: "5 Mai 2026",
         features: [
