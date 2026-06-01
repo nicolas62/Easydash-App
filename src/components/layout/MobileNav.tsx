@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Plus, Edit3, XCircle, Star } from 'lucide-react';
 import { Dashboard } from '../../types';
 import { ICONS } from '../../constants';
@@ -22,6 +22,12 @@ const MobileNav: React.FC<MobileNavProps> = ({
   onEditDashboard,
   onDeleteDashboard,
 }) => {
+  const activeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    activeButtonRef.current?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }, [activeDashboardId]);
+
   return (
     <div className="md:hidden flex-none h-14 bg-dark-bg/95 backdrop-blur border-b border-border flex items-center px-4 gap-2 overflow-x-auto z-30 no-scrollbar transition-colors duration-300">
       {dashboards.map(dash => {
@@ -30,6 +36,7 @@ const MobileNav: React.FC<MobileNavProps> = ({
         return (
           <button
             key={dash.id}
+            ref={isActive ? activeButtonRef : undefined}
             onClick={() => setActiveDashboardId(dash.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all text-sm font-medium border flex-shrink-0 ${
               isActive

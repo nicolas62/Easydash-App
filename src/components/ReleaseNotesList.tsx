@@ -3,6 +3,13 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.9.5",
+        date: "1 Juin 2026",
+        features: [
+            { type: 'fix', text: "Navigation mobile — swipe entre dashboards : après un swipe, le sélecteur de dashboard en haut de l'écran scrolle automatiquement pour centrer le dashboard actif, évitant de devoir faire défiler manuellement la barre." },
+        ]
+    },
+    {
         version: "0.9.4",
         date: "10 Mai 2026",
         features: [
