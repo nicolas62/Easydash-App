@@ -117,4 +117,4 @@ export const DEFAULT_SETTINGS: AppSettings = {
     imgbbApiKey: ''
 };
 
-export const APP_VERSION = '0.9.5';
+export const APP_VERSION = '0.9.6';
