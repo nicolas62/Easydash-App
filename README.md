@@ -6,7 +6,7 @@
 
 **Le dashboard moderne et personnalisable pour votre box Jeedom**
 
-[![Version](https://img.shields.io/badge/version-0.9.4-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
+[![Version](https://img.shields.io/badge/version-0.9.6-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/Easydash-App/pkgs/container/easydash-app)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -268,6 +268,12 @@ Le widget Volet / Portail permet de piloter un volet roulant, une porte de garag
 ---
 
 ## Historique des versions
+
+### v0.9.6 — 1 Juin 2026
+- Sécurité — **qs** CVE-2026-8723 (moderate) : DoS dans `qs.stringify` sur tableaux comma avec valeurs null/undefined — override forcé à `>=6.15.2` (6.15.0 → 6.15.2, dépendance transitive d'express).
+
+### v0.9.5 — 1 Juin 2026
+- Navigation mobile — **swipe entre dashboards** : après un swipe, le sélecteur en haut de l'écran scrolle automatiquement pour centrer le dashboard actif (plus besoin de faire défiler manuellement).
 
 ### v0.9.4 — 10 Mai 2026
 - Sécurité — **protobufjs** : 6 CVE high/moderate corrigées (code injection, DoS, prototype pollution) — override forcé à `>=8.2.0`, version installée `8.4.2` via firebase → @grpc/proto-loader.
