@@ -3,6 +3,13 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.9.6",
+        date: "1 Juin 2026",
+        features: [
+            { type: 'fix', text: "Sécurité — qs CVE-2026-8723 (moderate) : qs.stringify plantait avec TypeError sur les entrées null/undefined dans les tableaux au format comma avec encodeValuesOnly. Correction via override qs >=6.15.2 (6.15.0 → 6.15.2, dépendance transitive d'express)." },
+        ]
+    },
+    {
         version: "0.9.5",
         date: "1 Juin 2026",
         features: [
