@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
     LayoutDashboard, Activity, History, ArrowRight, CheckCircle,
     Zap, Smartphone, Bell, ShieldCheck, Sliders, MonitorSmartphone,
-    Puzzle, BarChart3, Camera, Thermometer, AlarmSmoke, ExternalLink
+    Puzzle, BarChart3, Camera, Thermometer, AlarmSmoke, ExternalLink, Github
 } from 'lucide-react';
 import SEO from './SEO';
 import ReleaseNotesModal from './ReleaseNotesModal';
@@ -370,6 +370,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect }) => {
                             >
                                 v{APP_VERSION}
                             </button>
+                            <a
+                                href="https://github.com/nicolas62/Easydash-App"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-content-secondary/50 hover:text-jeedom-400 transition-colors ml-1.5 inline-flex"
+                                title="Voir le code source sur GitHub"
+                            >
+                                <Github size={13} />
+                            </a>
                         </div>
                         <p className="text-content-secondary text-sm text-center">
                             Dashboard Jeedom open source — Non affilié à Jeedom SAS.<br />

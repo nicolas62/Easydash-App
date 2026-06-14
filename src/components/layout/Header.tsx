@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Edit3, Menu, Workflow, BookOpen, Mail, RotateCcw, Lock } from 'lucide-react';
+import { Settings, Edit3, Menu, Workflow, BookOpen, Mail, RotateCcw, Lock, Github } from 'lucide-react';
 import { useMainMenu } from '../../hooks/useMainMenu';
 import { APP_VERSION } from '../../constants';
 
@@ -101,7 +101,15 @@ const Header: React.FC<HeaderProps> = ({
                 >
                   v{APP_VERSION}
                 </button>
-                <span className="text-[10px] text-content-secondary font-medium mx-1">-</span>
+                <a
+                  href="https://github.com/nicolas62/Easydash-App"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-content-secondary hover:text-jeedom-500 transition-colors mx-1.5 inline-flex"
+                  title="Voir le code source sur GitHub"
+                >
+                  <Github size={11} />
+                </a>
                 <span className="text-[10px] text-content-secondary font-medium">
                   © <a href="https://www.gauthier-nicolas.fr" target="_blank" rel="noopener noreferrer" className="hover:text-jeedom-500 transition-colors">Gauthier Nicolas</a>
                 </span>

@@ -6,7 +6,7 @@
 
 **Le dashboard moderne et personnalisable pour votre box Jeedom**
 
-[![Version](https://img.shields.io/badge/version-0.9.6-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
+[![Version](https://img.shields.io/badge/version-0.9.7-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/Easydash-App/pkgs/container/easydash-app)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -268,6 +268,12 @@ Le widget Volet / Portail permet de piloter un volet roulant, une porte de garag
 ---
 
 ## Historique des versions
+
+### v0.9.7 — 14 Juin 2026
+- Sécurité — **react-router** (high) : 6 CVEs — XSS (redirections RSC, prerendered redirect), RCE via turbo-stream, open redirect, DoS (`__manifest`, single-fetch) — mise à jour `>=7.14.3`.
+- Sécurité — **@grpc/grpc-js** (high) : crash serveur/client sur requête compressée ou mal formée (GHSA-5375, GHSA-99f4) — mise à jour via `npm audit fix`.
+- Sécurité — **esbuild** (high, dev only) : lecture arbitraire de fichiers sur Windows en dev server, intégrité binaire Deno — override forcé à `>=0.28.1`.
+- Lien **GitHub** : icône dans le menu et le footer de la landing page → [Easydash-App](https://github.com/nicolas62/Easydash-App).
 
 ### v0.9.6 — 1 Juin 2026
 - Sécurité — **qs** CVE-2026-8723 (moderate) : DoS dans `qs.stringify` sur tableaux comma avec valeurs null/undefined — override forcé à `>=6.15.2` (6.15.0 → 6.15.2, dépendance transitive d'express).
