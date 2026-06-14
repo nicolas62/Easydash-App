@@ -8,7 +8,7 @@ const releases = [
         features: [
             { type: 'fix', text: "Sécurité — react-router (high) : 6 CVEs corrigées — XSS via cible javascript: dans les redirections RSC, stored XSS dans le HTML prerendered, RCE via désérialisation turbo-stream TYPE_ERROR, open redirect URL protocol-relative, DoS via endpoint __manifest et single-fetch — mise à jour vers >=7.14.3." },
             { type: 'fix', text: "Sécurité — @grpc/grpc-js (high) : crash serveur/client sur requête compressée malformée (GHSA-5375-pq7m-f5r2) et requête mal formée (GHSA-99f4-grh7-6pcq) — mise à jour via npm audit fix." },
-            { type: 'fix', text: "Sécurité — esbuild (high, dev uniquement) : lecture arbitraire de fichiers via le dev server sur Windows (GHSA-g7r4-m6w7-qqqr), vérification d'intégrité binaire manquante en contexte Deno (GHSA-gv7w-rqvm-qjhr) — override forcé à >=0.28.1." },
+            { type: 'fix', text: "Sécurité — esbuild GHSA-gv7w-rqvm-qjhr (high) : intégrité binaire manquante en contexte Deno — non applicable à EasyDash (projet npm uniquement). GHSA-g7r4-m6w7-qqqr (lecture fichiers Windows dev server) corrigé par vite 6.4.3." },
             { type: 'new', text: "Lien GitHub : icône GitHub (lucide-react) dans le menu principal et le footer, cliquable vers le dépôt open source." },
         ]
     },

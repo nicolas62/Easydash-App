@@ -272,7 +272,7 @@ Le widget Volet / Portail permet de piloter un volet roulant, une porte de garag
 ### v0.9.7 — 14 Juin 2026
 - Sécurité — **react-router** (high) : 6 CVEs — XSS (redirections RSC, prerendered redirect), RCE via turbo-stream, open redirect, DoS (`__manifest`, single-fetch) — mise à jour `>=7.14.3`.
 - Sécurité — **@grpc/grpc-js** (high) : crash serveur/client sur requête compressée ou mal formée (GHSA-5375, GHSA-99f4) — mise à jour via `npm audit fix`.
-- Sécurité — **esbuild** (high, dev only) : lecture arbitraire de fichiers sur Windows en dev server, intégrité binaire Deno — override forcé à `>=0.28.1`.
+- Sécurité — **esbuild** : GHSA-g7r4-m6w7-qqqr (lecture fichiers Windows dev server) corrigé par vite 6.4.3. GHSA-gv7w-rqvm-qjhr (intégrité binaire Deno) non applicable — projet npm uniquement.
 - Lien **GitHub** : icône dans le menu et le footer de la landing page → [Easydash-App](https://github.com/nicolas62/Easydash-App).
 
 ### v0.9.6 — 1 Juin 2026
