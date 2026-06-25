@@ -31,3 +31,6 @@ Thumbs.db
 # Editor
 .vscode/settings.json
 .idea/
+
+# Claude agent workspace
+.agent/

@@ -3,6 +3,23 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.9.9",
+        date: "25 Juin 2026",
+        features: [
+            { type: 'new', text: "Widget Variable : lecture et écriture des variables de scénarios Jeedom (#maVariable#) depuis un widget dédié, avec polling configurable (30s à 10 min). Compatible Jeedom 3.x+." },
+            { type: 'new', text: "Temps écoulé : option 'Afficher le temps écoulé' sur les widgets info, action, toggle et slider. Affiche 'il y a 5 min' sous le nom du widget. Tracking client-side, aucune dépendance de version Jeedom." },
+        ]
+    },
+    {
+        version: "0.9.8",
+        date: "24 Juin 2026",
+        features: [
+            { type: 'fix', text: "Sécurité — protobufjs (moderate) : CVE-2026-54270 amplification mémoire sur champs inconnus en binary decode, CVE-2026-54269 noms dérivés du schéma écrasant des propriétés runtime — override >=8.6.0 (8.6.5 installé), dépendance transitive de firebase/@grpc/proto-loader." },
+            { type: 'fix', text: "Sécurité — @babel/core (low) : GHSA-4x5r-pxfx-6jf8 lecture arbitraire de fichiers via commentaire sourceMappingURL — mise à jour 7.29.0 → 7.29.7, dépendance dev transitive (@vitejs/plugin-react, vite-plugin-pwa)." },
+            { type: 'improvement', text: "Sécurité — SSRF hardening : localhost, 127.0.0.1 et 0.0.0.0 ajoutés dans la liste de blocage du proxy serveur pour éviter les requêtes auto-référentes. Les IPs LAN (192.168.x, 10.x) et http: restent autorisés pour les instances Jeedom locales." },
+        ]
+    },
+    {
         version: "0.9.7",
         date: "14 Juin 2026",
         features: [

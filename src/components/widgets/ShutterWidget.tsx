@@ -20,7 +20,7 @@ const ShutterWidget: React.FC<ShutterWidgetProps> = ({ widget, settings, command
 
     const positionCmd = commands.find(c => String(c.id) === String(widget.shutterPositionInfoId ?? ''));
     const initialPosition = positionCmd?.value !== undefined ? Number(positionCmd.value) : 50;
-    const wsPosition = useJeedomCommand(widget.shutterPositionInfoId, initialPosition);
+    const { value: wsPosition } = useJeedomCommand(widget.shutterPositionInfoId, initialPosition);
     const remotePosition = wsPosition !== undefined ? Number(wsPosition) : initialPosition;
     const displayPosition = localPosition !== null ? localPosition : remotePosition;
 

@@ -21,7 +21,10 @@ const BLOCKED_HOSTS = new Set([
     '169.254.169.254', // AWS / GCP / Azure instance metadata
     '100.100.100.200', // Alibaba Cloud metadata
     'fd00::ec2',        // AWS IPv6 metadata
-    '::1',              // IPv6 localhost
+    '::1',              // IPv6 loopback
+    '127.0.0.1',        // IPv4 loopback — prevent SSRF self-loop
+    '0.0.0.0',          // unspecified address
+    'localhost',        // hostname alias for loopback
 ]);
 
 const isSafeUrl = (urlStr: string): boolean => {

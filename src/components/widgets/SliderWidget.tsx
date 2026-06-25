@@ -21,7 +21,7 @@ const SliderWidget: React.FC<SliderWidgetProps> = ({ widget, settings, commands,
     const initialValue = infoCmd?.value !== undefined ? Number(infoCmd.value) : min;
 
     // Abonnement temps-réel WebSocket
-    const wsValue = useJeedomCommand(widget.sliderInfoId, initialValue);
+    const { value: wsValue } = useJeedomCommand(widget.sliderInfoId, initialValue);
     const remoteValue = wsValue !== undefined ? Number(wsValue) : initialValue;
 
     // Valeur locale pendant le drag

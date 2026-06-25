@@ -456,6 +456,7 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                 <option value="weather">Météo</option>
                                 <option value="alarm">Alarme</option>
                                 <option value="shutter">Volet / Portail</option>
+                                <option value="variable">Variable de scénario</option>
                             </select>
                         </div>
                         <div>
@@ -1309,7 +1310,7 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                 <p className="text-xs text-content-secondary mb-2">
                                     Permet d'afficher une valeur (ex: température, conso) tout en gardant l'action au clic.
                                 </p>
-                                <CommandSelector 
+                                <CommandSelector
                                     value={widget.displayInfoId}
                                     onChange={(val) => setWidget({...widget, displayInfoId: val})}
                                     availableEqLogics={availableEqLogics}
@@ -1317,6 +1318,72 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                     placeholder="-- Sélectionner une info --"
                                     disabled={!hasAvailableData}
                                 />
+                            </div>
+                        )}
+
+                        {/* CONFIGURATION VARIABLE DE SCÉNARIO */}
+                        {widget.type === 'variable' && (
+                            <div className="mt-4 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Nom de la variable <span className="text-red-400">*</span>
+                                    </label>
+                                    <p className="text-xs text-content-secondary mb-2">
+                                        Entrez le nom sans les <code className="bg-dark-card px-1 rounded">#</code>. Ex&nbsp;: <code className="bg-dark-card px-1 rounded">maVariable</code>
+                                    </p>
+                                    <input
+                                        type="text"
+                                        value={widget.variableName ?? ''}
+                                        onChange={e => setWidget({ ...widget, variableName: e.target.value })}
+                                        placeholder="ex: compteurArrosage"
+                                        className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none focus:ring-2 focus:ring-jeedom-500 font-mono text-sm"
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <span className="text-sm font-medium text-content-secondary">Permettre la modification</span>
+                                        <p className="text-xs text-content-secondary">Affiche un champ pour écrire une nouvelle valeur</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setWidget({ ...widget, variableAllowEdit: !widget.variableAllowEdit })}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${widget.variableAllowEdit ? 'bg-jeedom-500' : 'bg-border'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${widget.variableAllowEdit ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary mb-1">
+                                        Intervalle de rafraîchissement
+                                    </label>
+                                    <select
+                                        value={widget.variablePollInterval ?? 60}
+                                        onChange={e => setWidget({ ...widget, variablePollInterval: Number(e.target.value) })}
+                                        className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
+                                    >
+                                        <option value={30}>30 secondes</option>
+                                        <option value={60}>1 minute</option>
+                                        <option value={300}>5 minutes</option>
+                                        <option value={600}>10 minutes</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TEMPS DEPUIS LA DERNIÈRE MISE À JOUR */}
+                        {(widget.type === 'info' || widget.type === 'action' || widget.type === 'toggle' || widget.type === 'slider') && (
+                            <div className="mt-4 pt-4 border-t border-dashed border-border flex items-center justify-between">
+                                <div>
+                                    <span className="text-sm font-medium text-content-secondary">Afficher le temps écoulé</span>
+                                    <p className="text-xs text-content-secondary">Ex : "il y a 5 min" sous le nom du widget</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setWidget({ ...widget, showElapsedTime: !widget.showElapsedTime })}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${widget.showElapsedTime ? 'bg-jeedom-500' : 'bg-border'}`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${widget.showElapsedTime ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
                             </div>
                         )}
                         </>

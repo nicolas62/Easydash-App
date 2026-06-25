@@ -34,7 +34,7 @@ const AlarmWidget: React.FC<AlarmWidgetProps> = ({
 
     // Real-time state from Jeedom (optional)
     const stateCmd = commands.find(c => c.id === widget.alarmStateId);
-    const rawState = useJeedomCommand(stateCmd?.id, stateCmd?.value);
+    const { value: rawState } = useJeedomCommand(stateCmd?.id, stateCmd?.value);
 
     const armedValue = widget.alarmArmedValue ?? '1';
     const isArmed = widget.alarmStateId

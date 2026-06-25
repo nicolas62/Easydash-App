@@ -727,3 +727,26 @@ export const jeedomBackup = async (settings: AppSettings): Promise<void> => {
     if (settings.useDemoMode) return new Promise(resolve => setTimeout(resolve, 2000));
     await jeedomJsonRpcCall(settings, 'jeedom::backup', {}, LONG_TIMEOUT_MS);
 };
+
+export const fetchVariableValue = async (settings: AppSettings, name: string): Promise<string | null> => {
+    if (settings.useDemoMode) return null;
+    if (!name) return null;
+    try {
+        const result = await jeedomApiCall(settings, { type: 'variable', name });
+        if (result === null || result === undefined) return null;
+        return String(result);
+    } catch {
+        return null;
+    }
+};
+
+export const setVariableValue = async (settings: AppSettings, name: string, value: string): Promise<boolean> => {
+    if (settings.useDemoMode) return true;
+    if (!name) return false;
+    try {
+        await jeedomApiCall(settings, { type: 'variable', name, value });
+        return true;
+    } catch {
+        return false;
+    }
+};

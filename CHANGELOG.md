@@ -4,6 +4,94 @@ All notable changes to EasyDash are documented here.
 
 ---
 
+## [0.9.9] — 2026-06-25
+
+### Ajouté
+- **Widget Variable** : nouveau type de widget pour lire et écrire les variables de scénarios Jeedom (`#maVariable#`) via l'API `type=variable`. Polling configurable (30 s, 1 min, 5 min, 10 min). Édition inline optionnelle avec validation au clavier (Entrée / Échap). Compatible Jeedom 3.x+.
+- **Temps écoulé** : option "Afficher le temps écoulé" sur les widgets Info, Action, Toggle et Slider. Affiche "à l'instant", "il y a N min", "il y a Nh", "il y a Nj" sous le nom du widget. Se met à jour automatiquement toutes les 60 secondes. Tracking client-side, aucune dépendance de version Jeedom.
+
+### Technique
+- `useJeedomCommand` retourne désormais `{ value, updateTime }` (timestamp ms du dernier changement, initialisé depuis `collectDate` de l'API Jeedom si disponible).
+- Nouveau hook `useElapsedTime(ts)` et utilitaire `formatElapsed(ts)`.
+- Nouveau hook `useVariableWidget(settings, name, pollInterval)` avec optimistic update.
+- Nouveaux services `fetchVariableValue()` et `setVariableValue()` dans `jeedomService.ts`.
+
+---
+
+## [0.9.8] — 2026-06-24
+
+### Corrigé
+- Sécurité — **protobufjs** (moderate) : CVE-2026-54270 (amplification mémoire binary decode) + CVE-2026-54269 (shadowing de propriétés runtime) — override `>=8.6.0` (8.6.5 installé), dépendance transitive firebase → `@grpc/proto-loader`.
+- Sécurité — **@babel/core** (low) : GHSA-4x5r-pxfx-6jf8 (lecture arbitraire de fichiers via `sourceMappingURL`) — `7.29.0 → 7.29.7`, dépendance dev transitive.
+- Sécurité — **SSRF hardening** : `localhost`, `127.0.0.1` et `0.0.0.0` ajoutés dans la liste de blocage du proxy serveur. HTTP local et IPs LAN (192.168.x, 10.x) restent autorisés pour Jeedom.
+
+---
+
+## [0.9.7] — 2026-06-14
+
+### Ajouté
+- Icône **GitHub** (lucide-react) dans le menu principal et le footer de la landing page, cliquable vers le dépôt open source.
+
+### Corrigé
+- Sécurité — **react-router** (high) : 6 CVEs (XSS redirections RSC, stored XSS prerendered, RCE turbo-stream, open redirect, DoS `__manifest` et single-fetch) — mise à jour `>=7.14.3`.
+- Sécurité — **@grpc/grpc-js** (high) : crash sur requête compressée/mal formée (GHSA-5375, GHSA-99f4) — mise à jour via `npm audit fix`.
+- Sécurité — **esbuild** GHSA-gv7w-rqvm-qjhr (intégrité binaire Deno) non applicable à EasyDash (projet npm) — alerte Dependabot dismissée. GHSA-g7r4 corrigé par vite 6.4.3.
+
+---
+
+## [0.9.6] — 2026-06-01
+
+### Corrigé
+- Sécurité — **qs** CVE-2026-8723 (moderate) : `TypeError` dans `qs.stringify` sur tableaux `comma` avec valeurs `null`/`undefined` — override `>=6.15.2`, dépendance transitive d'express.
+
+---
+
+## [0.9.5] — 2026-06-01
+
+### Amélioré
+- Navigation mobile — **swipe** : après un swipe entre dashboards, le sélecteur en haut de l'écran scrolle automatiquement pour centrer le dashboard actif.
+
+---
+
+## [0.9.4] — 2026-05-10
+
+### Corrigé
+- Sécurité — **protobufjs** : 6 CVE high/moderate (code injection, DoS, prototype pollution) — override `>=8.2.0` (8.0.1 → 8.4.2, via firebase → `@grpc/proto-loader`).
+- Sécurité — **CSP** `connect-src` : ajout de `http:` pour les instances Jeedom en LAN (était bloqué par la politique HTTPS uniquement).
+
+---
+
+## [0.9.3] — 2026-05-05
+
+### Ajouté
+- **Code PIN admin** : mode édition et paramètres protégés par PBKDF2-SHA-256 (min. 6 caractères). Anti-bruteforce : 5 tentatives → verrouillage 5 min. Section Sécurité dans les Paramètres.
+- **Session admin déverrouillée** : une seule saisie par session ; bouton cadenas dans le header pour re-verrouiller.
+
+### Amélioré
+- Sécurité — code PIN alarme migré de SHA-256 non salé vers PBKDF2-SHA-256 (100 000 itérations, sel 16 octets) — rétrocompatible.
+- Sécurité — en-têtes HTTP : `Content-Security-Policy`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`.
+- Sécurité — clé API ImgBB dans le corps POST au lieu du paramètre d'URL.
+
+### Corrigé
+- Validation protocole URL caméra : seuls `http:` et `https:` acceptés.
+- TypeScript : erreur `Cannot find module virtual:pwa-register` corrigée.
+
+---
+
+## [0.9.2] — 2026-05-04
+
+### Ajouté
+- Nouveau widget **Volet / Portail** : boutons Ouvrir / Stop / Fermer, position temps réel, curseur de positionnement optionnel (0–100 %).
+
+### Corrigé
+- Sécurité — **vite** 6.4.2 (GHSA-4w7w, GHSA-p9ff).
+- Sécurité — **firebase** 12.12.0 + override protobufjs `>=7.5.5` (GHSA-xq3m).
+
+### Supprimé
+- Dépendance directe **lodash** (non utilisée). Intégration Google AdSense et fichiers Android legacy.
+
+---
+
 ## [0.9.1] — 2026-03-27
 
 ### Nouveau — Widget Alarme

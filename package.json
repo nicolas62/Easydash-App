@@ -1,7 +1,7 @@
 {
   "name": "easydash",
   "private": true,
-  "version": "0.9.7",
+  "version": "0.9.9",
   "type": "module",
   "scripts": {
     "dev": "tsx src/server.ts",
@@ -30,7 +30,7 @@
   },
   "overrides": {
     "serialize-javascript": "^7.0.3",
-    "protobufjs": ">=8.2.0",
+    "protobufjs": ">=8.6.0",
     "fast-uri": ">=3.1.2",
     "qs": ">=6.15.2"
   },

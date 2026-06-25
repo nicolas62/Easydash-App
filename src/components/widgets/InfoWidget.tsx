@@ -1,5 +1,7 @@
 import React from 'react';
+import { Clock } from 'lucide-react';
 import { WidgetConfig } from '../../types';
+import { useElapsedTime } from '../../hooks/useElapsedTime';
 
 interface InfoWidgetProps {
   widget: WidgetConfig;
@@ -7,9 +9,13 @@ interface InfoWidgetProps {
   displayValue: string;
   isColorized: boolean;
   animateValue: boolean;
+  updateTime?: number;
+  showElapsedTime?: boolean;
 }
 
-const InfoWidget = React.memo(({ widget, Icon, displayValue, isColorized, animateValue }: InfoWidgetProps) => {
+const InfoWidget = React.memo(({ widget, Icon, displayValue, isColorized, animateValue, updateTime, showElapsedTime }: InfoWidgetProps) => {
+  const elapsed = useElapsedTime(showElapsedTime ? updateTime : undefined);
+
   return (
     <>
       {/* Background icon (watermark) */}
@@ -38,9 +44,17 @@ const InfoWidget = React.memo(({ widget, Icon, displayValue, isColorized, animat
             {displayValue}
           </span>
         </div>
-        <h3 className={`text-center text-xs font-medium truncate opacity-90 ${isColorized ? 'text-white' : 'text-content-secondary'}`}>
-          {widget.name}
-        </h3>
+        <div className="text-center">
+          <h3 className={`text-xs font-medium truncate opacity-90 ${isColorized ? 'text-white' : 'text-content-secondary'}`}>
+            {widget.name}
+          </h3>
+          {elapsed && (
+            <span className={`inline-flex items-center gap-0.5 text-[9px] opacity-60 ${isColorized ? 'text-white' : 'text-content-secondary'}`}>
+              <Clock size={7} />
+              {elapsed}
+            </span>
+          )}
+        </div>
       </div>
     </>
   );

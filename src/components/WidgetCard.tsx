@@ -14,6 +14,7 @@ import ActionWidget from './widgets/ActionWidget';
 import SliderWidget from './widgets/SliderWidget';
 import AlarmWidget from './widgets/AlarmWidget';
 import ShutterWidget from './widgets/ShutterWidget';
+import VariableWidget from './widgets/VariableWidget';
 
 
 interface WidgetCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -51,6 +52,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     const isInfoType = widget.type === 'info';
     const isAlarm = widget.type === 'alarm';
     const isShutter = widget.type === 'shutter';
+    const isVariable = widget.type === 'variable';
 
     // Fetch chart history
     // O(1) lookup map — replaces multiple O(n) .find() calls
@@ -72,8 +74,8 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     );
 
     // Real-time values via WebSocket
-    const mainValue = useJeedomCommand(mainCommand?.id, mainCommand?.value);
-    const secondaryValue = useJeedomCommand(secondaryCommand?.id, secondaryCommand?.value);
+    const { value: mainValue, updateTime } = useJeedomCommand(mainCommand?.id, mainCommand?.value, mainCommand?.collectDate);
+    const { value: secondaryValue } = useJeedomCommand(secondaryCommand?.id, secondaryCommand?.value);
 
     // Clear optimistic value on WS update
     useEffect(() => {
@@ -144,7 +146,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     const handleAction = async (e: React.MouseEvent) => {
         if (editMode || !isConnected) return;
         e.stopPropagation();
-        if (widget.type === 'info' || widget.type === 'alarm') return;
+        if (widget.type === 'info' || widget.type === 'alarm' || widget.type === 'variable') return;
 
         setLoading(true);
         const previousValue = mainValue !== undefined ? mainValue : mainCommand?.value;
@@ -269,6 +271,8 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                     <ThermostatWidget widget={widget} settings={settings} isColorized={isColorized} commands={commands} />
                 ) : isWeather ? (
                     <WeatherWidget widget={widget} isColorized={isColorized} />
+                ) : isVariable ? (
+                    <VariableWidget widget={widget} settings={settings} isEditMode={editMode} />
                 ) : isInfoType ? (
                     <InfoWidget
                         widget={widget}
@@ -276,6 +280,8 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                         displayValue={displayValue}
                         isColorized={isColorized}
                         animateValue={animateValue}
+                        updateTime={updateTime}
+                        showElapsedTime={widget.showElapsedTime}
                     />
                 ) : isChart ? (
                     chartError ? (
@@ -303,6 +309,8 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                         isColorized={isColorized}
                         animateValue={animateValue}
                         loading={loading}
+                        updateTime={updateTime}
+                        showElapsedTime={widget.showElapsedTime}
                     />
                 )}
 

@@ -13,10 +13,10 @@ interface WeatherWidgetProps {
 
 const WeatherWidget: React.FC<WeatherWidgetProps> = ({ widget, isColorized }) => {
     // --- REAL-TIME DATA ---
-    const temp = useJeedomCommand(widget.tempCmdId, undefined);
-    const condition = useJeedomCommand(widget.conditionCmdId, undefined);
-    const min = useJeedomCommand(widget.minCmdId, undefined);
-    const max = useJeedomCommand(widget.maxCmdId, undefined);
+    const { value: temp } = useJeedomCommand(widget.tempCmdId, undefined);
+    const { value: condition } = useJeedomCommand(widget.conditionCmdId, undefined);
+    const { value: min } = useJeedomCommand(widget.minCmdId, undefined);
+    const { value: max } = useJeedomCommand(widget.maxCmdId, undefined);
 
     // --- LOGIC ---
     const getIcon = (cond: string | undefined) => {

@@ -7,7 +7,7 @@ export interface WidgetConfig {
   id: string;
   dashboardId: string;
   name: string;
-  type: 'info' | 'action' | 'toggle' | 'slider' | 'scenario' | 'chart' | 'camera' | 'thermostat' | 'weather' | 'alarm' | 'shutter';
+  type: 'info' | 'action' | 'toggle' | 'slider' | 'scenario' | 'chart' | 'camera' | 'thermostat' | 'weather' | 'alarm' | 'shutter' | 'variable';
   category?: WidgetCategory; // New field for filtering
   isFavorite?: boolean; // New field for Home/Favorites display
   historyPeriod?: '24h' | '7d' | '30d' | 'custom'; // For chart widgets
@@ -56,6 +56,14 @@ export interface WidgetConfig {
   alarmStateId?: string;         // optional: info command for current alarm state
   alarmCodeHash?: string;        // SHA-256 hash of the disarm PIN (plain text never stored)
   alarmArmedValue?: string;      // value that means "armed" (default: '1')
+
+  // Variable specific (Jeedom scenario variables)
+  variableName?: string;          // Jeedom variable name (without #)
+  variableAllowEdit?: boolean;    // Show an edit input to write the variable
+  variablePollInterval?: number;  // Polling interval in seconds (default: 60)
+
+  // Display options
+  showElapsedTime?: boolean;      // Show time since last value update on info/action/toggle/slider
 
   commandId?: string; // The ID to execute action or read info
   commandOffId?: string; // Specific ID for OFF action (for toggles)
@@ -108,6 +116,8 @@ export interface JeedomCommand {
   template: any;
   display: any;
   value?: string | number; // Current value if available in fullData
+  collectDate?: string;   // Date of last data collection from Jeedom (ISO or "YYYY-MM-DD HH:MM:SS")
+  valueDate?: string;     // Date of last value change from Jeedom
   isVisible: string;
 }
 

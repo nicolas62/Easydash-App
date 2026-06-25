@@ -20,9 +20,9 @@ const ThermostatWidget: React.FC<ThermostatWidgetProps> = ({ widget, settings, i
     };
 
     // --- REAL-TIME DATA ---
-    const currentTemp = useJeedomCommand(widget.currentTempCmdId, findInitialValue(widget.currentTempCmdId));
-    const setpoint = useJeedomCommand(widget.setpointCmdId, findInitialValue(widget.setpointCmdId));
-    const state = useJeedomCommand(widget.stateCmdId, findInitialValue(widget.stateCmdId));
+    const { value: currentTemp } = useJeedomCommand(widget.currentTempCmdId, findInitialValue(widget.currentTempCmdId));
+    const { value: setpoint } = useJeedomCommand(widget.setpointCmdId, findInitialValue(widget.setpointCmdId));
+    const { value: state } = useJeedomCommand(widget.stateCmdId, findInitialValue(widget.stateCmdId));
 
     // --- LOGIC ---
     const isHeating = useMemo(() => {
@@ -40,7 +40,7 @@ const ThermostatWidget: React.FC<ThermostatWidgetProps> = ({ widget, settings, i
     const isActive = isHeating || isCooling;
 
     // --- MODE ---
-    const modeInfo = useJeedomCommand(widget.modeInfoCmdId, findInitialValue(widget.modeInfoCmdId));
+    const { value: modeInfo } = useJeedomCommand(widget.modeInfoCmdId, findInitialValue(widget.modeInfoCmdId));
     const modeStr  = modeInfo !== undefined ? String(modeInfo).toLowerCase() : '';
     const isAway   = modeStr.includes('absent') || modeStr.includes('away') || modeStr === 'absent';
     const isEco    = modeStr.includes('eco');

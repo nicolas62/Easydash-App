@@ -6,7 +6,7 @@
 
 **Le dashboard moderne et personnalisable pour votre box Jeedom**
 
-[![Version](https://img.shields.io/badge/version-0.9.7-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
+[![Version](https://img.shields.io/badge/version-0.9.9-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/Easydash-App/pkgs/container/easydash-app)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -43,6 +43,7 @@ EasyDash est une interface domotique **moderne, réactive et entièrement person
 | **Météo** | Prévisions météo intégrées |
 | **Alarme** | Activation/désactivation d'alarme avec code PIN sécurisé (SHA-256), card rouge quand armée |
 | **Volet / Portail** | Boutons Ouvrir / Stop / Fermer, affichage de position en temps réel, curseur de positionnement optionnel |
+| **Variable** | Lecture et écriture d'une variable de scénario Jeedom (`#maVariable#`), polling configurable, édition inline optionnelle |
 
 ### Tailles de widgets
 
@@ -268,6 +269,15 @@ Le widget Volet / Portail permet de piloter un volet roulant, une porte de garag
 ---
 
 ## Historique des versions
+
+### v0.9.9 — 25 Juin 2026
+- Nouveau widget **Variable** : lecture et écriture des variables de scénarios Jeedom (`#maVariable#`) depuis un widget dédié, polling configurable (30 s à 10 min), édition inline optionnelle. Compatible Jeedom 3.x+.
+- **Temps écoulé** : option "Afficher le temps écoulé" sur les widgets info, action, toggle et slider — affiche "à l'instant", "il y a N min", "il y a Nh" ou "il y a Nj" sous le nom du widget. Tracking client-side, aucune dépendance de version Jeedom.
+
+### v0.9.8 — 24 Juin 2026
+- Sécurité — **protobufjs** (moderate) : CVE-2026-54270 (amplification mémoire binary decode) + CVE-2026-54269 (shadowing propriétés runtime) — override forcé à `>=8.6.0` (8.6.5 installé).
+- Sécurité — **@babel/core** (low) : GHSA-4x5r-pxfx-6jf8 (lecture fichier via sourceMappingURL) — `7.29.0 → 7.29.7`, dépendance dev transitive.
+- Sécurité — **SSRF hardening** : `localhost`, `127.0.0.1`, `0.0.0.0` ajoutés aux hôtes bloqués dans le proxy serveur. HTTP local et IPs LAN restent autorisés pour Jeedom.
 
 ### v0.9.7 — 14 Juin 2026
 - Sécurité — **react-router** (high) : 6 CVEs — XSS (redirections RSC, prerendered redirect), RCE via turbo-stream, open redirect, DoS (`__manifest`, single-fetch) — mise à jour `>=7.14.3`.

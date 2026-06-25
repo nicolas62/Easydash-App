@@ -1,5 +1,7 @@
 import React from 'react';
+import { Clock } from 'lucide-react';
 import { WidgetConfig } from '../../types';
+import { useElapsedTime } from '../../hooks/useElapsedTime';
 
 interface ActionWidgetProps {
   widget: WidgetConfig;
@@ -9,6 +11,8 @@ interface ActionWidgetProps {
   isColorized: boolean;
   animateValue: boolean;
   loading: boolean;
+  updateTime?: number;
+  showElapsedTime?: boolean;
 }
 
 const ActionWidget = React.memo(({
@@ -19,7 +23,11 @@ const ActionWidget = React.memo(({
   isColorized,
   animateValue,
   loading,
+  updateTime,
+  showElapsedTime,
 }: ActionWidgetProps) => {
+  const elapsed = useElapsedTime(showElapsedTime ? updateTime : undefined);
+
   const showValue =
     (widget.type !== 'action' || !!widget.infoId) &&
     (displayValue || secondaryDisplayValue);
@@ -55,10 +63,16 @@ const ActionWidget = React.memo(({
       </div>
 
       {/* Name */}
-      <div className="w-full mt-auto pt-1">
-        <h3 className={`text-center text-xs font-medium truncate transition-colors duration-300 leading-tight ${isColorized ? 'text-white font-semibold' : 'text-content-secondary group-hover:text-content-primary'}`}>
+      <div className="w-full mt-auto pt-1 text-center">
+        <h3 className={`text-xs font-medium truncate transition-colors duration-300 leading-tight ${isColorized ? 'text-white font-semibold' : 'text-content-secondary group-hover:text-content-primary'}`}>
           {widget.name}
         </h3>
+        {elapsed && (
+          <span className={`inline-flex items-center gap-0.5 text-[9px] opacity-60 ${isColorized ? 'text-white' : 'text-content-secondary'}`}>
+            <Clock size={7} />
+            {elapsed}
+          </span>
+        )}
       </div>
     </div>
   );

@@ -17,7 +17,10 @@ const BLOCKED_HOSTS = new Set([
     '169.254.169.254', // AWS / GCP / Azure instance metadata
     '100.100.100.200', // Alibaba Cloud metadata
     'fd00::ec2', // AWS IPv6 metadata
-    '::1', // IPv6 localhost
+    '::1', // IPv6 loopback
+    '127.0.0.1', // IPv4 loopback — prevent SSRF self-loop
+    '0.0.0.0', // unspecified address
+    'localhost', // hostname alias for loopback
 ]);
 const isSafeUrl = (urlStr) => {
     try {
@@ -136,9 +139,30 @@ async function startServer() {
         const PORT = Number(process.env.PORT) || 3000;
         const NODE_ENV = process.env.NODE_ENV || 'development';
         console.log(`Starting server in ${NODE_ENV} mode...`);
-        // Add security headers to allow OAuth popups
+        // Security headers
         app.use((_req, res, next) => {
+            // Allow OAuth popups (Google Drive / Firebase)
             res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+            // Prevent clickjacking
+            res.setHeader('X-Frame-Options', 'DENY');
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+            res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+            // Content Security Policy
+            // - unsafe-inline required for Tailwind CSS style attributes
+            // - connect-src allows any https/ws origin (Jeedom URL is user-defined)
+            // - img-src allows data: (favicon) and http: (local camera streams)
+            res.setHeader('Content-Security-Policy', [
+                "default-src 'self'",
+                "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com",
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                "font-src 'self' https://fonts.gstatic.com",
+                "img-src 'self' data: blob: https: http:",
+                "connect-src 'self' https: http: wss: ws:",
+                "frame-src 'none'",
+                "object-src 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+            ].join('; '));
             next();
         });
         // Health check endpoint
@@ -208,21 +232,6 @@ async function startServer() {
             }
         });
         // ── Push subscription endpoints ─────────────────────────────────────────
-        // ads.txt — required by Google AdSense to authorize ad serving on this domain
-        app.get("/ads.txt", (_req, res) => {
-            const clientId = process.env.ADSENSE_CLIENT_ID || '';
-            if (!clientId)
-                return res.status(404).send('');
-            res.type('text/plain').send(`google.com, ${clientId}, DIRECT, f08c47fec0942fa0\n`);
-        });
-        // Public endpoint — returns AdSense config from env vars (values are public by nature)
-        app.get("/api/adsense-config", (_req, res) => {
-            const clientId = process.env.ADSENSE_CLIENT_ID || '';
-            const slotId = process.env.ADSENSE_SLOT_ID || '';
-            if (!clientId || !slotId)
-                return res.status(404).json({ error: 'AdSense not configured' });
-            res.json({ clientId, slotId });
-        });
         // Public endpoint — returns VAPID public key and a server token so the
         // frontend can authenticate subsequent write requests.
         app.get("/api/push/vapid-public-key", (_req, res) => {
