@@ -4,6 +4,17 @@ All notable changes to EasyDash are documented here.
 
 ---
 
+## [0.9.10] — 2026-07-22
+
+### Sécurité
+- **websocket-driver** (critical) : GHSA-mp7j-qc5w-4988 (resource limit bypass) + GHSA-xv26-6w52-cph6 (message corruption) — override `>=0.7.5`, dépendance transitive `firebase → @firebase/database → faye-websocket`.
+- **fast-uri** (high ×2) : GHSA-v2hh-gcrm-f6hx + GHSA-4c8g-83qw-93j6 (host confusion backslash/IDN) — override bumped `>=3.1.2 → >=3.1.4`, dépendance transitive `vite-plugin-pwa → workbox-build → ajv` (build only).
+- **brace-expansion** (high) : GHSA-3jxr-9vmj-r5cp (DoS expansion exponentielle) — override `>=2.1.2`, dépendance transitive `vite-plugin-pwa → workbox-build → minimatch` (build only).
+- **protobufjs** (moderate) : GHSA-j3f2-48v5-ccww (DoS boucle infinie parsing `.proto`) — override bumped `>=8.6.0 → >=8.6.6`, dépendance transitive `firebase → @grpc/proto-loader`.
+- **body-parser** (low) : GHSA-v422-hmwv-36x6 (DoS limite taille silencieusement désactivée) — override `>=2.3.0`, dépendance transitive `express@5`.
+
+---
+
 ## [0.9.9] — 2026-06-25
 
 ### Ajouté

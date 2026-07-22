@@ -3,6 +3,17 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.9.10",
+        date: "22 Juillet 2026",
+        features: [
+            { type: 'fix', text: "Sécurité — websocket-driver (critical) : GHSA-mp7j-qc5w-4988 + GHSA-xv26-6w52-cph6 (resource limit bypass / message corruption) — override >=0.7.5 (firebase → faye-websocket)." },
+            { type: 'fix', text: "Sécurité — fast-uri (high ×2) : GHSA-v2hh-gcrm-f6hx + GHSA-4c8g-83qw-93j6 (host confusion) — override >=3.1.4 (build only)." },
+            { type: 'fix', text: "Sécurité — brace-expansion (high) : GHSA-3jxr-9vmj-r5cp (DoS expansion exponentielle) — override >=2.1.2 (build only)." },
+            { type: 'fix', text: "Sécurité — protobufjs (moderate) : GHSA-j3f2-48v5-ccww (DoS parsing .proto) — override >=8.6.6 (firebase → grpc)." },
+            { type: 'fix', text: "Sécurité — body-parser (low) : GHSA-v422-hmwv-36x6 (DoS limite taille) — override >=2.3.0 (express@5)." },
+        ]
+    },
+    {
         version: "0.9.9",
         date: "25 Juin 2026",
         features: [
