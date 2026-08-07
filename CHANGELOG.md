@@ -4,6 +4,16 @@ All notable changes to EasyDash are documented here.
 
 ---
 
+## [0.9.11] — 2026-08-07
+
+### Sécurité
+- **react-router** / **react-router-dom** (high) : GHSA-wrjc-x8rr-h8h6 (open redirect backslash), GHSA-h8fp-f39c-q6mh (XSS RSCErrorHandler), GHSA-337j-9hxr-rhxg (injection constructeur SSR hydration), GHSA-chx6-hx7r-mcp5 (DoS route matching) — mise à jour `7.13.1 → 7.18.2`. GHSA-qwww-vcr4-c8h2 (CSRF mode RSC) non applicable — EasyDash utilise `BrowserRouter` classique, pas les API RSC `unstable_*`.
+- **postcss** (high) : GHSA-r28c-9q8g-f849 (path traversal sourceMappingURL) + GHSA-fxqj-rqcc-2cmp (lecture arbitraire de fichiers `.map`) — mise à jour `8.5.14 → 8.5.26`.
+- **fast-uri** (high) : GHSA-7p8r-x3mc-p8w7 (host confusion via backslash) — override bumped `>=3.1.4 → >=4.1.2`, dépendance transitive `vite-plugin-pwa → workbox-build → ajv` (build only).
+- **brace-expansion** (high ×2) : GHSA-mh99-v99m-4gvg + GHSA-rgw5-rvv9-x895 (DoS expansion/tableaux non bornés) — override bumped `>=2.1.2 → >=5.0.9`, dépendance transitive `vite-plugin-pwa → workbox-build → minimatch` (build only).
+
+---
+
 ## [0.9.10] — 2026-07-22
 
 ### Sécurité

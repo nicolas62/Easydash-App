@@ -3,6 +3,16 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.9.11",
+        date: "7 Août 2026",
+        features: [
+            { type: 'fix', text: "Sécurité — react-router / react-router-dom (high) : 4 CVEs corrigées (open redirect, XSS, injection constructeur SSR, DoS route matching) — mise à jour 7.13.1 → 7.18.2. GHSA-qwww-vcr4-c8h2 (CSRF mode RSC) non applicable — EasyDash utilise BrowserRouter classique." },
+            { type: 'fix', text: "Sécurité — postcss (high) : GHSA-r28c-9q8g-f849 + GHSA-fxqj-rqcc-2cmp (lecture arbitraire de fichiers .map) — mise à jour 8.5.14 → 8.5.26." },
+            { type: 'fix', text: "Sécurité — fast-uri (high) : GHSA-7p8r-x3mc-p8w7 (host confusion) — override >=4.1.2 (build only)." },
+            { type: 'fix', text: "Sécurité — brace-expansion (high ×2) : GHSA-mh99-v99m-4gvg + GHSA-rgw5-rvv9-x895 (DoS expansion non bornée) — override >=5.0.9 (build only)." },
+        ]
+    },
+    {
         version: "0.9.10",
         date: "22 Juillet 2026",
         features: [

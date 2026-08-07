@@ -6,7 +6,7 @@
 
 **Le dashboard moderne et personnalisable pour votre box Jeedom**
 
-[![Version](https://img.shields.io/badge/version-0.9.9-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
+[![Version](https://img.shields.io/badge/version-0.9.11-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/Easydash-App/pkgs/container/easydash-app)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -269,6 +269,19 @@ Le widget Volet / Portail permet de piloter un volet roulant, une porte de garag
 ---
 
 ## Historique des versions
+
+### v0.9.11 — 7 Août 2026
+- Sécurité — **react-router** / **react-router-dom** (high) : 4 CVEs — open redirect, XSS RSCErrorHandler, injection constructeur SSR, DoS route matching — mise à jour `7.13.1 → 7.18.2`. GHSA-qwww-vcr4-c8h2 (CSRF mode RSC) non applicable — EasyDash utilise `BrowserRouter` classique, pas les API RSC.
+- Sécurité — **postcss** (high) : GHSA-r28c-9q8g-f849 + GHSA-fxqj-rqcc-2cmp (lecture arbitraire de fichiers `.map`) — mise à jour `8.5.14 → 8.5.26`.
+- Sécurité — **fast-uri** (high) : GHSA-7p8r-x3mc-p8w7 (host confusion) — override `>=4.1.2` (build only).
+- Sécurité — **brace-expansion** (high ×2) : GHSA-mh99-v99m-4gvg + GHSA-rgw5-rvv9-x895 (DoS expansion non bornée) — override `>=5.0.9` (build only).
+
+### v0.9.10 — 22 Juillet 2026
+- Sécurité — **websocket-driver** (critical) : GHSA-mp7j-qc5w-4988 + GHSA-xv26-6w52-cph6 (resource limit bypass / message corruption) — override `>=0.7.5` (firebase → faye-websocket).
+- Sécurité — **fast-uri** (high ×2) : GHSA-v2hh-gcrm-f6hx + GHSA-4c8g-83qw-93j6 (host confusion) — override `>=3.1.4` (build only).
+- Sécurité — **brace-expansion** (high) : GHSA-3jxr-9vmj-r5cp (DoS expansion exponentielle) — override `>=2.1.2` (build only).
+- Sécurité — **protobufjs** (moderate) : GHSA-j3f2-48v5-ccww (DoS parsing `.proto`) — override `>=8.6.6` (firebase → grpc).
+- Sécurité — **body-parser** (low) : GHSA-v422-hmwv-36x6 (DoS limite taille) — override `>=2.3.0` (express@5).
 
 ### v0.9.9 — 25 Juin 2026
 - Nouveau widget **Variable** : lecture et écriture des variables de scénarios Jeedom (`#maVariable#`) depuis un widget dédié, polling configurable (30 s à 10 min), édition inline optionnelle. Compatible Jeedom 3.x+.
