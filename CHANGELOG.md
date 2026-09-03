@@ -4,6 +4,16 @@ All notable changes to EasyDash are documented here.
 
 ---
 
+## [0.9.12] — 2026-09-03
+
+### Sécurité
+- **fast-uri** (high ×4) : GHSA-5jgf-p345-68v8 (host confusion IDN), GHSA-f65p-4m7j-42xc (SSRF via IPv6), GHSA-fph4-wmhf-6fwf (SSRF via percent-decoding répété), GHSA-jqff-g426-hqxp (host confusion percent-encoded scheme) — override bumped `>=4.1.2 → >=4.1.4`, dépendance transitive `vite-plugin-pwa → workbox-build → ajv` (build only).
+- **qs** (moderate ×2) : GHSA-x5fp-wj9c-mxmx (contournement array-limit via clés bracket) + GHSA-4mjr-xmp4-gh2g (DoS via isBuffer contrôlé par l'attaquant) — override bumped `>=6.15.2 → >=6.16.0`, dépendance `express → body-parser` (runtime serveur).
+- **nanoid** (high) : GHSA-2v37-7h3g-55p8 (boucle infinie générateur custom avec `size=0`) — override `^3.3.18`, dépendance transitive `postcss` (build only).
+- **browserslist** (high ×2) : GHSA-c83g-rgw3-j3cx (croissance mémoire non bornée) + GHSA-73wf-gq98-2v4g (crash / écriture de prototype) — override `>=4.28.7`, dépendances transitives `@babel/core`, `autoprefixer`, `workbox-build` (build only).
+
+---
+
 ## [0.9.11] — 2026-08-07
 
 ### Sécurité

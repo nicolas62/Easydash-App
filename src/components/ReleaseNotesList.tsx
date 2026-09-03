@@ -3,6 +3,16 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "0.9.12",
+        date: "3 Septembre 2026",
+        features: [
+            { type: 'fix', text: "Sécurité — fast-uri (high ×4) : GHSA-5jgf-p345-68v8, GHSA-f65p-4m7j-42xc, GHSA-fph4-wmhf-6fwf, GHSA-jqff-g426-hqxp (host confusion / SSRF) — override >=4.1.4 (build only)." },
+            { type: 'fix', text: "Sécurité — qs (moderate ×2) : GHSA-x5fp-wj9c-mxmx + GHSA-4mjr-xmp4-gh2g (contournement array-limit / DoS isBuffer) — override >=6.16.0 (express → body-parser, runtime serveur)." },
+            { type: 'fix', text: "Sécurité — nanoid (high) : GHSA-2v37-7h3g-55p8 (boucle infinie générateur custom) — override ^3.3.18 (postcss, build only)." },
+            { type: 'fix', text: "Sécurité — browserslist (high ×2) : GHSA-c83g-rgw3-j3cx + GHSA-73wf-gq98-2v4g (croissance mémoire non bornée / crash) — override >=4.28.7 (build only)." },
+        ]
+    },
+    {
         version: "0.9.11",
         date: "7 Août 2026",
         features: [

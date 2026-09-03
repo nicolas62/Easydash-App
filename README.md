@@ -6,7 +6,7 @@
 
 **Le dashboard moderne et personnalisable pour votre box Jeedom**
 
-[![Version](https://img.shields.io/badge/version-0.9.11-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
+[![Version](https://img.shields.io/badge/version-0.9.12-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/Easydash-App/pkgs/container/easydash-app)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -269,6 +269,12 @@ Le widget Volet / Portail permet de piloter un volet roulant, une porte de garag
 ---
 
 ## Historique des versions
+
+### v0.9.12 — 3 Septembre 2026
+- Sécurité — **fast-uri** (high ×4) : GHSA-5jgf-p345-68v8, GHSA-f65p-4m7j-42xc, GHSA-fph4-wmhf-6fwf, GHSA-jqff-g426-hqxp (host confusion / SSRF) — override `>=4.1.4` (build only).
+- Sécurité — **qs** (moderate ×2) : GHSA-x5fp-wj9c-mxmx + GHSA-4mjr-xmp4-gh2g (contournement array-limit / DoS isBuffer) — override `>=6.16.0` (`express → body-parser`, runtime serveur).
+- Sécurité — **nanoid** (high) : GHSA-2v37-7h3g-55p8 (boucle infinie générateur custom) — override `^3.3.18` (`postcss`, build only).
+- Sécurité — **browserslist** (high ×2) : GHSA-c83g-rgw3-j3cx (croissance mémoire non bornée) + GHSA-73wf-gq98-2v4g (crash / écriture de prototype) — override `>=4.28.7` (build only).
 
 ### v0.9.11 — 7 Août 2026
 - Sécurité — **react-router** / **react-router-dom** (high) : 4 CVEs — open redirect, XSS RSCErrorHandler, injection constructeur SSR, DoS route matching — mise à jour `7.13.1 → 7.18.2`. GHSA-qwww-vcr4-c8h2 (CSRF mode RSC) non applicable — EasyDash utilise `BrowserRouter` classique, pas les API RSC.
