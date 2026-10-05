@@ -6,7 +6,7 @@
 
 **Le dashboard moderne et personnalisable pour votre box Jeedom**
 
-[![Version](https://img.shields.io/badge/version-0.9.12-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/Easydash-App/pkgs/container/easydash-app)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -269,6 +269,14 @@ Le widget Volet / Portail permet de piloter un volet roulant, une porte de garag
 ---
 
 ## Historique des versions
+
+### v1.0.0 — 5 Octobre 2026
+- Sécurité — **Clé API inviolable au repos** : Clé maîtresse AES-GCM 256 scellée dans IndexedDB avec `{ extractable: false }` (W3C Web Crypto). Exportation de la clé brute impossible via DevTools.
+- Sécurité — **Masquage dans le DOM** : Remplacement de l'affichage de la clé dans les paramètres par un masquage opaque et badge de protection (aucune injection de clé dans l'attribut `value` du DOM HTML).
+- Sécurité — **Secret Vault en mémoire** : Isolation de la clé API déchiffrée dans une closure JavaScript privée hors de portée de `window`.
+- Sécurité — **Code PIN renforcé** : Algorithme PBKDF2 à 600 000 itérations SHA-256 (recommandation OWASP), comparaison en temps constant et protection anti-force brute (5 essais max).
+- Sécurité — **Logs nettoyés** : Suppression de l'affichage des 4 premiers caractères de la clé API dans les logs console du WebSocket.
+- Sécurité — **Dépendances à 0 vulnérabilité** : `fast-uri` (`>=4.2.1`), `brace-expansion` (`>=5.0.12`), `@grpc/grpc-js` (`>=1.14.0`).
 
 ### v0.9.12 — 3 Septembre 2026
 - Sécurité — **fast-uri** (high ×4) : GHSA-5jgf-p345-68v8, GHSA-f65p-4m7j-42xc, GHSA-fph4-wmhf-6fwf, GHSA-jqff-g426-hqxp (host confusion / SSRF) — override `>=4.1.4` (build only).

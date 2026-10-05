@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppSettings, Dashboard, WidgetConfig, JeedomCommand } from '../types';
 import { testJeedomConnection } from '../services/jeedomService';
-import { Save, X, Moon, Sun, Activity, RefreshCw, Download, Upload, FileJson, Wifi, WifiOff, Lock, CloudUpload, CloudDownload, LogIn, LogOut, Shield, Bell, Eye, EyeOff, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Save, X, Moon, Sun, Activity, RefreshCw, Download, Upload, FileJson, Wifi, WifiOff, Lock, CloudUpload, CloudDownload, LogIn, LogOut, Shield, Bell, Eye, EyeOff, CheckCircle2, AlertTriangle, Key } from 'lucide-react';
 import { hashPin, verifyPin } from '../utils/crypto';
+import { hasSecretApiKey, getSecretApiKey } from '../services/cryptoService';
 import SettingsHealthTab from './SettingsHealthTab';
 import AlertsTab from './alerts/AlertsTab';
 import { useGoogleDrive } from '../hooks/useGoogleDrive';
@@ -49,6 +50,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
     const [pinSuccess, setPinSuccess] = useState<string | null>(null);
     const [isHashingPin, setIsHashingPin] = useState(false);
 
+    // Secure API key state (masking from DOM)
+    const hasExistingApiKey = !!settings.apiKey || hasSecretApiKey();
+    const hasExistingImgbbKey = !!settings.imgbbApiKey;
+    const [isEditingApiKey, setIsEditingApiKey] = useState(false);
+    const [isEditingImgbbKey, setIsEditingImgbbKey] = useState(false);
+
     // Sync form data when settings change or modal opens
     useEffect(() => {
         if (isOpen) {
@@ -58,6 +65,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
             setTestMessage('');
             setCurrentPin(''); setNewPin(''); setConfirmPin('');
             setPinError(null); setPinSuccess(null);
+            setIsEditingApiKey(false);
+            setIsEditingImgbbKey(false);
         }
     }, [isOpen, settings]);
 
@@ -100,14 +109,26 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData);
+        const settingsToSave = { ...formData };
+        // If user didn't edit the masked API keys, preserve the existing secure values
+        if (!isEditingApiKey && hasExistingApiKey) {
+            settingsToSave.apiKey = settings.apiKey || getSecretApiKey();
+        }
+        if (!isEditingImgbbKey && hasExistingImgbbKey) {
+            settingsToSave.imgbbApiKey = settings.imgbbApiKey;
+        }
+        onSave(settingsToSave);
         onClose();
     };
 
     const handleTestConnection = async () => {
         setTestStatus('loading');
         setTestMessage('');
-        const result = await testJeedomConnection(formData);
+        const testSettings = { ...formData };
+        if (!isEditingApiKey && hasExistingApiKey) {
+            testSettings.apiKey = settings.apiKey || getSecretApiKey();
+        }
+        const result = await testJeedomConnection(testSettings);
         setTestStatus(result.success ? 'success' : 'error');
         setTestMessage(result.message);
     };
@@ -339,31 +360,124 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                                         )}
                                     </div>
 
+                                    {/* Clé API Core sécurisée */}
                                     <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">Clé API (Core)</label>
-                                        <input 
-                                            type="password" 
-                                            name="apiKey"
-                                            value={formData.apiKey}
-                                            onChange={handleChange}
-                                            placeholder="Clé API Core"
-                                            className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 focus:border-transparent outline-none transition-all font-mono"
-                                        />
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="block text-sm font-medium text-content-secondary">Clé API (Core)</label>
+                                            {hasExistingApiKey && !isEditingApiKey && (
+                                                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                                    <Lock size={10} /> Protégée & Chiffrée
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {hasExistingApiKey && !isEditingApiKey ? (
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex-1 bg-input-bg border border-border text-content-secondary rounded-lg p-3 font-mono text-sm tracking-widest select-none flex items-center justify-between">
+                                                    <span>••••••••••••••••••••••••••••••••</span>
+                                                    <span className="text-[11px] text-content-secondary/60 font-sans tracking-normal">Clé masquée</span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsEditingApiKey(true);
+                                                        setFormData(prev => ({ ...prev, apiKey: '' }));
+                                                    }}
+                                                    className="px-3 py-3 rounded-lg border border-border text-xs font-medium text-content-primary hover:bg-dark-card transition-colors shrink-0"
+                                                >
+                                                    Modifier
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-1.5">
+                                                <div className="flex items-center gap-2">
+                                                    <input 
+                                                        type="password" 
+                                                        name="apiKey"
+                                                        value={formData.apiKey}
+                                                        onChange={handleChange}
+                                                        placeholder={hasExistingApiKey ? "Entrez la nouvelle clé API" : "Clé API Core"}
+                                                        autoFocus={isEditingApiKey}
+                                                        className="flex-1 bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 focus:border-transparent outline-none transition-all font-mono text-sm"
+                                                    />
+                                                    {hasExistingApiKey && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setIsEditingApiKey(false);
+                                                                setFormData(prev => ({ ...prev, apiKey: '' }));
+                                                            }}
+                                                            className="px-3 py-3 rounded-lg border border-border text-xs text-content-secondary hover:bg-dark-card transition-colors shrink-0"
+                                                        >
+                                                            Conserver
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <p className="text-[10px] text-content-secondary ml-1">
+                                                    La clé sera chiffrée avec une clé WebCrypto inviolable dès l'enregistrement.
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
 
+                                    {/* Clé API ImgBB sécurisée */}
                                     <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">Clé API ImgBB (Optionnel)</label>
-                                        <input 
-                                            type="password" 
-                                            name="imgbbApiKey"
-                                            value={formData.imgbbApiKey || ''}
-                                            onChange={handleChange}
-                                            placeholder="Clé API pour l'upload d'images"
-                                            className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 focus:border-transparent outline-none transition-all font-mono"
-                                        />
-                                        <p className="text-[10px] text-content-secondary mt-1 ml-1">
-                                            Nécessaire pour uploader des images de fond. Obtenez-en une sur <a href="https://api.imgbb.com/" target="_blank" rel="noopener noreferrer" className="text-jeedom-400 hover:underline">api.imgbb.com</a>.
-                                        </p>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="block text-sm font-medium text-content-secondary">Clé API ImgBB (Optionnel)</label>
+                                            {hasExistingImgbbKey && !isEditingImgbbKey && (
+                                                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                                    <Lock size={10} /> Enregistrée
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {hasExistingImgbbKey && !isEditingImgbbKey ? (
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex-1 bg-input-bg border border-border text-content-secondary rounded-lg p-3 font-mono text-sm tracking-widest select-none flex items-center justify-between">
+                                                    <span>••••••••••••••••••••••••</span>
+                                                    <span className="text-[11px] text-content-secondary/60 font-sans tracking-normal">Clé masquée</span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsEditingImgbbKey(true);
+                                                        setFormData(prev => ({ ...prev, imgbbApiKey: '' }));
+                                                    }}
+                                                    className="px-3 py-3 rounded-lg border border-border text-xs font-medium text-content-primary hover:bg-dark-card transition-colors shrink-0"
+                                                >
+                                                    Modifier
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-1.5">
+                                                <div className="flex items-center gap-2">
+                                                    <input 
+                                                        type="password" 
+                                                        name="imgbbApiKey"
+                                                        value={formData.imgbbApiKey || ''}
+                                                        onChange={handleChange}
+                                                        placeholder={hasExistingImgbbKey ? "Nouvelle clé API ImgBB" : "Clé API pour l'upload d'images"}
+                                                        autoFocus={isEditingImgbbKey}
+                                                        className="flex-1 bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 focus:border-transparent outline-none transition-all font-mono text-sm"
+                                                    />
+                                                    {hasExistingImgbbKey && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setIsEditingImgbbKey(false);
+                                                                setFormData(prev => ({ ...prev, imgbbApiKey: '' }));
+                                                            }}
+                                                            className="px-3 py-3 rounded-lg border border-border text-xs text-content-secondary hover:bg-dark-card transition-colors shrink-0"
+                                                        >
+                                                            Conserver
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <p className="text-[10px] text-content-secondary ml-1">
+                                                    Nécessaire pour uploader des images de fond. Obtenez-en une sur <a href="https://api.imgbb.com/" target="_blank" rel="noopener noreferrer" className="text-jeedom-400 hover:underline">api.imgbb.com</a>.
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <label className="flex items-center space-x-3 p-3 border border-border rounded-lg bg-input-bg cursor-pointer">
@@ -407,7 +521,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                                         <button 
                                             type="button"
                                             onClick={handleTestConnection}
-                                            disabled={testStatus === 'loading' || !formData.jeedomUrl || !formData.apiKey}
+                                            disabled={testStatus === 'loading' || !formData.jeedomUrl || (!formData.apiKey && !hasExistingApiKey)}
                                             className={`w-full py-2.5 px-3 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all shadow-sm ${
                                                 testStatus === 'success' ? 'bg-green-500/10 text-green-500 border border-green-500/50' :
                                                 testStatus === 'error' ? 'bg-red-500/10 text-red-500 border border-red-500/50' :

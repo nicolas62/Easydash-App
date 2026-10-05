@@ -1,4 +1,7 @@
 import { AppSettings, JeedomCommand, JeedomEqLogic, JeedomHealthItem, JeedomScenario } from '../types';
+import { getSecretApiKey } from './cryptoService';
+
+const getEffectiveApiKey = (settings: AppSettings): string => (settings.apiKey || getSecretApiKey() || '').trim();
 
 // --- MOCK DATA FOR DEMO MODE ---
 const MOCK_DATA: JeedomEqLogic[] = [
@@ -146,7 +149,7 @@ const jeedomApiCall = async (settings: AppSettings, params: Record<string, strin
     const baseUrl = getUrlToUse(settings);
 
     const urlParams = new URLSearchParams();
-    urlParams.append('apikey', settings.apiKey.trim());
+    urlParams.append('apikey', getEffectiveApiKey(settings));
     Object.keys(params).forEach(key => urlParams.append(key, params[key]));
 
     const fetchUrl = `${baseUrl}?${urlParams.toString()}`;
@@ -229,7 +232,7 @@ const jeedomJsonRpcCall = async (settings: AppSettings, method: string, params: 
     const rpcPayload = {
         jsonrpc: "2.0",
         method,
-        params: { apikey: settings.apiKey.trim(), ...params },
+        params: { apikey: getEffectiveApiKey(settings), ...params },
         id: Date.now()
     };
 
@@ -287,7 +290,7 @@ const jeedomJsonRpcCall = async (settings: AppSettings, method: string, params: 
 // --- API METHODS ---
 
 export const testJeedomConnection = async (settings: AppSettings): Promise<{success: boolean, message: string}> => {
-    if(!settings.jeedomUrl || !settings.apiKey) return { success: false, message: "URL ou Clé API manquante" };
+    if(!settings.jeedomUrl || !getEffectiveApiKey(settings)) return { success: false, message: "URL ou Clé API manquante" };
 
     try {
         // Try JSON RPC Ping first as it's more robust

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { AppSettings } from '../types';
 import { DEFAULT_SETTINGS } from '../constants';
-import { encryptData, decryptData } from '../services/cryptoService';
+import { encryptData, decryptData, setSecretApiKey, clearSecretApiKey } from '../services/cryptoService';
 
 export function useSettings() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
@@ -16,7 +16,9 @@ export function useSettings() {
         try {
           const parsed = JSON.parse(saved);
           if (parsed.apiKey) {
-            parsed.apiKey = await decryptData(parsed.apiKey);
+            const decryptedKey = await decryptData(parsed.apiKey);
+            parsed.apiKey = decryptedKey;
+            setSecretApiKey(decryptedKey);
           }
           if (!parsed.theme) parsed.theme = 'dark';
           setSettings(parsed);
@@ -82,6 +84,11 @@ export function useSettings() {
       localStorage.removeItem('jeedom_dashboards');
       localStorage.removeItem('jeedom_widgets');
       localStorage.removeItem('jeedom_secure_key');
+      localStorage.removeItem('dashboard_pin_lockout');
+      clearSecretApiKey();
+      try {
+          indexedDB.deleteDatabase('easydash_vault');
+      } catch { /* ignore */ }
       setSettings(DEFAULT_SETTINGS);
       window.location.reload();
   };

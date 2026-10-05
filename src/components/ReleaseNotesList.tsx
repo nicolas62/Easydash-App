@@ -3,6 +3,18 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "1.0.0",
+        date: "5 Octobre 2026",
+        features: [
+            { type: 'improvement', text: "Sécurité — Clé API inviolable : La clé maîtresse AES-GCM 256 est désormais scellée dans IndexedDB avec { extractable: false } (W3C Web Crypto), interdisant toute extraction de la clé même depuis la console DevTools." },
+            { type: 'improvement', text: "Sécurité — Masquage dans l'interface : La clé API n'apparaît plus jamais dans le DOM HTML / inputs (remplacée par un placeholder masqué et badge de protection)." },
+            { type: 'improvement', text: "Sécurité — Secret Vault en mémoire : La clé déchiffrée est isolée dans un coffre en mémoire inaccessible depuis l'objet global window." },
+            { type: 'improvement', text: "Sécurité — Code PIN renforcé : Migration du hachage vers PBKDF2 à 600 000 itérations SHA-256 (recommandation OWASP) avec comparaison en temps constant et protection anti-force brute (5 essais max)." },
+            { type: 'fix', text: "Sécurité — Confidentialité des logs : Suppression de toute fuite de caractères de clé API dans la console (WebSocket)." },
+            { type: 'fix', text: "Sécurité — Dépendances : Correction des alertes Dependabot et audit (fast-uri >=4.2.1, brace-expansion >=5.0.12, @grpc/grpc-js >=1.14.0) — 0 vulnérabilité." },
+        ]
+    },
+    {
         version: "0.9.12",
         date: "3 Septembre 2026",
         features: [

@@ -1,4 +1,5 @@
 import { AppSettings } from '../types';
+import { getSecretApiKey } from './cryptoService';
 
 type JeedomEventCallback = (value: string | number) => void;
 type CommandUpdateCallback = (updates: Array<{id: string, value: string | number}>) => void;
@@ -165,7 +166,8 @@ class JeedomWebSocketService {
     }
 
     private initConnection() {
-        if (!this.settings?.jeedomUrl || !this.settings.apiKey) return;
+        const apiKey = this.settings?.apiKey || getSecretApiKey();
+        if (!this.settings?.jeedomUrl || !apiKey) return;
         if (this.isConnecting) return;
 
         this.isConnecting = true;
@@ -175,8 +177,8 @@ class JeedomWebSocketService {
         const wsUrl = this.currentAttempt === 'A' ? urls.urlA : urls.urlB;
         
         if (this.currentAttempt === 'A') {
-            console.info(`[JeedomWS] Tentative de connexion avec la clé API commençant par : ${this.settings.apiKey.substring(0, 4)}...`);
-            console.log(`[JeedomWS] Tentative de connexion via port direct (URL A) : ${wsUrl}`);
+            console.info('[JeedomWS] Tentative de connexion WebSocket...');
+            console.log(`[JeedomWS] Connexion via port direct (URL A) : ${wsUrl}`);
         } else {
             console.warn(`[JeedomWS] Échec URL A. Tentative de repli via Proxy Apache (URL B) : ${wsUrl}`);
         }
@@ -196,7 +198,7 @@ class JeedomWebSocketService {
 
                 // Authenticate — seul usage autorisé de ws.send()
                 this.send({
-                    apikey: this.settings?.apiKey
+                    apikey: apiKey
                 });
             };
 

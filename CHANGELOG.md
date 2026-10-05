@@ -2,6 +2,20 @@
 
 All notable changes to EasyDash are documented here.
 
+## [1.0.0] — 2026-10-05
+
+### Sécurité & Cryptographie
+- **Clé API inviolable au repos (IndexedDB + Clé non extractible)** : La clé maîtresse AES-GCM 256 bits est désormais stockée en natif dans IndexedDB (`easydash_vault`) avec le drapeau W3C `{ extractable: false }`. L'exportation de la clé brute est matériellement interdite par le moteur du navigateur, neutralisant toute tentative d'extraction via la console DevTools.
+- **Suppression définitive du stockage de clé en clair** : Migration automatique et purge immédiate de `localStorage.getItem('jeedom_secure_key')`.
+- **Masquage de la clé dans le DOM** : Dès qu'une clé API est enregistrée, elle n'est plus jamais injectée dans le DOM HTML ou dans l'attribut `value` d'un formulaire. Elle apparaît sous forme de placeholder masqué (`••••••••••••••••`) avec un badge "Protégée & Chiffrée".
+- **Secret Vault en mémoire** : La clé déchiffrée est isolée dans une closure JavaScript privée en mémoire, inaccessible depuis l'objet global `window` ou les DevTools.
+- **Renforcement du Code PIN (OWASP)** : Migration de PBKDF2 vers 600 000 itérations SHA-256 avec format `pbkdf2v2:` et rétrocompatibilité complète. Ajout d'une comparaison en temps constant contre les attaques temporelles et protection anti-force brute (5 essais max).
+- **Confidentialité des logs** : Suppression de l'affichage des 4 premiers caractères de la clé API dans les logs console du WebSocket.
+- **Dépendances & Dependabot (0 vulnérabilité)** :
+  - `fast-uri` : override `>=4.2.1` (ferme l'alerte Dependabot #51 / CVE-2026-86818).
+  - `brace-expansion` : override `>=5.0.12` (ferme GHSA-q2hr-2g5m-vwhr, GHSA-qhr7-859c-m2p7, GHSA-6j4f-fj2g-mc7p).
+  - `@grpc/grpc-js` : override `>=1.14.0` (ferme GHSA-m9gg-hp2v-232j, GHSA-f596-whhp-79r4).
+
 ---
 
 ## [0.9.12] — 2026-09-03

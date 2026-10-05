@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Lock, ShieldAlert } from 'lucide-react';
+import { Lock, ShieldAlert, Loader2 } from 'lucide-react';
 import { verifyPin } from '../utils/crypto';
 
 const LOCKOUT_KEY = 'dashboard_pin_lockout';
@@ -36,6 +36,7 @@ interface PinUnlockModalProps {
 const PinUnlockModal: React.FC<PinUnlockModalProps> = ({ storedHash, onSuccess, onCancel }) => {
     const [pin, setPin] = useState('');
     const [error, setError] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
     const [lockout, setLockout] = useState<LockoutState>(readLockout);
     const [, forceUpdate] = useState(0);
 
@@ -51,26 +52,31 @@ const PinUnlockModal: React.FC<PinUnlockModalProps> = ({ storedHash, onSuccess, 
 
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
-        if (isLocked || pin.length < 6) return;
+        if (isLocked || isVerifying || pin.length < 6) return;
 
-        const ok = await verifyPin(pin, storedHash);
-        if (ok) {
-            clearLockout();
-            onSuccess();
-            return;
-        }
+        setIsVerifying(true);
+        try {
+            const ok = await verifyPin(pin, storedHash);
+            if (ok) {
+                clearLockout();
+                onSuccess();
+                return;
+            }
 
-        const next = readLockout();
-        next.count += 1;
-        if (next.count >= MAX_ATTEMPTS) {
-            next.lockedUntil = Date.now() + LOCKOUT_MS;
-            next.count = 0;
+            const next = readLockout();
+            next.count += 1;
+            if (next.count >= MAX_ATTEMPTS) {
+                next.lockedUntil = Date.now() + LOCKOUT_MS;
+                next.count = 0;
+            }
+            saveLockout(next);
+            setLockout({ ...next });
+            setError(true);
+            setPin('');
+        } finally {
+            setIsVerifying(false);
         }
-        saveLockout(next);
-        setLockout({ ...next });
-        setError(true);
-        setPin('');
-    }, [pin, storedHash, isLocked, onSuccess]);
+    }, [pin, storedHash, isLocked, isVerifying, onSuccess]);
 
     return (
         <div
@@ -129,10 +135,17 @@ const PinUnlockModal: React.FC<PinUnlockModalProps> = ({ storedHash, onSuccess, 
                         </button>
                         <button
                             type="submit"
-                            disabled={isLocked || pin.length < 6}
-                            className="flex-1 py-2.5 rounded-xl bg-jeedom-600 hover:bg-jeedom-500 text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            disabled={isLocked || isVerifying || pin.length < 6}
+                            className="flex-1 py-2.5 rounded-xl bg-jeedom-600 hover:bg-jeedom-500 text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            Valider
+                            {isVerifying ? (
+                                <>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    <span>Vérification...</span>
+                                </>
+                            ) : (
+                                'Valider'
+                            )}
                         </button>
                     </div>
                 </form>
