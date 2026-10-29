@@ -2,6 +2,19 @@
 
 All notable changes to EasyDash are documented here.
 
+## [1.0.1] — 2026-10-29
+
+### Sécurité
+- **proxy-addr** (critical) : CVE-2026-90711 / GHSA-jqcg-44mw-7w3h (usurpation d'IP via sous-réseau IPv4-mapped IPv6) — mise à jour `express ^5.3.0` et override `>=2.0.8` (ferme l'alerte Dependabot #53).
+- **source-map-js** (high) : CVE-2026-93749 / GHSA-68fv-2mgg-jv7q (DoS de l'event-loop via offsets de sections source-map) — override `>=1.2.2` (ferme l'alerte Dependabot #54).
+- **fast-uri** (medium ×2, low ×2) : CVE-2026-110306 (GHSA-w74x-v6f9-j3xg), CVE-2026-110180 (GHSA-wjr9-j795-jxcr), CVE-2026-110095 (GHSA-xhq7-xmqj-769h), CVE-2026-110725 (GHSA-333x-w4r6-6crp) — override `>=4.2.1 → >=4.2.3` (ferme les alertes Dependabot #55 à #58).
+- **body-parser** (high) : GHSA-27r3-jxmh-p828 (DoS via octets résiduels après un corps de requête compressé) — override `>=2.3.0 → >=2.4.0`.
+- **qs** (moderate) : GHSA-6pq8-jhm2-2vcw (DoS `TypeError` non interceptée dans `qs.stringify` avec `arrayFormat: 'comma'`) — override `>=6.16.0 → >=6.17.1`.
+- **vite** (high) : GHSA-587h-7wmj-h5pm, GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw, GHSA-rq7h-c2jc-7f22, GHSA-9jrq-w75r-8gcw — mise à jour `6.4.3 → 6.4.5`.
+- **serialize-javascript** (low) : GHSA-m5mm-p8h7-m29v (XSS via `</script` non échappé en fin de corps de fonction) — override `>=7.1.4`.
+
+---
+
 ## [1.0.0] — 2026-10-05
 
 ### Sécurité & Cryptographie

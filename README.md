@@ -6,7 +6,7 @@
 
 **Le dashboard moderne et personnalisable pour votre box Jeedom**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
+[![Version](https://img.shields.io/badge/version-1.0.1-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/Easydash-App/pkgs/container/easydash-app)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -269,6 +269,13 @@ Le widget Volet / Portail permet de piloter un volet roulant, une porte de garag
 ---
 
 ## Historique des versions
+
+### v1.0.1 — 29 Octobre 2026
+- Sécurité — **proxy-addr** (critical) : CVE-2026-90711 / GHSA-jqcg-44mw-7w3h (usurpation d'IP via sous-réseau IPv4-mapped IPv6) — `express ^5.3.0` + override `>=2.0.8` (ferme Dependabot #53).
+- Sécurité — **source-map-js** (high) : CVE-2026-93749 / GHSA-68fv-2mgg-jv7q (DoS event-loop via offsets source-map) — override `>=1.2.2` (ferme Dependabot #54).
+- Sécurité — **fast-uri** (medium ×2, low ×2) : CVE-2026-110306, CVE-2026-110180, CVE-2026-110095, CVE-2026-110725 — override `>=4.2.3` (ferme Dependabot #55 à #58).
+- Sécurité — **body-parser** (high) & **qs** (moderate) : GHSA-27r3-jxmh-p828 & GHSA-6pq8-jhm2-2vcw — overrides `>=2.4.0` et `>=6.17.1`.
+- Sécurité — **vite** (high) & **serialize-javascript** (low) : mise à jour `vite 6.4.5` et override `serialize-javascript >=7.1.4`.
 
 ### v1.0.0 — 5 Octobre 2026
 - Sécurité — **Clé API inviolable au repos** : Clé maîtresse AES-GCM 256 scellée dans IndexedDB avec `{ extractable: false }` (W3C Web Crypto). Exportation de la clé brute impossible via DevTools.

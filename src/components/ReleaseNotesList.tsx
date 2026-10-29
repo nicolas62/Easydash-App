@@ -3,6 +3,17 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "1.0.1",
+        date: "29 Octobre 2026",
+        features: [
+            { type: 'fix', text: "Sécurité — proxy-addr (critical) : CVE-2026-90711 / GHSA-jqcg-44mw-7w3h (usurpation d'IP via sous-réseau IPv4-mapped IPv6) — express >=5.3.0 & override >=2.0.8 (ferme Dependabot #53)." },
+            { type: 'fix', text: "Sécurité — source-map-js (high) : CVE-2026-93749 / GHSA-68fv-2mgg-jv7q (DoS de l'event-loop via offsets source-map) — override >=1.2.2 (ferme Dependabot #54)." },
+            { type: 'fix', text: "Sécurité — fast-uri (medium ×2, low ×2) : CVE-2026-110306, CVE-2026-110180, CVE-2026-110095, CVE-2026-110725 (usurpation de schéma / confusion d'hôte WHATWG) — override >=4.2.3 (ferme Dependabot #55 à #58)." },
+            { type: 'fix', text: "Sécurité — body-parser (high) & qs (moderate) : GHSA-27r3-jxmh-p828 (DoS corps compressé) & GHSA-6pq8-jhm2-2vcw (DoS qs.stringify) — overrides >=2.4.0 et >=6.17.1." },
+            { type: 'fix', text: "Sécurité — vite (high) & serialize-javascript (low) : mise à jour vite 6.4.5 (5 avis corrigés) et override serialize-javascript >=7.1.4." },
+        ]
+    },
+    {
         version: "1.0.0",
         date: "5 Octobre 2026",
         features: [
