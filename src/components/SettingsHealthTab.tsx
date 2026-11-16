@@ -65,7 +65,9 @@ const SettingsHealthTab: React.FC<SettingsHealthTabProps> = ({ settings }) => {
             }
         } catch (e) {
             console.error(`Action ${actionType} failed:`, e);
-            alert(`L'action ${actionType} a échoué.`);
+            window.dispatchEvent(new CustomEvent('easydash:alert', {
+                detail: { title: 'Maintenance Jeedom', body: `L'action ${actionType} a échoué.`, severity: 'critical' }
+            }));
         } finally {
             setActionLoading(null);
             setConfirmAction(null); // Clear modal state

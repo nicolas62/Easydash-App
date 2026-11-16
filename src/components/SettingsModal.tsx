@@ -147,7 +147,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `jeedom-connect-backup-${new Date().toISOString().split('T')[0]}.json`;
+        link.download = `easydash-backup-${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -549,8 +549,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                                 <input 
                                     type="number" 
                                     name="refreshInterval"
+                                    min={1000}
+                                    step={1000}
                                     value={formData.refreshInterval}
-                                    onChange={(e) => setFormData({...formData, refreshInterval: parseInt(e.target.value)})}
+                                    onChange={(e) => {
+                                        const val = parseInt(e.target.value, 10);
+                                        setFormData({ ...formData, refreshInterval: isNaN(val) ? 5000 : Math.max(1000, val) });
+                                    }}
                                     className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 focus:border-transparent outline-none transition-all"
                                 />
                             </div>

@@ -30,10 +30,21 @@ const AlarmWidget: React.FC<AlarmWidgetProps> = ({
 
     const LOCKOUT_ATTEMPTS = 3;
     const LOCKOUT_DURATION_MS = 30_000;
-    const isLocked = Date.now() < lockedUntil;
+    const isLocked = lockedUntil > 0 && Date.now() < lockedUntil;
+
+    useEffect(() => {
+        if (lockedUntil <= 0) return;
+        const remaining = lockedUntil - Date.now();
+        if (remaining <= 0) {
+            setLockedUntil(0);
+            return;
+        }
+        const timer = setTimeout(() => setLockedUntil(0), remaining);
+        return () => clearTimeout(timer);
+    }, [lockedUntil]);
 
     // Real-time state from Jeedom (optional)
-    const stateCmd = commands.find(c => c.id === widget.alarmStateId);
+    const stateCmd = commands.find(c => String(c.id) === String(widget.alarmStateId));
     const { value: rawState } = useJeedomCommand(stateCmd?.id, stateCmd?.value);
 
     const armedValue = widget.alarmArmedValue ?? '1';

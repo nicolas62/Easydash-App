@@ -3,6 +3,18 @@ import { GitCommit, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 const releases = [
     {
+        version: "1.0.2",
+        date: "16 Novembre 2026",
+        features: [
+            { type: 'fix', text: "Météo, Volet & Alarme : chargement initial et rafraîchissement complet des valeurs en mode polling HTTP et WebSocket, correction de l'affichage 'undefined' / NaN° sur le widget Météo." },
+            { type: 'fix', text: "Système d'alertes : détection sur front montant/descendant même sans hystérésis et persistance systématique de la dernière valeur pour les règles 'change', 'above' et 'below'." },
+            { type: 'fix', text: "Caméra, Séquence & Toggle : rétablissement automatique du flux caméra après erreur réseau, cycle complet des étapes en mode Séquence, support de commandOffId et déverrouillage automatique du PIN alarme après 30 s." },
+            { type: 'improvement', text: "Sécurité & Proxy local : autorisation des instances Jeedom locales sur 127.0.0.1 / localhost en mode Proxy (hors port EasyDash), blocage des redirections SSRF, purge mémoire du rate-limiter et synchronisation du coffre mémoire API." },
+            { type: 'improvement', text: "Performances & Bundle : découpage intelligent des chunks Vite (chunk principal réduit de 1,19 Mo à 351 Ko), optimisation du comparateur React.memo des widgets et remplacement des alert() bloquants par des Toasts." },
+            { type: 'fix', text: "Dépendances : mise à jour glob >=14.0.6 et minimatch >=11.0.8 (GHSA-3g3m-2fjr-6pw4, GHSA-g3hv-75wg-m249)." },
+        ]
+    },
+    {
         version: "1.0.1",
         date: "29 Octobre 2026",
         features: [

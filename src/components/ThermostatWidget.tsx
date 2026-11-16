@@ -48,12 +48,28 @@ const ThermostatWidget: React.FC<ThermostatWidgetProps> = ({ widget, settings, i
     // --- HANDLERS ---
     const handleSetpointChange = async (direction: 'up' | 'down') => {
         const cmdId = direction === 'up' ? widget.actionUpCmdId : widget.actionDownCmdId;
-        if (cmdId) await executeJeedomCommand(settings, cmdId);
+        if (!cmdId) return;
+        try {
+            await executeJeedomCommand(settings, cmdId);
+        } catch (err) {
+            console.error('[thermostat] setpoint error:', err);
+            window.dispatchEvent(new CustomEvent('easydash:alert', {
+                detail: { title: widget.name, body: 'Échec du changement de consigne.', severity: 'critical' }
+            }));
+        }
     };
 
     const handleMode = async (mode: 'away' | 'eco') => {
         const cmdId = mode === 'away' ? widget.awayModeCmdId : widget.ecoModeCmdId;
-        if (cmdId) await executeJeedomCommand(settings, cmdId);
+        if (!cmdId) return;
+        try {
+            await executeJeedomCommand(settings, cmdId);
+        } catch (err) {
+            console.error('[thermostat] mode error:', err);
+            window.dispatchEvent(new CustomEvent('easydash:alert', {
+                detail: { title: widget.name, body: 'Échec du changement de mode.', severity: 'critical' }
+            }));
+        }
     };
 
     // --- STYLES ---

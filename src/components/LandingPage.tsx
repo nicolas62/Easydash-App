@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
     LayoutDashboard, Activity, History, ArrowRight, CheckCircle,
     Zap, Smartphone, Bell, ShieldCheck, Sliders, MonitorSmartphone,
     Puzzle, BarChart3, Camera, Thermometer, AlarmSmoke, ExternalLink, Github
 } from 'lucide-react';
 import SEO from './SEO';
-import ReleaseNotesModal from './ReleaseNotesModal';
-import ContactModal from './ContactModal';
+
+const ReleaseNotesModal = lazy(() => import('./ReleaseNotesModal'));
+const ContactModal = lazy(() => import('./ContactModal'));
 
 import { APP_VERSION } from '../constants';
 
@@ -385,9 +387,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect }) => {
                             © {new Date().getFullYear()} EasyDash. Tous droits réservés.
                         </p>
                         <div className="flex gap-6">
-                            <a href="/legal" className="text-content-secondary hover:text-jeedom-500 transition-colors text-sm">
+                            <Link to="/legal" className="text-content-secondary hover:text-jeedom-500 transition-colors text-sm">
                                 Mentions Légales
-                            </a>
+                            </Link>
                             <button
                                 onClick={() => setShowContact(true)}
                                 className="text-content-secondary hover:text-jeedom-500 transition-colors text-sm"
@@ -400,8 +402,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onConnect }) => {
             </div>
 
             {/* Modals */}
-            <ReleaseNotesModal isOpen={showReleaseNotes} onClose={() => setShowReleaseNotes(false)} />
-            <ContactModal     isOpen={showContact}       onClose={() => setShowContact(false)} />
+            <Suspense fallback={null}>
+                <ReleaseNotesModal isOpen={showReleaseNotes} onClose={() => setShowReleaseNotes(false)} />
+                <ContactModal     isOpen={showContact}       onClose={() => setShowContact(false)} />
+            </Suspense>
         </>
     );
 };

@@ -27,8 +27,8 @@ interface CommandSelectorProps {
     disabled?: boolean;
 }
 
-const CommandSelector: React.FC<CommandSelectorProps> = ({ 
-    value, onChange, availableEqLogics, filterType = 'all', placeholder = "Sélectionner...", disabled 
+const CommandSelector: React.FC<CommandSelectorProps> = ({
+    value, onChange, availableEqLogics, filterType = 'all', placeholder = "Sélectionner...", disabled
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -60,7 +60,7 @@ const CommandSelector: React.FC<CommandSelectorProps> = ({
     const selectedCommandName = useMemo(() => {
         if (!value) return null;
         for (const eq of (availableEqLogics || [])) {
-            const cmd = eq.cmds?.find(c => c.id === value);
+            const cmd = eq.cmds?.find(c => String(c.id) === String(value));
             if (cmd) return `${eq.name} - ${cmd.name}`;
         }
         return value; // Fallback ID si non trouvé
@@ -74,10 +74,10 @@ const CommandSelector: React.FC<CommandSelectorProps> = ({
             // Filtrer les commandes par type ET par recherche
             const matchingCmds = (eq.cmds || []).filter(cmd => {
                 const typeMatch = filterType === 'all' || cmd.type === filterType;
-                const searchMatch = 
-                    cmd.name.toLowerCase().includes(lowerSearch) || 
+                const searchMatch =
+                    cmd.name.toLowerCase().includes(lowerSearch) ||
                     eq.name.toLowerCase().includes(lowerSearch); // On garde si le nom de l'équipement matche aussi
-                
+
                 return typeMatch && searchMatch;
             });
 
@@ -136,10 +136,10 @@ const CommandSelector: React.FC<CommandSelectorProps> = ({
                                                 onChange(cmd.id);
                                                 setIsOpen(false);
                                             }}
-                                            className={`w-full text-left px-4 py-2 text-sm hover:bg-jeedom-600 hover:text-white transition-colors flex items-center justify-between ${value === cmd.id ? 'bg-jeedom-600/20 text-jeedom-500' : 'text-content-primary'}`}
+                                            className={`w-full text-left px-4 py-2 text-sm hover:bg-jeedom-600 hover:text-white transition-colors flex items-center justify-between ${String(value) === String(cmd.id) ? 'bg-jeedom-600/20 text-jeedom-500' : 'text-content-primary'}`}
                                         >
                                             <span>{cmd.name}</span>
-                                            {value === cmd.id && <Check size={14} />}
+                                            {String(value) === String(cmd.id) && <Check size={14} />}
                                         </button>
                                     ))}
                                 </div>
@@ -160,30 +160,19 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
     const [scenarioError, setScenarioError] = useState<string | null>(null);
     const [alarmCodeInput, setAlarmCodeInput] = useState('');
 
-    // Debug logs
-    console.log("WidgetEditorModal Render. Scenarios count:", (scenarios || []).length, "Available props:", (availableScenarios || []).length);
-
     // Sync with props but allow local override
     useEffect(() => {
         if ((availableScenarios || []).length > 0) {
-            console.log("Syncing scenarios from props:", availableScenarios.length);
             setScenarios(availableScenarios);
         }
     }, [availableScenarios]);
 
     const loadScenarios = async () => {
-        if (!settings) {
-            console.error("Settings missing in loadScenarios");
-            return;
-        }
+        if (!settings) return;
         setIsLoadingScenarios(true);
         setScenarioError(null);
         try {
-            console.log("Fetching scenarios in editor with settings:", { url: settings.jeedomUrl, hasKey: !!settings.apiKey });
             const data = await fetchJeedomScenarios(settings);
-            console.log("WidgetEditorModal received scenarios:", data);
-            console.log("Setting scenarios state with:", data.length, "items");
-            
             // Sort: Groups first, then names
             data.sort((a, b) => {
                 if (a.group === b.group) return a.name.localeCompare(b.name);
@@ -198,13 +187,6 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
         }
     };
 
-    // Fetch scenarios on mount (like ScenarioModal)
-    useEffect(() => {
-        if (isOpen && settings) {
-            loadScenarios();
-        }
-    }, [isOpen, settings]);
-
     const [widget, setWidget] = useState<WidgetConfig>({
         id: '',
         dashboardId: dashboardId,
@@ -218,7 +200,14 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
         actionExecutionMode: 'sequence',
         isFavorite: false
     });
-    
+
+    // Fetch scenarios only when editing a scenario widget and none are loaded yet
+    useEffect(() => {
+        if (isOpen && settings && widget.type === 'scenario' && scenarios.length === 0) {
+            loadScenarios();
+        }
+    }, [isOpen, settings, widget.type]);
+
     useEffect(() => {
         setAlarmCodeInput(''); // Reset plain-text code input on each open
     }, [isOpen]);
@@ -323,14 +312,14 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
             const step = [...newSteps[stepIndex]];
             step.splice(cmdIndex, 1);
             newSteps[stepIndex] = step;
-            
+
             // If step becomes empty, remove it (unless it's the only one)
             if (step.length === 0 && newSteps.length > 1) {
                 newSteps.splice(stepIndex, 1);
             } else if (step.length === 0) {
-                 newSteps[stepIndex] = ['']; // Keep at least one empty slot
+                newSteps[stepIndex] = ['']; // Keep at least one empty slot
             }
-            
+
             return { ...prev, sequenceSteps: newSteps };
         });
     };
@@ -341,13 +330,13 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
             const step = [...newSteps[stepIndex]];
             step[cmdIndex] = value;
             newSteps[stepIndex] = step;
-            
+
             // Sync commandId if it's the first command of first step
             let newCommandId = prev.commandId;
             if (stepIndex === 0 && cmdIndex === 0) {
                 newCommandId = value;
             }
-            
+
             return { ...prev, sequenceSteps: newSteps, commandId: newCommandId };
         });
     };
@@ -384,33 +373,32 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
-                    
+
                     {/* Name & Favorites */}
                     <div className="flex gap-4 items-start">
                         <div className="flex-1">
                             <label className="block text-sm font-medium text-content-secondary mb-1">Nom</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 required
                                 value={widget.name}
-                                onChange={e => setWidget({...widget, name: e.target.value})}
+                                onChange={e => setWidget({ ...widget, name: e.target.value })}
                                 className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
                                 placeholder="Ex: Température Salon"
                             />
                         </div>
                         <div>
-                             <label className="block text-sm font-medium text-content-secondary mb-1">Favori</label>
-                             <button
+                            <label className="block text-sm font-medium text-content-secondary mb-1">Favori</label>
+                            <button
                                 type="button"
                                 onClick={() => setWidget(prev => ({ ...prev, isFavorite: !prev.isFavorite }))}
-                                className={`h-[50px] w-[50px] flex items-center justify-center rounded-lg border transition-all ${
-                                    widget.isFavorite 
-                                    ? 'bg-yellow-500/10 border-yellow-500 text-yellow-500' 
-                                    : 'bg-input-bg border-border text-content-secondary hover:bg-dark-card'
-                                }`}
-                             >
+                                className={`h-[50px] w-[50px] flex items-center justify-center rounded-lg border transition-all ${widget.isFavorite
+                                        ? 'bg-yellow-500/10 border-yellow-500 text-yellow-500'
+                                        : 'bg-input-bg border-border text-content-secondary hover:bg-dark-card'
+                                    }`}
+                            >
                                 <Star size={24} fill={widget.isFavorite ? "currentColor" : "none"} />
-                             </button>
+                            </button>
                         </div>
                     </div>
 
@@ -422,12 +410,11 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                 <button
                                     key={cat.id}
                                     type="button"
-                                    onClick={() => setWidget({...widget, category: cat.id})}
-                                    className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-all ${
-                                        widget.category === cat.id 
-                                        ? 'bg-jeedom-600/20 border-jeedom-500 text-jeedom-500' 
-                                        : 'bg-input-bg border-transparent text-content-secondary hover:bg-dark-card'
-                                    }`}
+                                    onClick={() => setWidget({ ...widget, category: cat.id })}
+                                    className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-all ${widget.category === cat.id
+                                            ? 'bg-jeedom-600/20 border-jeedom-500 text-jeedom-500'
+                                            : 'bg-input-bg border-transparent text-content-secondary hover:bg-dark-card'
+                                        }`}
                                 >
                                     <cat.icon size={18} className="mb-1" />
                                     <span className="text-[10px] font-medium">{cat.label}</span>
@@ -440,9 +427,9 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-content-secondary mb-1">Type</label>
-                            <select 
+                            <select
                                 value={widget.type}
-                                onChange={e => setWidget({...widget, type: e.target.value as any})}
+                                onChange={e => setWidget({ ...widget, type: e.target.value as any })}
                                 className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
                             >
                                 <option value="info">Information</option>
@@ -461,15 +448,15 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-content-secondary mb-1">Taille</label>
-                            <select 
+                            <select
                                 value={widget.size}
-                                onChange={e => setWidget({...widget, size: e.target.value as any})}
+                                onChange={e => setWidget({ ...widget, size: e.target.value as any })}
                                 className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
                             >
                                 <option value="small">Carré (1x1)</option>
                                 <option value="medium">Large (2x1)</option>
                                 <option value="large">Grand (2x2)</option>
-                                <option value="wide">Très Large (4x2)</option>
+                                <option value="wide">Très Large (3x1)</option>
                             </select>
                         </div>
                     </div>
@@ -478,927 +465,923 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                     <div className="space-y-3">
                         {widget.type === 'scenario' ? (
                             <>
-                            <div>
-                                <label className="block text-sm font-medium text-content-secondary flex items-center gap-2 mb-2">
-                                     <Workflow size={14} className="text-jeedom-500"/>
-                                     Scénario à lancer
-                                     {isLoadingScenarios && <RefreshCw size={12} className="animate-spin ml-2" />}
-                                     {!isLoadingScenarios && (
-                                         <button 
-                                            type="button" 
-                                            onClick={loadScenarios}
-                                            className="ml-2 text-xs text-jeedom-500 hover:underline flex items-center gap-1"
-                                         >
-                                             <RefreshCw size={10} /> Actualiser
-                                         </button>
-                                     )}
-                                     <span className="text-[10px] text-content-secondary ml-auto">
-                                         {scenarios.length} trouvés
-                                     </span>
-                                </label>
-                                {scenarios.length === 0 && !isLoadingScenarios && (
-                                    <div className="mb-2 p-2 bg-orange-500/10 border border-orange-500/20 rounded text-[10px] text-orange-200 font-mono">
-                                        DEBUG: URL={settings?.jeedomUrl || 'N/A'} <br/>
-                                        KEY={settings?.apiKey ? '***' : 'MISSING'} <br/>
-                                        Last Error: {scenarioError || 'None'}
-                                    </div>
-                                )}
-                                <select
-                                    value={widget.scenarioId || ''}
-                                    onChange={(e) => setWidget({...widget, scenarioId: e.target.value})}
-                                    className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
-                                    disabled={isLoadingScenarios}
-                                >
-                                    <option value="">-- Sélectionner un scénario --</option>
-                                    {scenarios.length > 0 ? (
-                                        scenarios.map(sc => (
-                                            <option key={sc.id} value={sc.id}>
-                                                {sc.group ? `[${sc.group}] ` : ''}{sc.name}
-                                            </option>
-                                        ))
-                                    ) : (
-                                        <option value="" disabled>
-                                            {isLoadingScenarios ? "Chargement..." : (scenarioError ? `Erreur: ${scenarioError}` : "Aucun scénario trouvé")}
-                                        </option>
-                                    )}
-                                </select>
-                            </div>
-
-                            {/* Tags de scénario */}
-                            <div className="mt-4">
-                                <label className="block text-sm font-medium text-content-secondary mb-2">
-                                    Tags passés au scénario (optionnel)
-                                </label>
-                                <div className="space-y-2">
-                                    {(widget.scenarioTags || []).map((tag, i) => (
-                                        <div key={i} className="flex gap-2 items-center">
-                                            <input
-                                                type="text"
-                                                value={tag.name}
-                                                onChange={e => {
-                                                    const tags = [...(widget.scenarioTags || [])];
-                                                    tags[i] = { ...tags[i], name: e.target.value };
-                                                    setWidget({...widget, scenarioTags: tags});
-                                                }}
-                                                placeholder="nom_tag"
-                                                className="flex-1 bg-input-bg border border-border text-content-primary rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-jeedom-500"
-                                            />
-                                            <span className="text-content-secondary text-sm">=</span>
-                                            <input
-                                                type="text"
-                                                value={tag.value}
-                                                onChange={e => {
-                                                    const tags = [...(widget.scenarioTags || [])];
-                                                    tags[i] = { ...tags[i], value: e.target.value };
-                                                    setWidget({...widget, scenarioTags: tags});
-                                                }}
-                                                placeholder="valeur"
-                                                className="flex-1 bg-input-bg border border-border text-content-primary rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-jeedom-500"
-                                            />
+                                <div>
+                                    <label className="block text-sm font-medium text-content-secondary flex items-center gap-2 mb-2">
+                                        <Workflow size={14} className="text-jeedom-500" />
+                                        Scénario à lancer
+                                        {isLoadingScenarios && <RefreshCw size={12} className="animate-spin ml-2" />}
+                                        {!isLoadingScenarios && (
                                             <button
                                                 type="button"
-                                                onClick={() => {
-                                                    const tags = (widget.scenarioTags || []).filter((_, idx) => idx !== i);
-                                                    setWidget({...widget, scenarioTags: tags});
-                                                }}
-                                                className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
+                                                onClick={loadScenarios}
+                                                className="ml-2 text-xs text-jeedom-500 hover:underline flex items-center gap-1"
                                             >
-                                                <X size={14} />
+                                                <RefreshCw size={10} /> Actualiser
                                             </button>
+                                        )}
+                                        <span className="text-[10px] text-content-secondary ml-auto">
+                                            {scenarios.length} trouvés
+                                        </span>
+                                    </label>
+                                    {scenarios.length === 0 && !isLoadingScenarios && scenarioError && (
+                                        <div className="mb-2 p-2 bg-orange-500/10 border border-orange-500/20 rounded text-xs text-orange-300">
+                                            {scenarioError}
                                         </div>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={() => setWidget({...widget, scenarioTags: [...(widget.scenarioTags || []), { name: '', value: '' }]})}
-                                        className="flex items-center gap-1 text-xs text-jeedom-500 hover:text-jeedom-400 transition-colors mt-1"
+                                    )}
+                                    <select
+                                        value={widget.scenarioId || ''}
+                                        onChange={(e) => setWidget({ ...widget, scenarioId: e.target.value })}
+                                        className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
+                                        disabled={isLoadingScenarios}
                                     >
-                                        <Plus size={12} /> Ajouter un tag
-                                    </button>
+                                        <option value="">-- Sélectionner un scénario --</option>
+                                        {scenarios.length > 0 ? (
+                                            scenarios.map(sc => (
+                                                <option key={sc.id} value={sc.id}>
+                                                    {sc.group ? `[${sc.group}] ` : ''}{sc.name}
+                                                </option>
+                                            ))
+                                        ) : (
+                                            <option value="" disabled>
+                                                {isLoadingScenarios ? "Chargement..." : (scenarioError ? `Erreur: ${scenarioError}` : "Aucun scénario trouvé")}
+                                            </option>
+                                        )}
+                                    </select>
                                 </div>
-                            </div>
+
+                                {/* Tags de scénario */}
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-content-secondary mb-2">
+                                        Tags passés au scénario (optionnel)
+                                    </label>
+                                    <div className="space-y-2">
+                                        {(widget.scenarioTags || []).map((tag, i) => (
+                                            <div key={i} className="flex gap-2 items-center">
+                                                <input
+                                                    type="text"
+                                                    value={tag.name}
+                                                    onChange={e => {
+                                                        const tags = [...(widget.scenarioTags || [])];
+                                                        tags[i] = { ...tags[i], name: e.target.value };
+                                                        setWidget({ ...widget, scenarioTags: tags });
+                                                    }}
+                                                    placeholder="nom_tag"
+                                                    className="flex-1 bg-input-bg border border-border text-content-primary rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-jeedom-500"
+                                                />
+                                                <span className="text-content-secondary text-sm">=</span>
+                                                <input
+                                                    type="text"
+                                                    value={tag.value}
+                                                    onChange={e => {
+                                                        const tags = [...(widget.scenarioTags || [])];
+                                                        tags[i] = { ...tags[i], value: e.target.value };
+                                                        setWidget({ ...widget, scenarioTags: tags });
+                                                    }}
+                                                    placeholder="valeur"
+                                                    className="flex-1 bg-input-bg border border-border text-content-primary rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-jeedom-500"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const tags = (widget.scenarioTags || []).filter((_, idx) => idx !== i);
+                                                        setWidget({ ...widget, scenarioTags: tags });
+                                                    }}
+                                                    className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={() => setWidget({ ...widget, scenarioTags: [...(widget.scenarioTags || []), { name: '', value: '' }] })}
+                                            className="flex items-center gap-1 text-xs text-jeedom-500 hover:text-jeedom-400 transition-colors mt-1"
+                                        >
+                                            <Plus size={12} /> Ajouter un tag
+                                        </button>
+                                    </div>
+                                </div>
                             </>
                         ) : (
                             <>
-                        {/* CONFIGURATION POUR INFO */}
-                        {widget.type === 'info' && (
-                            <div className="mt-4">
-                                <label className="block text-sm font-medium text-content-secondary mb-1">
-                                    Commande d'information
-                                </label>
-                                <CommandSelector 
-                                    value={widget.infoId}
-                                    onChange={(val) => setWidget({...widget, infoId: val})}
-                                    availableEqLogics={availableEqLogics}
-                                    filterType="info"
-                                    placeholder="Sélectionner l'information..."
-                                    disabled={!hasAvailableData}
-                                />
-                            </div>
-                        )}
-
-                        {/* CONFIGURATION POUR CAMERA */}
-                        {widget.type === 'camera' && (
-                            <div className="mt-4 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        URL du flux (Stream MJPEG ou Snapshot)
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        value={widget.streamUrl || ''}
-                                        onChange={e => setWidget({...widget, streamUrl: e.target.value})}
-                                        className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
-                                        placeholder="http://jeedom/plugins/camera/..."
-                                    />
-                                    <p className="text-[10px] text-content-secondary mt-1">
-                                        L'URL doit être accessible depuis le navigateur. Si snapshot, activez le rafraîchissement.
-                                    </p>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Rafraîchissement (ms) - 0 pour flux vidéo
-                                    </label>
-                                    <input 
-                                        type="number" 
-                                        value={widget.refreshInterval || 0}
-                                        onChange={e => setWidget({...widget, refreshInterval: parseInt(e.target.value) || 0})}
-                                        className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
-                                        placeholder="Ex: 5000 pour 5s"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* CONFIGURATION POUR SLIDER */}
-                        {widget.type === 'slider' && (
-                            <div className="mt-4 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Commande Info (valeur courante)
-                                    </label>
-                                    <CommandSelector
-                                        value={widget.sliderInfoId}
-                                        onChange={(val) => setWidget({...widget, sliderInfoId: val})}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="info"
-                                        placeholder="Sélectionner la commande info..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Commande Action (envoyer la valeur)
-                                    </label>
-                                    <CommandSelector
-                                        value={widget.sliderActionId}
-                                        onChange={(val) => setWidget({...widget, sliderActionId: val})}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="action"
-                                        placeholder="Sélectionner la commande action..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">Min</label>
-                                        <input
-                                            type="number"
-                                            value={widget.sliderMin ?? 0}
-                                            onChange={e => setWidget({...widget, sliderMin: Number(e.target.value)})}
-                                            className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">Max</label>
-                                        <input
-                                            type="number"
-                                            value={widget.sliderMax ?? 100}
-                                            onChange={e => setWidget({...widget, sliderMax: Number(e.target.value)})}
-                                            className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">Pas</label>
-                                        <input
-                                            type="number"
-                                            value={widget.sliderStep ?? 1}
-                                            onChange={e => setWidget({...widget, sliderStep: Number(e.target.value)})}
-                                            className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* CONFIGURATION POUR THERMOSTAT */}
-                        {widget.type === 'thermostat' && (
-                            <div className="mt-4 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Température Actuelle (Info)
-                                    </label>
-                                    <CommandSelector 
-                                        value={widget.currentTempCmdId}
-                                        onChange={(val) => setWidget({...widget, currentTempCmdId: val})}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="info"
-                                        placeholder="Sélectionner la température..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Consigne (Info)
-                                    </label>
-                                    <CommandSelector 
-                                        value={widget.setpointCmdId}
-                                        onChange={(val) => setWidget({...widget, setpointCmdId: val})}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="info"
-                                        placeholder="Sélectionner la consigne..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
+                                {/* CONFIGURATION POUR INFO */}
+                                {widget.type === 'info' && (
+                                    <div className="mt-4">
                                         <label className="block text-sm font-medium text-content-secondary mb-1">
-                                            Action (+)
-                                        </label>
-                                        <CommandSelector 
-                                            value={widget.actionUpCmdId}
-                                            onChange={(val) => setWidget({...widget, actionUpCmdId: val})}
-                                            availableEqLogics={availableEqLogics}
-                                            filterType="action"
-                                            placeholder="Monter"
-                                            disabled={!hasAvailableData}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">
-                                            Action (-)
-                                        </label>
-                                        <CommandSelector 
-                                            value={widget.actionDownCmdId}
-                                            onChange={(val) => setWidget({...widget, actionDownCmdId: val})}
-                                            availableEqLogics={availableEqLogics}
-                                            filterType="action"
-                                            placeholder="Descendre"
-                                            disabled={!hasAvailableData}
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        État (Chauffe/Clim/Arrêt) - Optionnel
-                                    </label>
-                                    <CommandSelector
-                                        value={widget.stateCmdId}
-                                        onChange={(val) => setWidget({...widget, stateCmdId: val})}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="info"
-                                        placeholder="Sélectionner l'état..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Mode actuel (Info) - Optionnel
-                                    </label>
-                                    <CommandSelector
-                                        value={widget.modeInfoCmdId}
-                                        onChange={(val) => setWidget({...widget, modeInfoCmdId: val})}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="info"
-                                        placeholder="Sélectionner le mode..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">
-                                            Action Mode Absent
+                                            Commande d'information
                                         </label>
                                         <CommandSelector
-                                            value={widget.awayModeCmdId}
-                                            onChange={(val) => setWidget({...widget, awayModeCmdId: val})}
-                                            availableEqLogics={availableEqLogics}
-                                            filterType="action"
-                                            placeholder="Mode absent..."
-                                            disabled={!hasAvailableData}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">
-                                            Action Mode Éco
-                                        </label>
-                                        <CommandSelector
-                                            value={widget.ecoModeCmdId}
-                                            onChange={(val) => setWidget({...widget, ecoModeCmdId: val})}
-                                            availableEqLogics={availableEqLogics}
-                                            filterType="action"
-                                            placeholder="Mode éco..."
-                                            disabled={!hasAvailableData}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* CONFIGURATION POUR METEO */}
-                        {widget.type === 'weather' && (
-                            <div className="mt-4 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Température (Info)
-                                    </label>
-                                    <CommandSelector 
-                                        value={widget.tempCmdId}
-                                        onChange={(val) => setWidget({...widget, tempCmdId: val})}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="info"
-                                        placeholder="Sélectionner la température..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Condition Météo (Info Texte ou Numérique)
-                                    </label>
-                                    <CommandSelector 
-                                        value={widget.conditionCmdId}
-                                        onChange={(val) => setWidget({...widget, conditionCmdId: val})}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="info"
-                                        placeholder="Sélectionner la condition..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">
-                                            Min (Info)
-                                        </label>
-                                        <CommandSelector 
-                                            value={widget.minCmdId}
-                                            onChange={(val) => setWidget({...widget, minCmdId: val})}
+                                            value={widget.infoId}
+                                            onChange={(val) => setWidget({ ...widget, infoId: val })}
                                             availableEqLogics={availableEqLogics}
                                             filterType="info"
-                                            placeholder="Temp. Min"
+                                            placeholder="Sélectionner l'information..."
                                             disabled={!hasAvailableData}
                                         />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">
-                                            Max (Info)
-                                        </label>
-                                        <CommandSelector 
-                                            value={widget.maxCmdId}
-                                            onChange={(val) => setWidget({...widget, maxCmdId: val})}
-                                            availableEqLogics={availableEqLogics}
-                                            filterType="info"
-                                            placeholder="Temp. Max"
-                                            disabled={!hasAvailableData}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* CONFIGURATION POUR ALARME */}
-                        {widget.type === 'alarm' && (
-                            <div className="mt-4 space-y-4">
-                                <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                                    <ShieldAlert size={16} className="text-red-400 shrink-0" />
-                                    <p className="text-xs text-red-300">
-                                        Le widget devient rouge lorsque l'alarme est armée. Le code de désactivation est stocké chiffré (SHA-256) — jamais en clair.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Commande Activer (Action)
-                                    </label>
-                                    <CommandSelector
-                                        value={widget.alarmActivateCmdId}
-                                        onChange={(val) => setWidget({ ...widget, alarmActivateCmdId: val })}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="action"
-                                        placeholder="Commande pour armer..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Commande Désactiver (Action)
-                                    </label>
-                                    <CommandSelector
-                                        value={widget.alarmDeactivateCmdId}
-                                        onChange={(val) => setWidget({ ...widget, alarmDeactivateCmdId: val })}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="action"
-                                        placeholder="Commande pour désarmer..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        État de l'alarme (Info) — Optionnel
-                                    </label>
-                                    <CommandSelector
-                                        value={widget.alarmStateId}
-                                        onChange={(val) => setWidget({ ...widget, alarmStateId: val })}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="info"
-                                        placeholder="Commande info pour l'état..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-
-                                {widget.alarmStateId && (
-                                    <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">
-                                            Valeur = Armée
-                                            <span className="ml-2 text-[10px] font-normal opacity-70">(défaut: 1)</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={widget.alarmArmedValue ?? '1'}
-                                            onChange={e => setWidget({ ...widget, alarmArmedValue: e.target.value })}
-                                            placeholder="1"
-                                            className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none text-sm"
-                                        />
-                                        <p className="text-[10px] text-content-secondary mt-1">
-                                            Valeur retournée par la commande Info quand l'alarme est armée (ex: 1, "armé", "total"…)
-                                        </p>
                                     </div>
                                 )}
 
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Code de désactivation
-                                        {widget.alarmCodeHash && !alarmCodeInput && (
-                                            <span className="ml-2 text-[10px] text-green-400 font-normal">Code configuré ✓ — laisser vide pour conserver</span>
-                                        )}
-                                    </label>
-                                    <input
-                                        type="password"
-                                        inputMode="numeric"
-                                        value={alarmCodeInput}
-                                        onChange={e => setAlarmCodeInput(e.target.value)}
-                                        placeholder={widget.alarmCodeHash ? '••••••  (inchangé)' : 'Saisir un code...'}
-                                        className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
-                                        autoComplete="new-password"
-                                    />
-                                    <p className="text-[10px] text-content-secondary mt-1">
-                                        Ce code sera demandé pour désactiver l'alarme. Stocké en SHA-256, jamais visible en clair.
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* CONFIGURATION POUR VOLET / PORTAIL */}
-                        {widget.type === 'shutter' && (
-                            <div className="mt-4 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Commande Ouvrir / Monter <span className="text-red-400">*</span>
-                                    </label>
-                                    <CommandSelector
-                                        value={widget.shutterOpenCmdId}
-                                        onChange={(val) => setWidget({ ...widget, shutterOpenCmdId: val })}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="action"
-                                        placeholder="Commande pour monter..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Commande Fermer / Descendre <span className="text-red-400">*</span>
-                                    </label>
-                                    <CommandSelector
-                                        value={widget.shutterCloseCmdId}
-                                        onChange={(val) => setWidget({ ...widget, shutterCloseCmdId: val })}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="action"
-                                        placeholder="Commande pour descendre..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Commande Stop
-                                        <span className="ml-2 text-[10px] font-normal opacity-70">— Optionnel</span>
-                                    </label>
-                                    <CommandSelector
-                                        value={widget.shutterStopCmdId}
-                                        onChange={(val) => setWidget({ ...widget, shutterStopCmdId: val })}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="action"
-                                        placeholder="Commande pour stopper..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Position actuelle (Info)
-                                        <span className="ml-2 text-[10px] font-normal opacity-70">— Optionnel, 0-100</span>
-                                    </label>
-                                    <CommandSelector
-                                        value={widget.shutterPositionInfoId}
-                                        onChange={(val) => setWidget({ ...widget, shutterPositionInfoId: val })}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="info"
-                                        placeholder="Info pour lire la position..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Définir la position (Action slider)
-                                        <span className="ml-2 text-[10px] font-normal opacity-70">— Optionnel, affiche un curseur</span>
-                                    </label>
-                                    <CommandSelector
-                                        value={widget.shutterPositionCmdId}
-                                        onChange={(val) => setWidget({ ...widget, shutterPositionCmdId: val })}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="action"
-                                        placeholder="Action pour positionner..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* SEQUENCE D'ACTIONS (Seulement pour type Action) */}
-                        {widget.type === 'action' && (
-                            <div className="mt-4 space-y-4 border-l-2 border-border pl-3">
-                                
-                                {/* Mode Selection: Cycle vs Batch */}
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-2">Mode d'exécution des actions</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setWidget({...widget, actionExecutionMode: 'sequence'})}
-                                            className={`p-2 rounded-lg border text-xs font-medium flex items-center justify-center gap-2 transition-all ${
-                                                widget.actionExecutionMode !== 'batch'
-                                                ? 'bg-jeedom-600/20 border-jeedom-500 text-jeedom-500'
-                                                : 'bg-input-bg border-transparent text-content-secondary hover:bg-dark-card'
-                                            }`}
-                                        >
-                                            <RotateCw size={14} />
-                                            Cycle (Étapes)
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setWidget({...widget, actionExecutionMode: 'batch'})}
-                                            className={`p-2 rounded-lg border text-xs font-medium flex items-center justify-center gap-2 transition-all ${
-                                                widget.actionExecutionMode === 'batch'
-                                                ? 'bg-jeedom-600/20 border-jeedom-500 text-jeedom-500'
-                                                : 'bg-input-bg border-transparent text-content-secondary hover:bg-dark-card'
-                                            }`}
-                                        >
-                                            <Layers size={14} />
-                                            Tout exécuter
-                                        </button>
+                                {/* CONFIGURATION POUR CAMERA */}
+                                {widget.type === 'camera' && (
+                                    <div className="mt-4 space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                URL du flux (Stream MJPEG ou Snapshot)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={widget.streamUrl || ''}
+                                                onChange={e => setWidget({ ...widget, streamUrl: e.target.value })}
+                                                className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
+                                                placeholder="http://jeedom/plugins/camera/..."
+                                            />
+                                            <p className="text-[10px] text-content-secondary mt-1">
+                                                L'URL doit être accessible depuis le navigateur. Si snapshot, activez le rafraîchissement.
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Rafraîchissement (ms) - 0 pour flux vidéo
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={widget.refreshInterval || 0}
+                                                onChange={e => setWidget({ ...widget, refreshInterval: parseInt(e.target.value) || 0 })}
+                                                className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
+                                                placeholder="Ex: 5000 pour 5s"
+                                            />
+                                        </div>
                                     </div>
-                                    <p className="text-[10px] text-content-secondary mt-1.5">
-                                        {widget.actionExecutionMode === 'batch' 
-                                         ? "Toutes les actions listées ci-dessous seront lancées en même temps au clic."
-                                         : "Chaque clic exécutera l'étape suivante (boucle). Une étape peut contenir plusieurs actions."}
-                                    </p>
-                                </div>
+                                )}
 
-                                {/* EDITOR FOR SEQUENCE MODE */}
-                                {widget.actionExecutionMode !== 'batch' && (
-                                    <div className="space-y-6">
-                                        {widget.sequenceSteps?.map((step, stepIndex) => (
-                                            <div key={stepIndex} className="bg-dark-card/50 p-3 rounded-lg border border-border/50">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-xs font-bold text-jeedom-500 uppercase tracking-wider">
-                                                        Étape {stepIndex + 1}
-                                                    </span>
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleAddCommandToStep(stepIndex)}
-                                                            className="text-[10px] bg-jeedom-600/20 text-jeedom-500 px-2 py-1 rounded hover:bg-jeedom-600/30"
-                                                        >
-                                                            + Action
-                                                        </button>
-                                                        {widget.sequenceSteps && widget.sequenceSteps.length > 1 && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleRemoveStep(stepIndex)}
-                                                                className="text-red-400 hover:text-red-500"
-                                                            >
-                                                                <Trash2 size={14} />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="space-y-2">
-                                                    {step.map((cmdId, cmdIndex) => (
-                                                        <div key={cmdIndex} className="flex gap-2 items-center">
-                                                            <div className="flex-1">
-                                                                <CommandSelector 
-                                                                    value={cmdId}
-                                                                    onChange={(val) => handleUpdateStepCommand(stepIndex, cmdIndex, val)}
-                                                                    availableEqLogics={availableEqLogics}
-                                                                    filterType="action"
-                                                                    placeholder={`Action ${cmdIndex + 1}`}
-                                                                    disabled={!hasAvailableData}
-                                                                />
-                                                            </div>
-                                                            {step.length > 1 && (
-                                                                <button 
-                                                                    type="button"
-                                                                    onClick={() => handleRemoveCommandFromStep(stepIndex, cmdIndex)}
-                                                                    className="text-content-secondary hover:text-red-400 p-1"
-                                                                >
-                                                                    <X size={14} />
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                {/* CONFIGURATION POUR SLIDER */}
+                                {widget.type === 'slider' && (
+                                    <div className="mt-4 space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Commande Info (valeur courante)
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.sliderInfoId}
+                                                onChange={(val) => setWidget({ ...widget, sliderInfoId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="info"
+                                                placeholder="Sélectionner la commande info..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Commande Action (envoyer la valeur)
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.sliderActionId}
+                                                onChange={(val) => setWidget({ ...widget, sliderActionId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="action"
+                                                placeholder="Sélectionner la commande action..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <div>
+                                                <label className="block text-sm font-medium text-content-secondary mb-1">Min</label>
+                                                <input
+                                                    type="number"
+                                                    value={widget.sliderMin ?? 0}
+                                                    onChange={e => setWidget({ ...widget, sliderMin: Number(e.target.value) })}
+                                                    className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
+                                                />
                                             </div>
-                                        ))}
-                                        
-                                        <button 
-                                            type="button"
-                                            onClick={handleAddStep}
-                                            className="w-full py-2 border border-dashed border-border rounded-lg text-xs text-content-secondary hover:text-jeedom-500 hover:border-jeedom-500 transition-colors flex items-center justify-center gap-2"
-                                        >
-                                            <Plus size={14} />
-                                            Ajouter une étape au cycle
-                                        </button>
+                                            <div>
+                                                <label className="block text-sm font-medium text-content-secondary mb-1">Max</label>
+                                                <input
+                                                    type="number"
+                                                    value={widget.sliderMax ?? 100}
+                                                    onChange={e => setWidget({ ...widget, sliderMax: Number(e.target.value) })}
+                                                    className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-content-secondary mb-1">Pas</label>
+                                                <input
+                                                    type="number"
+                                                    value={widget.sliderStep ?? 1}
+                                                    onChange={e => setWidget({ ...widget, sliderStep: Number(e.target.value) })}
+                                                    className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 
-                                {/* EDITOR FOR BATCH MODE (Legacy) */}
-                                {widget.actionExecutionMode === 'batch' && (
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-medium text-content-secondary flex items-center gap-2">
-                                            Actions à exécuter
-                                        </label>
-                                        
-                                        {/* Main Command (Always first in batch) */}
-                                        <div className="flex gap-2 items-start">
-                                            <div className="flex-1">
-                                                <CommandSelector 
-                                                    value={widget.commandId}
-                                                    onChange={(val) => setWidget({...widget, commandId: val})}
+                                {/* CONFIGURATION POUR THERMOSTAT */}
+                                {widget.type === 'thermostat' && (
+                                    <div className="mt-4 space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Température Actuelle (Info)
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.currentTempCmdId}
+                                                onChange={(val) => setWidget({ ...widget, currentTempCmdId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="info"
+                                                placeholder="Sélectionner la température..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Consigne (Info)
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.setpointCmdId}
+                                                onChange={(val) => setWidget({ ...widget, setpointCmdId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="info"
+                                                placeholder="Sélectionner la consigne..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                    Action (+)
+                                                </label>
+                                                <CommandSelector
+                                                    value={widget.actionUpCmdId}
+                                                    onChange={(val) => setWidget({ ...widget, actionUpCmdId: val })}
                                                     availableEqLogics={availableEqLogics}
                                                     filterType="action"
-                                                    placeholder="Action Principale"
+                                                    placeholder="Monter"
+                                                    disabled={!hasAvailableData}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                    Action (-)
+                                                </label>
+                                                <CommandSelector
+                                                    value={widget.actionDownCmdId}
+                                                    onChange={(val) => setWidget({ ...widget, actionDownCmdId: val })}
+                                                    availableEqLogics={availableEqLogics}
+                                                    filterType="action"
+                                                    placeholder="Descendre"
                                                     disabled={!hasAvailableData}
                                                 />
                                             </div>
                                         </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                État (Chauffe/Clim/Arrêt) - Optionnel
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.stateCmdId}
+                                                onChange={(val) => setWidget({ ...widget, stateCmdId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="info"
+                                                placeholder="Sélectionner l'état..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Mode actuel (Info) - Optionnel
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.modeInfoCmdId}
+                                                onChange={(val) => setWidget({ ...widget, modeInfoCmdId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="info"
+                                                placeholder="Sélectionner le mode..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                    Action Mode Absent
+                                                </label>
+                                                <CommandSelector
+                                                    value={widget.awayModeCmdId}
+                                                    onChange={(val) => setWidget({ ...widget, awayModeCmdId: val })}
+                                                    availableEqLogics={availableEqLogics}
+                                                    filterType="action"
+                                                    placeholder="Mode absent..."
+                                                    disabled={!hasAvailableData}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                    Action Mode Éco
+                                                </label>
+                                                <CommandSelector
+                                                    value={widget.ecoModeCmdId}
+                                                    onChange={(val) => setWidget({ ...widget, ecoModeCmdId: val })}
+                                                    availableEqLogics={availableEqLogics}
+                                                    filterType="action"
+                                                    placeholder="Mode éco..."
+                                                    disabled={!hasAvailableData}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
-                                        {widget.additionalCommandIds?.map((cmdId, index) => (
-                                            <div key={index} className="flex gap-2 animate-in fade-in slide-in-from-left-2 items-start">
-                                                <div className="flex-1">
-                                                    <CommandSelector 
-                                                        value={cmdId}
-                                                        onChange={(val) => handleUpdateAdditionalAction(index, val)}
-                                                        availableEqLogics={availableEqLogics}
-                                                        filterType="action"
-                                                        placeholder={`Action supplémentaire ${index + 1}`}
-                                                        disabled={!hasAvailableData}
-                                                    />
-                                                </div>
-                                                <button 
+                                {/* CONFIGURATION POUR METEO */}
+                                {widget.type === 'weather' && (
+                                    <div className="mt-4 space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Température (Info)
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.tempCmdId}
+                                                onChange={(val) => setWidget({ ...widget, tempCmdId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="info"
+                                                placeholder="Sélectionner la température..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Condition Météo (Info Texte ou Numérique)
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.conditionCmdId}
+                                                onChange={(val) => setWidget({ ...widget, conditionCmdId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="info"
+                                                placeholder="Sélectionner la condition..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                    Min (Info)
+                                                </label>
+                                                <CommandSelector
+                                                    value={widget.minCmdId}
+                                                    onChange={(val) => setWidget({ ...widget, minCmdId: val })}
+                                                    availableEqLogics={availableEqLogics}
+                                                    filterType="info"
+                                                    placeholder="Temp. Min"
+                                                    disabled={!hasAvailableData}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                    Max (Info)
+                                                </label>
+                                                <CommandSelector
+                                                    value={widget.maxCmdId}
+                                                    onChange={(val) => setWidget({ ...widget, maxCmdId: val })}
+                                                    availableEqLogics={availableEqLogics}
+                                                    filterType="info"
+                                                    placeholder="Temp. Max"
+                                                    disabled={!hasAvailableData}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* CONFIGURATION POUR ALARME */}
+                                {widget.type === 'alarm' && (
+                                    <div className="mt-4 space-y-4">
+                                        <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                            <ShieldAlert size={16} className="text-red-400 shrink-0" />
+                                            <p className="text-xs text-red-300">
+                                                Le widget devient rouge lorsque l'alarme est armée. Le code de désactivation est stocké chiffré (SHA-256) — jamais en clair.
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Commande Activer (Action)
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.alarmActivateCmdId}
+                                                onChange={(val) => setWidget({ ...widget, alarmActivateCmdId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="action"
+                                                placeholder="Commande pour armer..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Commande Désactiver (Action)
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.alarmDeactivateCmdId}
+                                                onChange={(val) => setWidget({ ...widget, alarmDeactivateCmdId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="action"
+                                                placeholder="Commande pour désarmer..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                État de l'alarme (Info) — Optionnel
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.alarmStateId}
+                                                onChange={(val) => setWidget({ ...widget, alarmStateId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="info"
+                                                placeholder="Commande info pour l'état..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+
+                                        {widget.alarmStateId && (
+                                            <div>
+                                                <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                    Valeur = Armée
+                                                    <span className="ml-2 text-[10px] font-normal opacity-70">(défaut: 1)</span>
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={widget.alarmArmedValue ?? '1'}
+                                                    onChange={e => setWidget({ ...widget, alarmArmedValue: e.target.value })}
+                                                    placeholder="1"
+                                                    className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none text-sm"
+                                                />
+                                                <p className="text-[10px] text-content-secondary mt-1">
+                                                    Valeur retournée par la commande Info quand l'alarme est armée (ex: 1, "armé", "total"…)
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Code de désactivation
+                                                {widget.alarmCodeHash && !alarmCodeInput && (
+                                                    <span className="ml-2 text-[10px] text-green-400 font-normal">Code configuré ✓ — laisser vide pour conserver</span>
+                                                )}
+                                            </label>
+                                            <input
+                                                type="password"
+                                                inputMode="numeric"
+                                                value={alarmCodeInput}
+                                                onChange={e => setAlarmCodeInput(e.target.value)}
+                                                placeholder={widget.alarmCodeHash ? '••••••  (inchangé)' : 'Saisir un code...'}
+                                                className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 focus:ring-2 focus:ring-jeedom-500 outline-none"
+                                                autoComplete="new-password"
+                                            />
+                                            <p className="text-[10px] text-content-secondary mt-1">
+                                                Ce code sera demandé pour désactiver l'alarme. Stocké en SHA-256, jamais visible en clair.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* CONFIGURATION POUR VOLET / PORTAIL */}
+                                {widget.type === 'shutter' && (
+                                    <div className="mt-4 space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Commande Ouvrir / Monter <span className="text-red-400">*</span>
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.shutterOpenCmdId}
+                                                onChange={(val) => setWidget({ ...widget, shutterOpenCmdId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="action"
+                                                placeholder="Commande pour monter..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Commande Fermer / Descendre <span className="text-red-400">*</span>
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.shutterCloseCmdId}
+                                                onChange={(val) => setWidget({ ...widget, shutterCloseCmdId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="action"
+                                                placeholder="Commande pour descendre..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Commande Stop
+                                                <span className="ml-2 text-[10px] font-normal opacity-70">— Optionnel</span>
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.shutterStopCmdId}
+                                                onChange={(val) => setWidget({ ...widget, shutterStopCmdId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="action"
+                                                placeholder="Commande pour stopper..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Position actuelle (Info)
+                                                <span className="ml-2 text-[10px] font-normal opacity-70">— Optionnel, 0-100</span>
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.shutterPositionInfoId}
+                                                onChange={(val) => setWidget({ ...widget, shutterPositionInfoId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="info"
+                                                placeholder="Info pour lire la position..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Définir la position (Action slider)
+                                                <span className="ml-2 text-[10px] font-normal opacity-70">— Optionnel, affiche un curseur</span>
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.shutterPositionCmdId}
+                                                onChange={(val) => setWidget({ ...widget, shutterPositionCmdId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="action"
+                                                placeholder="Action pour positionner..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* SEQUENCE D'ACTIONS (Seulement pour type Action) */}
+                                {widget.type === 'action' && (
+                                    <div className="mt-4 space-y-4 border-l-2 border-border pl-3">
+
+                                        {/* Mode Selection: Cycle vs Batch */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-2">Mode d'exécution des actions</label>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <button
                                                     type="button"
-                                                    onClick={() => handleRemoveAction(index)}
-                                                    className="p-3 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
+                                                    onClick={() => setWidget({ ...widget, actionExecutionMode: 'sequence' })}
+                                                    className={`p-2 rounded-lg border text-xs font-medium flex items-center justify-center gap-2 transition-all ${widget.actionExecutionMode !== 'batch'
+                                                            ? 'bg-jeedom-600/20 border-jeedom-500 text-jeedom-500'
+                                                            : 'bg-input-bg border-transparent text-content-secondary hover:bg-dark-card'
+                                                        }`}
                                                 >
-                                                    <Trash2 size={18} />
+                                                    <RotateCw size={14} />
+                                                    Cycle (Étapes)
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setWidget({ ...widget, actionExecutionMode: 'batch' })}
+                                                    className={`p-2 rounded-lg border text-xs font-medium flex items-center justify-center gap-2 transition-all ${widget.actionExecutionMode === 'batch'
+                                                            ? 'bg-jeedom-600/20 border-jeedom-500 text-jeedom-500'
+                                                            : 'bg-input-bg border-transparent text-content-secondary hover:bg-dark-card'
+                                                        }`}
+                                                >
+                                                    <Layers size={14} />
+                                                    Tout exécuter
                                                 </button>
                                             </div>
-                                        ))}
+                                            <p className="text-[10px] text-content-secondary mt-1.5">
+                                                {widget.actionExecutionMode === 'batch'
+                                                    ? "Toutes les actions listées ci-dessous seront lancées en même temps au clic."
+                                                    : "Chaque clic exécutera l'étape suivante (boucle). Une étape peut contenir plusieurs actions."}
+                                            </p>
+                                        </div>
 
-                                        <button 
+                                        {/* EDITOR FOR SEQUENCE MODE */}
+                                        {widget.actionExecutionMode !== 'batch' && (
+                                            <div className="space-y-6">
+                                                {widget.sequenceSteps?.map((step, stepIndex) => (
+                                                    <div key={stepIndex} className="bg-dark-card/50 p-3 rounded-lg border border-border/50">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <span className="text-xs font-bold text-jeedom-500 uppercase tracking-wider">
+                                                                Étape {stepIndex + 1}
+                                                            </span>
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleAddCommandToStep(stepIndex)}
+                                                                    className="text-[10px] bg-jeedom-600/20 text-jeedom-500 px-2 py-1 rounded hover:bg-jeedom-600/30"
+                                                                >
+                                                                    + Action
+                                                                </button>
+                                                                {widget.sequenceSteps && widget.sequenceSteps.length > 1 && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleRemoveStep(stepIndex)}
+                                                                        className="text-red-400 hover:text-red-500"
+                                                                    >
+                                                                        <Trash2 size={14} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-2">
+                                                            {step.map((cmdId, cmdIndex) => (
+                                                                <div key={cmdIndex} className="flex gap-2 items-center">
+                                                                    <div className="flex-1">
+                                                                        <CommandSelector
+                                                                            value={cmdId}
+                                                                            onChange={(val) => handleUpdateStepCommand(stepIndex, cmdIndex, val)}
+                                                                            availableEqLogics={availableEqLogics}
+                                                                            filterType="action"
+                                                                            placeholder={`Action ${cmdIndex + 1}`}
+                                                                            disabled={!hasAvailableData}
+                                                                        />
+                                                                    </div>
+                                                                    {step.length > 1 && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleRemoveCommandFromStep(stepIndex, cmdIndex)}
+                                                                            className="text-content-secondary hover:text-red-400 p-1"
+                                                                        >
+                                                                            <X size={14} />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ))}
+
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddStep}
+                                                    className="w-full py-2 border border-dashed border-border rounded-lg text-xs text-content-secondary hover:text-jeedom-500 hover:border-jeedom-500 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <Plus size={14} />
+                                                    Ajouter une étape au cycle
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* EDITOR FOR BATCH MODE (Legacy) */}
+                                        {widget.actionExecutionMode === 'batch' && (
+                                            <div className="space-y-3">
+                                                <label className="block text-sm font-medium text-content-secondary flex items-center gap-2">
+                                                    Actions à exécuter
+                                                </label>
+
+                                                {/* Main Command (Always first in batch) */}
+                                                <div className="flex gap-2 items-start">
+                                                    <div className="flex-1">
+                                                        <CommandSelector
+                                                            value={widget.commandId}
+                                                            onChange={(val) => setWidget({ ...widget, commandId: val })}
+                                                            availableEqLogics={availableEqLogics}
+                                                            filterType="action"
+                                                            placeholder="Action Principale"
+                                                            disabled={!hasAvailableData}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {widget.additionalCommandIds?.map((cmdId, index) => (
+                                                    <div key={index} className="flex gap-2 animate-in fade-in slide-in-from-left-2 items-start">
+                                                        <div className="flex-1">
+                                                            <CommandSelector
+                                                                value={cmdId}
+                                                                onChange={(val) => handleUpdateAdditionalAction(index, val)}
+                                                                availableEqLogics={availableEqLogics}
+                                                                filterType="action"
+                                                                placeholder={`Action supplémentaire ${index + 1}`}
+                                                                disabled={!hasAvailableData}
+                                                            />
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveAction(index)}
+                                                            className="p-3 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddAction}
+                                                    className="text-sm text-jeedom-500 hover:text-jeedom-400 font-medium flex items-center gap-1 mt-2"
+                                                >
+                                                    <Plus size={16} />
+                                                    Ajouter une action
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* CONFIGURATION SPECIFIQUE POUR TOGGLE (Simple Action) */}
+                                {widget.type === 'toggle' && (
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-content-secondary mb-1">
+                                            Commande d'action
+                                        </label>
+                                        <CommandSelector
+                                            value={widget.commandId}
+                                            onChange={(val) => setWidget({ ...widget, commandId: val })}
+                                            availableEqLogics={availableEqLogics}
+                                            filterType="action"
+                                            placeholder="Sélectionner l'action (On/Off/Toggle)..."
+                                            disabled={!hasAvailableData}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* CONFIGURATION SPECIFIQUE POUR CHART */}
+                                {widget.type === 'chart' && (
+                                    <div className="mt-4 space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Commande Historisée (Info)
+                                            </label>
+                                            <CommandSelector
+                                                value={widget.commandId}
+                                                onChange={(val) => setWidget({ ...widget, commandId: val })}
+                                                availableEqLogics={availableEqLogics}
+                                                filterType="info"
+                                                placeholder="Sélectionner l'info historisée..."
+                                                disabled={!hasAvailableData}
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                    Type de graphique
+                                                </label>
+                                                <select
+                                                    value={widget.chartType || 'line'}
+                                                    onChange={e => setWidget({ ...widget, chartType: e.target.value as any })}
+                                                    className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
+                                                >
+                                                    <option value="line">Ligne (Courbe)</option>
+                                                    <option value="bar">Barres (Histogramme)</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                    Agrégation des données
+                                                </label>
+                                                <select
+                                                    value={widget.chartAggregation || 'none'}
+                                                    onChange={e => setWidget({ ...widget, chartAggregation: e.target.value as any })}
+                                                    className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
+                                                >
+                                                    <option value="none">Aucune (Données brutes)</option>
+                                                    <option value="daily_avg">Moyenne par jour</option>
+                                                    <option value="daily_max">Maximum par jour</option>
+                                                    <option value="daily_sum">Somme par jour</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Période d'historique
+                                            </label>
+                                            <select
+                                                value={widget.historyPeriod || '24h'}
+                                                onChange={e => setWidget({ ...widget, historyPeriod: e.target.value as any })}
+                                                className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
+                                            >
+                                                <option value="24h">Dernières 24 heures</option>
+                                                <option value="7d">7 derniers jours</option>
+                                                <option value="30d">30 derniers jours</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Retour d'état pour Toggle ET Action (pour gérer l'icône dynamique) */}
+                                {(widget.type === 'toggle' || widget.type === 'action') && (
+                                    <div className="mt-2">
+                                        <label className="block text-sm font-medium text-content-secondary mb-1">
+                                            Info d'état (Retour)
+                                            {widget.type === 'action' && <span className="ml-2 text-[10px] text-content-secondary opacity-70 font-normal">(Requis pour changer l'icône ON/OFF)</span>}
+                                        </label>
+                                        <CommandSelector
+                                            value={widget.infoId}
+                                            onChange={(val) => setWidget({ ...widget, infoId: val })}
+                                            availableEqLogics={availableEqLogics}
+                                            filterType="info"
+                                            placeholder="-- Sélectionner l'état --"
+                                            disabled={!hasAvailableData}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Information SECONDAIRE pour les tuiles LARGE (Action/Toggle) */}
+                                {widget.size === 'large' && (widget.type === 'toggle' || widget.type === 'action') && (
+                                    <div className="mt-4 pt-4 border-t border-dashed border-border">
+                                        <label className="block text-sm font-medium text-content-secondary mb-1">
+                                            Information à afficher (Secondaire)
+                                            <span className="ml-2 text-[10px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">Mode Large</span>
+                                        </label>
+                                        <p className="text-xs text-content-secondary mb-2">
+                                            Permet d'afficher une valeur (ex: température, conso) tout en gardant l'action au clic.
+                                        </p>
+                                        <CommandSelector
+                                            value={widget.displayInfoId}
+                                            onChange={(val) => setWidget({ ...widget, displayInfoId: val })}
+                                            availableEqLogics={availableEqLogics}
+                                            filterType="info"
+                                            placeholder="-- Sélectionner une info --"
+                                            disabled={!hasAvailableData}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* CONFIGURATION VARIABLE DE SCÉNARIO */}
+                                {widget.type === 'variable' && (
+                                    <div className="mt-4 space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Nom de la variable <span className="text-red-400">*</span>
+                                            </label>
+                                            <p className="text-xs text-content-secondary mb-2">
+                                                Entrez le nom sans les <code className="bg-dark-card px-1 rounded">#</code>. Ex&nbsp;: <code className="bg-dark-card px-1 rounded">maVariable</code>
+                                            </p>
+                                            <input
+                                                type="text"
+                                                value={widget.variableName ?? ''}
+                                                onChange={e => setWidget({ ...widget, variableName: e.target.value })}
+                                                placeholder="ex: compteurArrosage"
+                                                className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none focus:ring-2 focus:ring-jeedom-500 font-mono text-sm"
+                                            />
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <span className="text-sm font-medium text-content-secondary">Permettre la modification</span>
+                                                <p className="text-xs text-content-secondary">Affiche un champ pour écrire une nouvelle valeur</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setWidget({ ...widget, variableAllowEdit: !widget.variableAllowEdit })}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${widget.variableAllowEdit ? 'bg-jeedom-500' : 'bg-border'}`}
+                                            >
+                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${widget.variableAllowEdit ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-content-secondary mb-1">
+                                                Intervalle de rafraîchissement
+                                            </label>
+                                            <select
+                                                value={widget.variablePollInterval ?? 60}
+                                                onChange={e => setWidget({ ...widget, variablePollInterval: Number(e.target.value) })}
+                                                className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
+                                            >
+                                                <option value={30}>30 secondes</option>
+                                                <option value={60}>1 minute</option>
+                                                <option value={300}>5 minutes</option>
+                                                <option value={600}>10 minutes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* TEMPS DEPUIS LA DERNIÈRE MISE À JOUR */}
+                                {(widget.type === 'info' || widget.type === 'action' || widget.type === 'toggle' || widget.type === 'slider') && (
+                                    <div className="mt-4 pt-4 border-t border-dashed border-border flex items-center justify-between">
+                                        <div>
+                                            <span className="text-sm font-medium text-content-secondary">Afficher le temps écoulé</span>
+                                            <p className="text-xs text-content-secondary">Ex : "il y a 5 min" sous le nom du widget</p>
+                                        </div>
+                                        <button
                                             type="button"
-                                            onClick={handleAddAction}
-                                            className="text-sm text-jeedom-500 hover:text-jeedom-400 font-medium flex items-center gap-1 mt-2"
+                                            onClick={() => setWidget({ ...widget, showElapsedTime: !widget.showElapsedTime })}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${widget.showElapsedTime ? 'bg-jeedom-500' : 'bg-border'}`}
                                         >
-                                            <Plus size={16} />
-                                            Ajouter une action
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${widget.showElapsedTime ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
                                 )}
-                            </div>
+                            </>
                         )}
-                        
-                        {/* CONFIGURATION SPECIFIQUE POUR TOGGLE (Simple Action) */}
-                        {widget.type === 'toggle' && (
-                            <div className="mt-4">
-                                <label className="block text-sm font-medium text-content-secondary mb-1">
-                                    Commande d'action
-                                </label>
-                                <CommandSelector 
-                                    value={widget.commandId}
-                                    onChange={(val) => setWidget({...widget, commandId: val})}
-                                    availableEqLogics={availableEqLogics}
-                                    filterType="action"
-                                    placeholder="Sélectionner l'action (On/Off/Toggle)..."
-                                    disabled={!hasAvailableData}
-                                />
-                            </div>
-                        )}
-
-                        {/* CONFIGURATION SPECIFIQUE POUR CHART */}
-                        {widget.type === 'chart' && (
-                            <div className="mt-4 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Commande Historisée (Info)
-                                    </label>
-                                    <CommandSelector 
-                                        value={widget.commandId}
-                                        onChange={(val) => setWidget({...widget, commandId: val})}
-                                        availableEqLogics={availableEqLogics}
-                                        filterType="info"
-                                        placeholder="Sélectionner l'info historisée..."
-                                        disabled={!hasAvailableData}
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">
-                                            Type de graphique
-                                        </label>
-                                        <select 
-                                            value={widget.chartType || 'line'}
-                                            onChange={e => setWidget({...widget, chartType: e.target.value as any})}
-                                            className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
-                                        >
-                                            <option value="line">Ligne (Courbe)</option>
-                                            <option value="bar">Barres (Histogramme)</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-content-secondary mb-1">
-                                            Agrégation des données
-                                        </label>
-                                        <select 
-                                            value={widget.chartAggregation || 'none'}
-                                            onChange={e => setWidget({...widget, chartAggregation: e.target.value as any})}
-                                            className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
-                                        >
-                                            <option value="none">Aucune (Données brutes)</option>
-                                            <option value="daily_avg">Moyenne par jour</option>
-                                            <option value="daily_max">Maximum par jour</option>
-                                            <option value="daily_sum">Somme par jour</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Période d'historique
-                                    </label>
-                                    <select 
-                                        value={widget.historyPeriod || '24h'}
-                                        onChange={e => setWidget({...widget, historyPeriod: e.target.value as any})}
-                                        className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
-                                    >
-                                        <option value="24h">Dernières 24 heures</option>
-                                        <option value="7d">7 derniers jours</option>
-                                        <option value="30d">30 derniers jours</option>
-                                    </select>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Retour d'état pour Toggle ET Action (pour gérer l'icône dynamique) */}
-                        {(widget.type === 'toggle' || widget.type === 'action') && (
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium text-content-secondary mb-1">
-                                    Info d'état (Retour)
-                                    {widget.type === 'action' && <span className="ml-2 text-[10px] text-content-secondary opacity-70 font-normal">(Requis pour changer l'icône ON/OFF)</span>}
-                                </label>
-                                <CommandSelector 
-                                    value={widget.infoId}
-                                    onChange={(val) => setWidget({...widget, infoId: val})}
-                                    availableEqLogics={availableEqLogics}
-                                    filterType="info"
-                                    placeholder="-- Sélectionner l'état --"
-                                    disabled={!hasAvailableData}
-                                />
-                            </div>
-                        )}
-
-                        {/* Information SECONDAIRE pour les tuiles LARGE (Action/Toggle) */}
-                        {widget.size === 'large' && (widget.type === 'toggle' || widget.type === 'action') && (
-                            <div className="mt-4 pt-4 border-t border-dashed border-border">
-                                <label className="block text-sm font-medium text-content-secondary mb-1">
-                                    Information à afficher (Secondaire)
-                                    <span className="ml-2 text-[10px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">Mode Large</span>
-                                </label>
-                                <p className="text-xs text-content-secondary mb-2">
-                                    Permet d'afficher une valeur (ex: température, conso) tout en gardant l'action au clic.
-                                </p>
-                                <CommandSelector
-                                    value={widget.displayInfoId}
-                                    onChange={(val) => setWidget({...widget, displayInfoId: val})}
-                                    availableEqLogics={availableEqLogics}
-                                    filterType="info"
-                                    placeholder="-- Sélectionner une info --"
-                                    disabled={!hasAvailableData}
-                                />
-                            </div>
-                        )}
-
-                        {/* CONFIGURATION VARIABLE DE SCÉNARIO */}
-                        {widget.type === 'variable' && (
-                            <div className="mt-4 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Nom de la variable <span className="text-red-400">*</span>
-                                    </label>
-                                    <p className="text-xs text-content-secondary mb-2">
-                                        Entrez le nom sans les <code className="bg-dark-card px-1 rounded">#</code>. Ex&nbsp;: <code className="bg-dark-card px-1 rounded">maVariable</code>
-                                    </p>
-                                    <input
-                                        type="text"
-                                        value={widget.variableName ?? ''}
-                                        onChange={e => setWidget({ ...widget, variableName: e.target.value })}
-                                        placeholder="ex: compteurArrosage"
-                                        className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none focus:ring-2 focus:ring-jeedom-500 font-mono text-sm"
-                                    />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <span className="text-sm font-medium text-content-secondary">Permettre la modification</span>
-                                        <p className="text-xs text-content-secondary">Affiche un champ pour écrire une nouvelle valeur</p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => setWidget({ ...widget, variableAllowEdit: !widget.variableAllowEdit })}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${widget.variableAllowEdit ? 'bg-jeedom-500' : 'bg-border'}`}
-                                    >
-                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${widget.variableAllowEdit ? 'translate-x-6' : 'translate-x-1'}`} />
-                                    </button>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-content-secondary mb-1">
-                                        Intervalle de rafraîchissement
-                                    </label>
-                                    <select
-                                        value={widget.variablePollInterval ?? 60}
-                                        onChange={e => setWidget({ ...widget, variablePollInterval: Number(e.target.value) })}
-                                        className="w-full bg-input-bg border border-border text-content-primary rounded-lg p-3 outline-none"
-                                    >
-                                        <option value={30}>30 secondes</option>
-                                        <option value={60}>1 minute</option>
-                                        <option value={300}>5 minutes</option>
-                                        <option value={600}>10 minutes</option>
-                                    </select>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* TEMPS DEPUIS LA DERNIÈRE MISE À JOUR */}
-                        {(widget.type === 'info' || widget.type === 'action' || widget.type === 'toggle' || widget.type === 'slider') && (
-                            <div className="mt-4 pt-4 border-t border-dashed border-border flex items-center justify-between">
-                                <div>
-                                    <span className="text-sm font-medium text-content-secondary">Afficher le temps écoulé</span>
-                                    <p className="text-xs text-content-secondary">Ex : "il y a 5 min" sous le nom du widget</p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setWidget({ ...widget, showElapsedTime: !widget.showElapsedTime })}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${widget.showElapsedTime ? 'bg-jeedom-500' : 'bg-border'}`}
-                                >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${widget.showElapsedTime ? 'translate-x-6' : 'translate-x-1'}`} />
-                                </button>
-                            </div>
-                        )}
-                        </>
-                    )}
                     </div>
 
                     {/* Colors */}
                     <div>
-                         <label className="block text-sm font-medium text-content-secondary mb-2">Couleur de fond (Actif)</label>
-                         <div className="flex flex-wrap gap-2 mb-4">
+                        <label className="block text-sm font-medium text-content-secondary mb-2">Couleur de fond (Actif)</label>
+                        <div className="flex flex-wrap gap-2 mb-4">
                             {COLORS.map(c => (
                                 <button
                                     key={c.value}
                                     type="button"
-                                    onClick={() => setWidget({...widget, color: c.value})}
+                                    onClick={() => setWidget({ ...widget, color: c.value })}
                                     className={`w-8 h-8 rounded-full ${c.value} ring-2 ring-offset-2 ring-offset-dark-surface transition-all ${widget.color === c.value ? 'ring-content-primary scale-110' : 'ring-transparent opacity-70 hover:opacity-100'}`}
                                 />
                             ))}
@@ -1406,10 +1389,10 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
 
                         <label className="block text-sm font-medium text-content-secondary mb-2">Couleur de la bordure</label>
                         <div className="flex flex-wrap gap-2">
-                             {/* Default/None option */}
+                            {/* Default/None option */}
                             <button
                                 type="button"
-                                onClick={() => setWidget({...widget, borderColor: undefined})}
+                                onClick={() => setWidget({ ...widget, borderColor: undefined })}
                                 className={`w-8 h-8 rounded-full bg-transparent border-2 border-dashed border-gray-500 ring-2 ring-offset-2 ring-offset-dark-surface transition-all ${!widget.borderColor ? 'ring-content-primary scale-110' : 'ring-transparent opacity-70 hover:opacity-100'}`}
                                 title="Aucune bordure (Par défaut)"
                             />
@@ -1419,7 +1402,7 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                                     <button
                                         key={`border-${c.value}`}
                                         type="button"
-                                        onClick={() => setWidget({...widget, borderColor: borderClass})}
+                                        onClick={() => setWidget({ ...widget, borderColor: borderClass })}
                                         className={`w-8 h-8 rounded-full border-2 ${borderClass} ring-2 ring-offset-2 ring-offset-dark-surface transition-all ${widget.borderColor === borderClass ? 'ring-content-primary scale-110' : 'ring-transparent opacity-70 hover:opacity-100'}`}
                                     />
                                 );
@@ -1430,16 +1413,16 @@ const WidgetEditorModal: React.FC<WidgetEditorModalProps> = ({ isOpen, onClose, 
                     {/* Icon */}
                     <div>
                         <label className="block text-sm font-medium text-content-secondary mb-2">Icone</label>
-                        <IconSelector 
+                        <IconSelector
                             selectedIcon={widget.icon}
-                            onSelect={(icon) => setWidget({...widget, icon})}
+                            onSelect={(icon) => setWidget({ ...widget, icon })}
                         />
                     </div>
 
                 </form>
 
                 <div className="p-6 border-t border-border">
-                    <button 
+                    <button
                         onClick={handleSubmit}
                         className="w-full bg-jeedom-600 hover:bg-jeedom-500 text-white py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2"
                     >

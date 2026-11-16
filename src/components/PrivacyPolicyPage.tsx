@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Shield, ArrowLeft } from 'lucide-react';
 import SEO from './SEO';
 
@@ -18,10 +19,10 @@ const PrivacyPolicyPage: React.FC = () => {
                         <Shield className="text-jeedom-500" size={32} />
                         Politique de Confidentialité
                     </h1>
-                    <a href="/" className="flex items-center gap-2 text-sm text-content-secondary hover:text-jeedom-400 transition-colors">
+                    <Link to="/" className="flex items-center gap-2 text-sm text-content-secondary hover:text-jeedom-400 transition-colors">
                         <ArrowLeft size={16} />
                         Retour à l'accueil
-                    </a>
+                    </Link>
                 </div>
 
                 {/* Content */}

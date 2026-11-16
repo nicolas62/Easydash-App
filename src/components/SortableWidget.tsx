@@ -33,7 +33,7 @@ const SortableWidget = React.memo(({ id, size, isEditMode, children }: SortableW
         small: 'col-span-1 row-span-1',
         medium: 'col-span-2 row-span-1',
         large: 'col-span-2 row-span-2',
-        wide: 'col-span-3 row-span-1',
+        wide: 'col-span-2 sm:col-span-3 row-span-1',
     };
 
     return (

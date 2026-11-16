@@ -51,13 +51,23 @@ export const useGoogleDrive = () => {
             }
         };
 
-        // Load GIS script dynamically
-        const script = document.createElement('script');
-        script.src = "https://accounts.google.com/gsi/client";
-        script.async = true;
-        script.defer = true;
-        script.onload = initGis;
-        document.body.appendChild(script);
+        // Load GIS script dynamically (avoid duplicates across modal re-mounts)
+        const gsiUrl = "https://accounts.google.com/gsi/client";
+        if ((window as any).google?.accounts?.oauth2) {
+            initGis();
+        } else {
+            const existingScript = document.querySelector(`script[src="${gsiUrl}"]`) as HTMLScriptElement | null;
+            if (existingScript) {
+                existingScript.addEventListener('load', initGis, { once: true });
+            } else {
+                const script = document.createElement('script');
+                script.src = gsiUrl;
+                script.async = true;
+                script.defer = true;
+                script.onload = initGis;
+                document.body.appendChild(script);
+            }
+        }
 
         initGapi();
     }, []);

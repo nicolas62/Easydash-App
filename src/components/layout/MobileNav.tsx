@@ -49,20 +49,24 @@ const MobileNav: React.FC<MobileNavProps> = ({
             {dash.id === 'favorites' && <Star size={10} className="text-amber-300" fill="currentColor"/>}
 
             {isEditMode && isActive && dash.id !== 'default' && dash.id !== 'favorites' && (
-              <div
-                onClick={(e) => { e.stopPropagation(); onEditDashboard(dash); }}
-                className="ml-2 -mr-1 p-0.5 rounded-full hover:bg-content-primary/10 transition-colors"
-              >
-                <Edit3 size={12} />
-              </div>
-            )}
-            {isEditMode && isActive && dash.id !== 'default' && (
-              <div
-                onClick={(e) => { e.stopPropagation(); onDeleteDashboard(dash.id); }}
-                className="ml-1 p-0.5 rounded-full hover:bg-red-500/50 text-red-200"
-              >
-                <XCircle size={14} />
-              </div>
+              <>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => { e.stopPropagation(); onEditDashboard(dash); }}
+                  className="ml-2 -mr-1 p-0.5 rounded-full hover:bg-content-primary/10 transition-colors"
+                >
+                  <Edit3 size={12} />
+                </span>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => { e.stopPropagation(); onDeleteDashboard(dash.id); }}
+                  className="ml-1 p-0.5 rounded-full hover:bg-red-500/50 text-red-200"
+                >
+                  <XCircle size={14} />
+                </span>
+              </>
             )}
           </button>
         );

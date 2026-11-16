@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Scale, ArrowLeft } from 'lucide-react';
 import SEO from './SEO';
 
@@ -18,10 +19,10 @@ const LegalPage: React.FC = () => {
                         <Scale className="text-jeedom-500" size={28} />
                         Mentions Légales
                     </h1>
-                    <a href="/" className="flex items-center gap-2 text-sm text-content-secondary hover:text-jeedom-400 transition-colors">
+                    <Link to="/" className="flex items-center gap-2 text-sm text-content-secondary hover:text-jeedom-400 transition-colors">
                         <ArrowLeft size={16} />
                         Retour à l'accueil
-                    </a>
+                    </Link>
                 </div>
 
                 {/* Content */}
@@ -94,14 +95,14 @@ const LegalPage: React.FC = () => {
                         </p>
                         <p className="mt-3">
                             Pour plus de détails, consultez notre{' '}
-                            <a href="/privacy" className="text-jeedom-400 hover:underline">Politique de confidentialité</a>.
+                            <Link to="/privacy" className="text-jeedom-400 hover:underline">Politique de confidentialité</Link>.
                         </p>
                     </section>
 
                     <section>
                         <h2 className="text-xl font-bold text-content-primary mb-3">7. Cookies</h2>
                         <p>
-                            EasyDash n'utilise pas de cookies à des fins de traçage ou de publicité. Un bandeau de consentement est affiché pour vous informer de l'utilisation du stockage local (localStorage) nécessaire au fonctionnement de l'application.
+                            EasyDash utilise le stockage local (localStorage / IndexedDB) nécessaire au fonctionnement de l'application et, uniquement après votre consentement explicite via le bandeau dédié, des cookies de mesure d'audience anonymisée (Google Analytics).
                         </p>
                     </section>
 

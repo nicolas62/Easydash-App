@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RefreshCw } from 'lucide-react';
 
@@ -25,8 +25,9 @@ import Modals from './components/modals/Modals';
 import LandingPage from './components/LandingPage';
 import PrivacyPolicyPage from './components/PrivacyPolicyPage';
 import LegalPage from './components/LegalPage';
-import SettingsModal from './components/SettingsModal';
 import CookieBanner from './components/CookieBanner';
+
+const SettingsModal = lazy(() => import('./components/SettingsModal'));
 import RouteTracker from './components/RouteTracker';
 import Toast from './components/Toast';
 import SEO from './components/SEO';
@@ -188,12 +189,14 @@ const App: React.FC = () => {
       <>
         <CookieBanner />
         <LandingPage onConnect={() => setIsSettingsOpen(true)} />
-        <SettingsModal
-          isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-          settings={settings}
-          onSave={setSettings}
-        />
+        <Suspense fallback={null}>
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            settings={settings}
+            onSave={setSettings}
+          />
+        </Suspense>
       </>
     );
   }

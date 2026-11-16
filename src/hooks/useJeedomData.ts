@@ -102,6 +102,18 @@ export function useJeedomData(settings: AppSettings, isSettingsLoaded: boolean, 
           else if (w.type === 'slider') {
               if (w.sliderInfoId) idsToFetch.add(w.sliderInfoId);
           }
+          else if (w.type === 'weather') {
+              if (w.tempCmdId) idsToFetch.add(w.tempCmdId);
+              if (w.conditionCmdId) idsToFetch.add(w.conditionCmdId);
+              if (w.minCmdId) idsToFetch.add(w.minCmdId);
+              if (w.maxCmdId) idsToFetch.add(w.maxCmdId);
+          }
+          else if (w.type === 'shutter') {
+              if (w.shutterPositionInfoId) idsToFetch.add(w.shutterPositionInfoId);
+          }
+          else if (w.type === 'alarm') {
+              if (w.alarmStateId) idsToFetch.add(w.alarmStateId);
+          }
           if (w.displayInfoId) idsToFetch.add(w.displayInfoId);
       });
 

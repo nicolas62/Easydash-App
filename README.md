@@ -6,7 +6,7 @@
 
 **Le dashboard moderne et personnalisable pour votre box Jeedom**
 
-[![Version](https://img.shields.io/badge/version-1.0.1-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
+[![Version](https://img.shields.io/badge/version-1.0.2-brightgreen?style=flat-square)](https://github.com/nicolas62/Easydash-App/releases)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-blue?style=flat-square&logo=docker)](https://github.com/nicolas62/Easydash-App/pkgs/container/easydash-app)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -269,6 +269,13 @@ Le widget Volet / Portail permet de piloter un volet roulant, une porte de garag
 ---
 
 ## Historique des versions
+
+### v1.0.2 — 16 Novembre 2026
+- Correctifs — **Météo, Volet & Alarme** : chargement initial et rafraîchissement complet en polling HTTP / WebSocket, correction de l'affichage `undefined` / `NaN°` sur la météo, et déverrouillage automatique du PIN alarme après 30 s.
+- Correctifs — **Système d'alertes** : détection sur front montant/descendant même sans hystérésis et persistance systématique de `lastValue` (`change`, `above`, `below`).
+- Correctifs — **Caméra, Séquence, Toggle & Modales** : reprise automatique du flux caméra après erreur réseau, cycle complet des étapes en mode Séquence, transmission de `imgbbApiKey` à `DashboardModal`, et protection du dashboard `Favoris` sur mobile.
+- Sécurité — **Proxy & Dépendances** : support de `127.0.0.1` / `localhost` en mode Proxy (hors port EasyDash), blocage des redirections SSRF, purge du rate-limiter, et mise à jour `glob >=14.0.6` / `minimatch >=11.0.8`.
+- Performances — **Bundle & Rendu** : découpage des chunks Vite (`index.js` réduit de 1,19 Mo à 351 Ko), optimisation du `React.memo` de `WidgetCard` et remplacement des `alert()` bloquants par des notifications `Toast`.
 
 ### v1.0.1 — 29 Octobre 2026
 - Sécurité — **proxy-addr** (critical) : CVE-2026-90711 / GHSA-jqcg-44mw-7w3h (usurpation d'IP via sous-réseau IPv4-mapped IPv6) — `express ^5.3.0` + override `>=2.0.8` (ferme Dependabot #53).

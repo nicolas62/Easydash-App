@@ -54,7 +54,7 @@ const AuthScreen: React.FC = () => {
                     </div>
                     <h1 className="text-3xl font-bold text-content-primary mb-2">Bienvenue</h1>
                     <p className="text-content-secondary">
-                        {isLogin ? "Connectez-vous à votre espace" : "Créez votre compte Jeedom Connect"}
+                        {isLogin ? "Connectez-vous à votre espace" : "Créez votre compte EasyDash"}
                     </p>
                 </div>
 

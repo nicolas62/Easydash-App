@@ -58,23 +58,24 @@ export function evaluateCondition(
     const thr  = Number(threshold);
 
     switch (type) {
-        case 'above':
+        case 'above': {
             // Déclenche sur front montant uniquement (évite répétition)
-            if (hysteresis > 0) {
-                const prev = previousValue !== undefined ? Number(previousValue) : undefined;
-                return curr > thr + hysteresis && (prev === undefined || prev <= thr + hysteresis);
-            }
-            return curr > thr;
+            if (isNaN(curr) || isNaN(thr)) return false;
+            const prev = previousValue !== undefined && previousValue !== '' ? Number(previousValue) : undefined;
+            const target = thr + (hysteresis > 0 ? hysteresis : 0);
+            return curr > target && (prev === undefined || isNaN(prev) || prev <= target);
+        }
 
-        case 'below':
-            if (hysteresis > 0) {
-                const prev = previousValue !== undefined ? Number(previousValue) : undefined;
-                return curr < thr - hysteresis && (prev === undefined || prev >= thr - hysteresis);
-            }
-            return curr < thr;
+        case 'below': {
+            if (isNaN(curr) || isNaN(thr)) return false;
+            const prev = previousValue !== undefined && previousValue !== '' ? Number(previousValue) : undefined;
+            const target = thr - (hysteresis > 0 ? hysteresis : 0);
+            return curr < target && (prev === undefined || isNaN(prev) || prev >= target);
+        }
 
         case 'equals':
-            return String(currentValue) === String(threshold);
+            return String(currentValue) === String(threshold) &&
+                   (previousValue === undefined || String(previousValue) !== String(threshold));
 
         case 'change':
             return previousValue !== undefined && String(currentValue) !== String(previousValue);

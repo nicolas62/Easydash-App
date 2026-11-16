@@ -121,6 +121,7 @@ const Modals: React.FC<ModalsProps> = ({
         initialData={editingWidget}
         onSave={onSaveWidget}
         availableEqLogics={eqLogics}
+        availableScenarios={scenarios}
         dashboardId={activeDashboardId}
         settings={settings}
       />
@@ -129,6 +130,7 @@ const Modals: React.FC<ModalsProps> = ({
         onClose={closeDashboardModal}
         initialData={editingDashboard}
         onSave={onSaveDashboard}
+        imgbbApiKey={settings.imgbbApiKey}
       />
       <ConfirmationModal
         isOpen={!!deleteWidgetId}

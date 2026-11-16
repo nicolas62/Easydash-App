@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Play, Square, Power, Calendar, Clock, Tag, Activity, Layers } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Play, Square, Power, Clock, Tag, Activity, Layers } from 'lucide-react';
 import { JeedomScenario, AppSettings } from '../types';
 import { executeScenario, stopScenario, toggleScenarioState } from '../services/jeedomService';
 import Toast, { ToastType } from './Toast';
@@ -15,18 +15,33 @@ interface ScenarioDetailsModalProps {
 const ScenarioDetailsModal: React.FC<ScenarioDetailsModalProps> = ({ isOpen, onClose, scenario, settings, onUpdate }) => {
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState<{message: string, type: ToastType} | null>(null);
+    const [localIsActive, setLocalIsActive] = useState(false);
+    const [localIsRunning, setLocalIsRunning] = useState(false);
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        if (scenario) {
+            setLocalIsActive(scenario.isActive === '1' || scenario.isActive === 1 || scenario.isActive === true);
+            setLocalIsRunning(scenario.state === 'run');
+        }
+    }, [scenario]);
+
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
+    }, []);
 
     if (!isOpen || !scenario) return null;
-
-    const isActive = scenario.isActive === '1' || scenario.isActive === 1 || scenario.isActive === true;
-    const isRunning = scenario.state === 'run';
 
     const handleRun = async () => {
         setLoading(true);
         try {
             await executeScenario(settings, scenario.id);
+            setLocalIsRunning(true);
             setToast({ message: "Scénario lancé", type: 'success' });
-            setTimeout(() => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
                 onUpdate();
                 setLoading(false);
             }, 1000);
@@ -42,8 +57,10 @@ const ScenarioDetailsModal: React.FC<ScenarioDetailsModalProps> = ({ isOpen, onC
         setLoading(true);
         try {
             await stopScenario(settings, scenario.id);
+            setLocalIsRunning(false);
             setToast({ message: "Scénario arrêté", type: 'success' });
-            setTimeout(() => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
                 onUpdate();
                 setLoading(false);
             }, 1000);
@@ -58,9 +75,12 @@ const ScenarioDetailsModal: React.FC<ScenarioDetailsModalProps> = ({ isOpen, onC
     const handleToggleState = async () => {
         setLoading(true);
         try {
-            await toggleScenarioState(settings, scenario.id, isActive);
-            setToast({ message: isActive ? "Scénario désactivé" : "Scénario activé", type: 'success' });
-            setTimeout(() => {
+            await toggleScenarioState(settings, scenario.id, localIsActive);
+            const nextState = !localIsActive;
+            setLocalIsActive(nextState);
+            setToast({ message: nextState ? "Scénario activé" : "Scénario désactivé", type: 'success' });
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
                 onUpdate();
                 setLoading(false);
             }, 500);
@@ -93,12 +113,12 @@ const ScenarioDetailsModal: React.FC<ScenarioDetailsModalProps> = ({ isOpen, onC
                     {/* Status Badge */}
                     <div className="flex justify-center">
                         <div className={`px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 border ${
-                            isRunning 
+                            localIsRunning 
                             ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' 
                             : 'bg-dark-card text-content-secondary border-border'
                         }`}>
-                            <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-orange-500 animate-pulse' : 'bg-content-secondary'}`}></div>
-                            {isRunning ? 'En cours d\'exécution' : 'Arrêté'}
+                            <div className={`w-2 h-2 rounded-full ${localIsRunning ? 'bg-orange-500 animate-pulse' : 'bg-content-secondary'}`}></div>
+                            {localIsRunning ? 'En cours d\'exécution' : 'Arrêté'}
                         </div>
                     </div>
 
@@ -132,7 +152,7 @@ const ScenarioDetailsModal: React.FC<ScenarioDetailsModalProps> = ({ isOpen, onC
 
                     {/* Actions */}
                     <div className="grid grid-cols-2 gap-3 pt-2">
-                        {isRunning ? (
+                        {localIsRunning ? (
                             <button 
                                 onClick={handleStop}
                                 disabled={loading}
@@ -156,13 +176,13 @@ const ScenarioDetailsModal: React.FC<ScenarioDetailsModalProps> = ({ isOpen, onC
                             onClick={handleToggleState}
                             disabled={loading}
                             className={`col-span-2 flex items-center justify-center gap-2 p-3 rounded-xl border transition-all font-medium ${
-                                isActive 
+                                localIsActive 
                                 ? 'bg-dark-card text-content-secondary border-border hover:bg-dark-surface' 
                                 : 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
                             }`}
                         >
                             <Power size={18} />
-                            {isActive ? 'Désactiver le scénario' : 'Activer le scénario'}
+                            {localIsActive ? 'Désactiver le scénario' : 'Activer le scénario'}
                         </button>
                     </div>
                 </div>

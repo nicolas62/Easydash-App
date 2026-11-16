@@ -22,8 +22,8 @@ export function useAlerts({ rules, commands, onNewAlerts }: UseAlertsOptions) {
     const evaluate = useCallback((cmds: JeedomCommand[]) => {
         if (rules.length === 0) return;
 
-        const states  = statesRef.current;
         let anyTriggered = false;
+        let statesChanged = false;
         const allHistory: AlertHistory[] = [];
 
         for (const cmd of cmds) {
@@ -37,20 +37,25 @@ export function useAlerts({ rules, commands, onNewAlerts }: UseAlertsOptions) {
                 rules,
                 String(cmd.id),
                 currentValue,
-                states,
+                statesRef.current,
             );
+
+            statesRef.current = newStates;
+            statesChanged = true;
 
             if (historyEntries.length > 0) {
                 anyTriggered = true;
                 allHistory.push(...historyEntries);
-                statesRef.current = newStates;
             }
 
             prevValuesRef.current.set(String(cmd.id), currentValue);
         }
 
-        if (anyTriggered) {
+        if (statesChanged) {
             saveStates(statesRef.current);
+        }
+
+        if (anyTriggered) {
             const history = loadHistory();
             saveHistory([...history, ...allHistory]);
             onNewAlerts?.(allHistory);

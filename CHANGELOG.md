@@ -2,6 +2,22 @@
 
 All notable changes to EasyDash are documented here.
 
+## [1.0.2] — 2026-11-16
+
+### Corrections de bugs
+- **Widget Météo, Volet & Alarme** : transmission des valeurs initiales à `WeatherWidget`, ajout des IDs de commandes (`tempCmdId`, `conditionCmdId`, `minCmdId`, `maxCmdId`, `shutterPositionInfoId`, `alarmStateId`) au polling HTTP et au comparateur `React.memo`, et correction du formatage `undefined` / `NaN°`.
+- **Système d'alertes** : déclenchement sur front montant/descendant même lorsque `hysteresis = 0` et sauvegarde systématique de `lastValue` dans `useAlerts` pour fiabiliser les conditions `change`, `above`, `below` et `equals`.
+- **Widget Caméra** : maintien du conteneur DOM en cas d'erreur transitoire pour permettre la reprise automatique du flux, ajout d'un `AbortController` sur le proxy caméra, fallback `getSecretApiKey()`, et correction de l'état plein écran par instance.
+- **Mode Séquence & Toggle** : suivi fiable de l'étape courante via `localStepIndexRef`, support de `commandOffId` et restriction de `optimisticValue` aux commandes binaires.
+- **UI & Modales** : transmission de `imgbbApiKey` à `DashboardModal`, mise à jour immédiate de l'état dans `ScenarioDetailsModal`, déverrouillage automatique par timer après 30 s sur `AlarmWidget`, protection du dashboard `Favoris` sur mobile (`MobileNav`), et grille responsive `col-span-2 sm:col-span-3` pour la taille `wide`.
+
+### Sécurité & Performances
+- **Proxy & SSRF (`server.ts`)** : autorisation des instances Jeedom locales sur `127.0.0.1` / `localhost` en mode Proxy (en ne bloquant que le port d'EasyDash lui-même contre les boucles auto-référentes), interdiction des redirections upstream (`redirect: 'error'`), et purge automatique des entrées expirées du rate-limiter.
+- **Dépendances** : override `glob >=14.0.6` et `minimatch >=11.0.8` (`GHSA-3g3m-2fjr-6pw4`, `GHSA-g3hv-75wg-m249`).
+- **Bundle & Performances** : code-splitting `React.lazy` harmonisé et découpage en chunks vendors (`index.js` réduit de 1,19 Mo à 351 Ko), court-circuit `prev.commands === next.commands` dans `WidgetCard`, et remplacement des `alert()` natifs par des notifications `Toast`.
+
+---
+
 ## [1.0.1] — 2026-10-29
 
 ### Sécurité

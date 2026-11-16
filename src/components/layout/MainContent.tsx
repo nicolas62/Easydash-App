@@ -1,4 +1,4 @@
-import React, { RefObject } from 'react';
+import React, { RefObject, useMemo } from 'react';
 import { RefreshCw, LayoutDashboard, Layers, Edit3, Plus, Settings, Star } from 'lucide-react';
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
@@ -53,13 +53,19 @@ const MainContent: React.FC<MainContentProps> = ({
   handleTouchEnd,
 }) => {
   const isHomeDashboard = activeDashboard?.id === 'default';
+  const widgetIds = useMemo(() => currentWidgets.map(w => w.id), [currentWidgets]);
+  const safeBgImage = useMemo(() => {
+    const raw = activeDashboard?.backgroundImage?.trim();
+    if (!raw || !/^https?:\/\//i.test(raw)) return undefined;
+    return `url("${raw.replace(/["\\<>()]/g, encodeURIComponent)}")`;
+  }, [activeDashboard?.backgroundImage]);
 
   return (
     <main
       ref={mainRef}
       className="flex-1 overflow-y-auto scroll-smooth relative overscroll-contain bg-cover bg-center bg-no-repeat bg-fixed transition-all duration-500"
       style={{
-        backgroundImage: activeDashboard?.backgroundImage ? `url(${activeDashboard.backgroundImage})` : undefined,
+        backgroundImage: safeBgImage,
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -155,7 +161,7 @@ const MainContent: React.FC<MainContentProps> = ({
 
         {currentWidgets.length > 0 && (
           <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-            <SortableContext items={currentWidgets.map(w => w.id)} strategy={rectSortingStrategy}>
+            <SortableContext items={widgetIds} strategy={rectSortingStrategy}>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 auto-rows-[minmax(140px,auto)] gap-4">
                 {currentWidgets.map(widget => (
                   <SortableWidget key={widget.id} id={widget.id} size={widget.size || "small"} isEditMode={isEditMode}>
@@ -166,8 +172,8 @@ const MainContent: React.FC<MainContentProps> = ({
                         scenarios={scenarios}
                         settings={settings}
                         editMode={isEditMode}
-                        onEdit={() => onEditWidget(widget)}
-                        onDelete={() => onDeleteWidget(widget.id)}
+                        onEdit={onEditWidget}
+                        onDelete={onDeleteWidget}
                         onScenarioClick={onScenarioClick}
                       />
                     </WidgetErrorBoundary>

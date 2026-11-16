@@ -14,24 +14,41 @@ if (process.env.ALLOW_INSECURE_TLS === 'true') {
 
 
 // --- SSRF protection ---
-// Block cloud metadata endpoints and other dangerous internal targets.
-// The app intentionally allows local-network IPs (192.168.x, 10.x, *.local)
-// because Jeedom typically runs on the home LAN.
+// Block cloud metadata endpoints and self-referential loops on the EasyDash port.
+// Local network IPs (192.168.x, 10.x, *.local) AND local Jeedom instances on
+// 127.0.0.1 / localhost (on any port other than EasyDash's own port) are allowed.
 const BLOCKED_HOSTS = new Set([
     '169.254.169.254', // AWS / GCP / Azure instance metadata
     '100.100.100.200', // Alibaba Cloud metadata
     'fd00::ec2',        // AWS IPv6 metadata
-    '::1',              // IPv6 loopback
-    '127.0.0.1',        // IPv4 loopback — prevent SSRF self-loop
     '0.0.0.0',          // unspecified address
-    'localhost',        // hostname alias for loopback
 ]);
 
-const isSafeUrl = (urlStr: string): boolean => {
+const LOOPBACK_HOSTS = new Set([
+    '127.0.0.1',
+    '::1',
+    'localhost',
+]);
+
+const isSafeUrl = (urlStr: string, serverPort: number = Number(process.env.PORT) || 3000): boolean => {
     try {
-        const { protocol, hostname } = new URL(urlStr);
-        if (!['http:', 'https:'].includes(protocol)) return false;
-        if (BLOCKED_HOSTS.has(hostname)) return false;
+        const parsed = new URL(urlStr);
+        if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+        const hostname = parsed.hostname.replace(/^\[|\]$/g, '').replace(/\.$/, '').toLowerCase();
+        if (BLOCKED_HOSTS.has(hostname) || hostname.startsWith('169.254.') || hostname.startsWith('0.')) {
+            return false;
+        }
+        const isLoopback =
+            LOOPBACK_HOSTS.has(hostname) ||
+            hostname.startsWith('127.') ||
+            hostname.startsWith('::ffff:127.') ||
+            hostname.startsWith('::ffff:7f00:') ||
+            hostname.endsWith('.localhost');
+        if (isLoopback) {
+            const targetPort = parsed.port ? Number(parsed.port) : (parsed.protocol === 'https:' ? 443 : 80);
+            // Block only self-loop requests targeting the EasyDash server itself
+            if (targetPort === serverPort) return false;
+        }
         return true;
     } catch {
         return false;
@@ -55,6 +72,11 @@ const _rateBuckets = new Map<string, { count: number; resetAt: number }>();
 
 function checkRateLimit(key: string, maxPerWindow: number, windowMs: number): boolean {
     const now = Date.now();
+    if (_rateBuckets.size > 500) {
+        for (const [k, v] of _rateBuckets.entries()) {
+            if (now > v.resetAt) _rateBuckets.delete(k);
+        }
+    }
     const bucket = _rateBuckets.get(key);
     if (!bucket || now > bucket.resetAt) {
         _rateBuckets.set(key, { count: 1, resetAt: now + windowMs });
@@ -216,6 +238,7 @@ async function startServer() {
           method,
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           signal: controller.signal,
+          redirect: 'error',
         };
         if (method === 'POST' && body) fetchOptions.body = JSON.stringify(body);
         const upstream = await fetch(url, fetchOptions);
@@ -245,7 +268,7 @@ async function startServer() {
         const timeout = setTimeout(() => controller.abort(), 10_000);
 
         try {
-            const upstream = await fetch(url, { signal: controller.signal });
+            const upstream = await fetch(url, { signal: controller.signal, redirect: 'error' });
             clearTimeout(timeout);
             res.status(upstream.status);
             res.setHeader('Content-Type', upstream.headers.get('content-type') || 'image/jpeg');

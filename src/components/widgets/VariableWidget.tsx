@@ -35,9 +35,12 @@ const VariableWidget: React.FC<VariableWidgetProps> = ({ widget, settings, isEdi
     const handleSend = async () => {
         if (sending) return;
         setSending(true);
-        await writeValue(inputVal);
-        setSending(false);
-        setEditing(false);
+        try {
+            await writeValue(inputVal);
+            setEditing(false);
+        } finally {
+            setSending(false);
+        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

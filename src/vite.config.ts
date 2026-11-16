@@ -60,6 +60,18 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'vendor-react': ['react', 'react-dom', 'react-router-dom', 'react-helmet-async'],
+              'vendor-charts': ['recharts'],
+              'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+              'vendor-icons': ['lucide-react'],
+            }
+          }
+        }
       }
     };
 });

@@ -18,6 +18,7 @@ export function useSettings() {
           if (parsed.apiKey) {
             const decryptedKey = await decryptData(parsed.apiKey);
             parsed.apiKey = decryptedKey;
+            prevApiKeyRef.current = decryptedKey;
             setSecretApiKey(decryptedKey);
           }
           if (!parsed.theme) parsed.theme = 'dark';
@@ -38,6 +39,7 @@ export function useSettings() {
     const saveSettings = async () => {
       const settingsToSave = { ...settings };
       if (settingsToSave.apiKey) {
+        setSecretApiKey(settingsToSave.apiKey);
         if (settingsToSave.apiKey !== prevApiKeyRef.current) {
           // API key changed — re-encrypt and update the ref
           settingsToSave.apiKey = await encryptData(settingsToSave.apiKey);
@@ -51,6 +53,9 @@ export function useSettings() {
             if (parsed.apiKey) settingsToSave.apiKey = parsed.apiKey;
           } catch { /* fall back to re-encrypting */ }
         }
+      } else {
+        clearSecretApiKey();
+        prevApiKeyRef.current = '';
       }
       localStorage.setItem('jeedom_settings', JSON.stringify(settingsToSave));
     };

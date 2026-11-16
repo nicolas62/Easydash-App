@@ -39,6 +39,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
     const [animateValue, setAnimateValue] = useState(false);
     const [alarmArmed, setAlarmArmed] = useState(false);
     const [optimisticValue, setOptimisticValue] = useState<string | number | undefined>(undefined);
+    const localStepIndexRef = React.useRef<number>(-1);
 
     const isGridLayout = className?.includes('react-grid-item');
     const isScenario = widget.type === 'scenario';
@@ -139,7 +140,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
         small: 'col-span-1 row-span-1',
         medium: 'col-span-2 row-span-1',
         large: 'col-span-2 row-span-2',
-        wide: 'col-span-3 row-span-1',
+        wide: 'col-span-2 sm:col-span-3 row-span-1',
     };
 
     // --- HANDLERS ---
@@ -158,18 +159,20 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                     else await executeScenario(settings, widget.scenarioId, widget.scenarioTags);
                 }
             } else if (widget.type === 'action' || widget.type === 'toggle' || widget.type === 'slider') {
-                if (widget.type === 'toggle' || widget.type === 'action') {
+                if (widget.type === 'toggle' || (widget.type === 'action' && mainCommand?.subType === 'binary')) {
                     const isActive = previousValue === 1 || previousValue === '1' || previousValue === 'on';
                     setOptimisticValue(isActive ? 0 : 1);
                 }
 
                 if (widget.type === 'action' && widget.actionExecutionMode === 'sequence' && widget.sequenceSteps?.length) {
-                    let currentStepIndex = 0;
-                    if (mainCommand?.value !== undefined) {
-                        const val = parseInt(String(mainCommand.value), 10);
-                        if (!isNaN(val) && val >= 0 && val < widget.sequenceSteps.length) currentStepIndex = val;
+                    let nextStepIndex = (localStepIndexRef.current + 1) % widget.sequenceSteps.length;
+                    if (previousValue !== undefined) {
+                        const val = parseInt(String(previousValue), 10);
+                        if (!isNaN(val) && val >= 0 && val < widget.sequenceSteps.length && localStepIndexRef.current === -1) {
+                            nextStepIndex = (val + 1) % widget.sequenceSteps.length;
+                        }
                     }
-                    const nextStepIndex = (currentStepIndex + 1) % widget.sequenceSteps.length;
+                    localStepIndexRef.current = nextStepIndex;
                     const validCommands = widget.sequenceSteps[nextStepIndex].filter(id => id && String(id).trim() !== '');
                     if (validCommands.length > 0) {
                         await Promise.all(validCommands.map(cmdId => executeJeedomCommand(settings, String(cmdId))));
@@ -178,7 +181,10 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                     const allCommands = [widget.commandId, ...(widget.additionalCommandIds || [])].filter(Boolean) as string[];
                     await Promise.all(allCommands.map(cmdId => executeJeedomCommand(settings, String(cmdId))));
                 } else {
-                    if (widget.commandId) await executeJeedomCommand(settings, String(widget.commandId));
+                    const targetCmdId = (widget.type === 'toggle' && widget.commandOffId && (previousValue === 1 || previousValue === '1' || previousValue === 'on'))
+                        ? widget.commandOffId
+                        : widget.commandId;
+                    if (targetCmdId) await executeJeedomCommand(settings, String(targetCmdId));
                 }
 
                 setAnimateValue(true);
@@ -188,7 +194,9 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
         } catch (error) {
             console.error('Error executing action:', error);
             setOptimisticValue(previousValue);
-            alert('Échec de la commande. Vérifiez votre connexion.');
+            window.dispatchEvent(new CustomEvent('easydash:alert', {
+                detail: { title: widget.name, body: 'Échec de la commande. Vérifiez votre connexion.', severity: 'critical' }
+            }));
         } finally {
             setLoading(false);
         }
@@ -270,7 +278,7 @@ const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(({
                 ) : isThermostat ? (
                     <ThermostatWidget widget={widget} settings={settings} isColorized={isColorized} commands={commands} />
                 ) : isWeather ? (
-                    <WeatherWidget widget={widget} isColorized={isColorized} />
+                    <WeatherWidget widget={widget} isColorized={isColorized} commands={commands} />
                 ) : isVariable ? (
                     <VariableWidget widget={widget} settings={settings} isEditMode={editMode} />
                 ) : isInfoType ? (
@@ -352,7 +360,8 @@ const areWidgetCardPropsEqual = (prev: WidgetCardProps & React.RefAttributes<HTM
     if (prev.editMode !== next.editMode) return false;
     if (prev.settings !== next.settings) return false;
     if (prev.isConnected !== next.isConnected) return false;
-    if (prev.scenarios !== next.scenarios) return false;
+    if (next.widget.type === 'scenario' && prev.scenarios !== next.scenarios) return false;
+    if (prev.commands === next.commands) return true;
 
     const ids = [
         prev.widget.commandId,
@@ -364,15 +373,19 @@ const areWidgetCardPropsEqual = (prev: WidgetCardProps & React.RefAttributes<HTM
         prev.widget.sliderInfoId,
         prev.widget.modeInfoCmdId,
         prev.widget.alarmStateId,
-    ].filter((id): id is string => !!id);
+        prev.widget.shutterPositionInfoId,
+        prev.widget.tempCmdId,
+        prev.widget.conditionCmdId,
+        prev.widget.minCmdId,
+        prev.widget.maxCmdId,
+    ].filter((id): id is string => !!id).map(String);
 
-    // Build Maps for O(1) lookup instead of O(n) Array.find() per ID.
-    // With 200 commands and 8 IDs per widget, this goes from ~1600 ops to ~208.
-    const prevIndex = new Map(prev.commands.map(c => [String(c.id), String(c.value)]));
-    const nextIndex = new Map(next.commands.map(c => [String(c.id), String(c.value)]));
+    if (ids.length === 0) return true;
 
     for (const id of ids) {
-        if (prevIndex.get(id) !== nextIndex.get(id)) return false;
+        const prevCmd = prev.commands.find(c => String(c.id) === id);
+        const nextCmd = next.commands.find(c => String(c.id) === id);
+        if (String(prevCmd?.value) !== String(nextCmd?.value)) return false;
     }
 
     return true;
